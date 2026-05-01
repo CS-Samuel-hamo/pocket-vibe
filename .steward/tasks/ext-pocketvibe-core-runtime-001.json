@@ -1,0 +1,58 @@
+{
+  "task_id": "ext-pocketvibe-core-runtime-001",
+  "task": "Prevent MessageBuffer.push from mutating caller-provided messages and cover it with a targeted unit test.",
+  "task_type": "hardening",
+  "risk_level": "low",
+  "task_mode": "planned-market",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "src/core/message_buffer.py",
+    "tests/test_message_buffer.py"
+  ],
+  "matched_modules": [
+    "core-runtime"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/core-runtime.yaml",
+    ".steward/agents/core-runtime-steward.md",
+    ".steward/templates/default-task-template.md",
+    ".steward/templates/default-review-template.md"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries",
+    "global.require_tests_for_behavior_change",
+    "global.explain_rule_exceptions",
+    "core-runtime.runtime_contract_changes_require_explicit_trace",
+    "core-runtime.crypto_and_buffer_changes_require_targeted_tests",
+    "core-runtime.telemetry_or_storage_changes_require_crosscheck"
+  ],
+  "constraints": [
+    "core-runtime.forbidden:weaken-crypto-guarantees",
+    "core-runtime.forbidden:bypass-rate-limits-without-review",
+    "core-runtime.forbidden:silent-runtime-state-drift"
+  ],
+  "required_checks": [
+    "core-runtime-tests",
+    "steward-approval"
+  ],
+  "required_approvals": [
+    "core-runtime-steward"
+  ],
+  "suggested_write_scope": [
+    "src/core/message_buffer.py",
+    "tests/test_message_buffer.py",
+    "src/core/**",
+    "src/infra/**"
+  ],
+  "next_steps": [
+    "build_plan_before_patch",
+    "run_independent_review_crosscheck",
+    "collect_required_checks",
+    "request_steward_approval"
+  ],
+  "decision": "task_ready"
+}

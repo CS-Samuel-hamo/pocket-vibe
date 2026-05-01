@@ -1,0 +1,57 @@
+{
+  "task_id": "ext-pocketvibe-backend-api-002",
+  "task": "Harden backend file-read errors so API responses stop leaking internal filesystem details, and cover the path with a targeted backend test.",
+  "task_type": "hardening",
+  "risk_level": "medium",
+  "task_mode": "planned-market",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "backend/main.py",
+    "tests/test_backend_main.py"
+  ],
+  "matched_modules": [
+    "backend-api"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/backend-api.yaml",
+    ".steward/agents/backend-api-steward.md",
+    ".steward/templates/default-task-template.md",
+    ".steward/templates/default-review-template.md"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries",
+    "global.require_tests_for_behavior_change",
+    "global.explain_rule_exceptions",
+    "backend-api.backend_contract_changes_require_route_review",
+    "backend-api.websocket_protocol_changes_require_explicit_trace",
+    "backend-api.backend_changes_that_depend_on_core_runtime_require_boundary_review"
+  ],
+  "constraints": [
+    "backend-api.forbidden:bypass-auth-token-flow",
+    "backend-api.forbidden:silent-websocket-contract-drift",
+    "backend-api.forbidden:unsafe-path-resolution"
+  ],
+  "required_checks": [
+    "backend-tests",
+    "steward-approval"
+  ],
+  "required_approvals": [
+    "backend-api-steward"
+  ],
+  "suggested_write_scope": [
+    "backend/main.py",
+    "tests/test_backend_main.py",
+    "backend/**"
+  ],
+  "next_steps": [
+    "build_plan_before_patch",
+    "run_independent_review_crosscheck",
+    "collect_required_checks",
+    "request_steward_approval"
+  ],
+  "decision": "task_ready"
+}

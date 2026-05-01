@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OpenVibe v2 — Code-First UI</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* ==================== DESIGN TOKENS ==================== */
+        :root {
+            --bg-deep: #0A0A0B;
+            --bg-surface: #111113;
+            --bg-elevated: #1A1A1F;
+            --bg-glass: rgba(255, 255, 255, 0.04);
+            --bg-glass-hover: rgba(255, 255, 255, 0.08);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --text-primary: #E8E8ED;
+            --text-secondary: #8E8E93;
+            --text-muted: #48484A;
+            --accent-purple: #A855F7;
+            --accent-blue: #3B82F6;
+            --accent-green: #22C55E;
+            --accent-red: #EF4444;
+            --accent-yellow: #F59E0B;
+            --accent-cyan: #06B6D4;
+            --diff-add-bg: rgba(34, 197, 94, 0.12);
+            --diff-add-gutter: rgba(34, 197, 94, 0.25);
+            --diff-del-bg: rgba(239, 68, 68, 0.12);
+            --diff-del-gutter: rgba(239, 68, 68, 0.25);
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --font-title: 'Outfit', sans-serif;
+            --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-full: 9999px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ==================== BACKGROUND GLOW ==================== */
+        .bg-glow {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-glow::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.10) 0%, transparent 70%);
+            filter: blur(80px);
+            animation: glowDrift1 12s ease-in-out infinite alternate;
+        }
+
+        .bg-glow::after {
+            content: '';
+            position: absolute;
+            bottom: 10%;
+            right: -15%;
+            width: 45vw;
+            height: 45vw;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.06) 0%, transparent 70%);
+            filter: blur(80px);
+            animation: glowDrift2 15s ease-in-out infinite alternate;
+        }
+
+        @keyframes glowDrift1 {
+            0% {
+                transform: translate(0, 0);
+            }
+
+            100% {
+                transform: translate(10vw, 15vh);
+            }
+        }
+
+        @keyframes glowDrift2 {
+            0% {
+                transform: translate(0, 0);
+            }
+
+            100% {
+                transform: translate(-8vw, -10vh);
+            }
+        }
+
+        /* ==================== APP CONTAINER ==================== */
+        .app {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* ==================== HEADER ==================== */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: rgba(17, 17, 19, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title {
+            font-family: var(--font-title);
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Mode Indicator */
+        .mode-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: var(--radius-full);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+
+        .mode-indicator.plan {
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: var(--accent-blue);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
+        }
+
+        .mode-indicator.build {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--accent-red);
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+            animation: buildPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes buildPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+            }
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 6px var(--accent-green);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .header-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-glass);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .header-btn:hover {
+            background: var(--bg-glass-hover);
+            color: var(--text-primary);
+        }
+
+        .header-btn.stop {
+            color: var(--accent-red);
+        }
+
+        /* ==================== TERMINAL PANEL ==================== */
+        .terminal-panel {
+            min-height: 60px;
+            overflow-y: auto;
+            background: var(--bg-surface);
+            border-bottom: none;
+        }
+
+        .terminal-label {
+            padding: 6px 16px 2px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .terminal-label .thinking-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            animation: thinkPulse 1.5s ease-in-out infinite;
+            margin-right: 6px;
+        }
+
+        @keyframes thinkPulse {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        .terminal-content {
+            padding: 4px 16px 8px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .terminal-content .line {
+            display: flex;
+            gap: 8px;
+        }
+
+        .terminal-content .prompt {
+            color: var(--accent-cyan);
+        }
+
+        .terminal-content .highlight {
+            color: var(--accent-green);
+        }
+
+        .terminal-content .warn {
+            color: var(--accent-yellow);
+        }
+
+        .terminal-content .error {
+            color: var(--accent-red);
+            font-weight: 500;
+        }
+
+        .terminal-content .file {
+            color: var(--accent-purple);
+            cursor: pointer;
+        }
+
+        .terminal-content .file:hover {
+            text-decoration: underline;
+        }
+
+        .terminal-content .subagent {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            margin: 2px 0;
+            background: rgba(6, 182, 212, 0.08);
+            border-radius: var(--radius-sm);
+            border-left: 2px solid var(--accent-cyan);
+            font-size: 11px;
+            color: var(--accent-cyan);
+        }
+
+        /* ==================== RESIZE DIVIDER ==================== */
+        .resize-divider {
+            height: 18px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: ns-resize;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background 0.15s;
+        }
+
+        .resize-divider:hover,
+        .resize-divider:active {
+            background: var(--bg-glass-hover);
+        }
+
+        .resize-handle {
+            width: 36px;
+            height: 3px;
+            border-radius: 2px;
+            background: var(--text-muted);
+            transition: background 0.15s;
+        }
+
+        .resize-divider:hover .resize-handle {
+            background: var(--text-secondary);
+        }
+
+        /* ==================== CODE PANEL (Unified Diff) ==================== */
+        .code-panel {
+            flex: 1;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-deep);
+        }
+
+        /* File Tabs (Compact) */
+        .file-tabs {
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            gap: 2px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+            overflow-x: auto;
+        }
+
+        .file-tab {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 7px 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+
+        .file-tab:hover {
+            color: var(--text-secondary);
+        }
+
+        .file-tab.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--accent-purple);
+        }
+
+        .file-tab .tab-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+
+        .file-tab .tab-dot.modified {
+            background: var(--accent-yellow);
+        }
+
+        .file-tab .tab-dot.critical {
+            background: var(--accent-red);
+        }
+
+        /* Diff Content */
+        .diff-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 0 8px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .diff-hunk-header {
+            padding: 6px 16px;
+            font-size: 11px;
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.06);
+            border-top: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .diff-line {
+            display: flex;
+            padding: 0;
+            transition: background 0.08s;
+        }
+
+        .diff-line:hover {
+            filter: brightness(1.15);
+        }
+
+        .diff-line .gutter {
+            width: 32px;
+            min-width: 32px;
+            text-align: right;
+            padding-right: 8px;
+            color: var(--text-muted);
+            user-select: none;
+            font-size: 11px;
+        }
+
+        .diff-line .sign {
+            width: 16px;
+            min-width: 16px;
+            text-align: center;
+            font-weight: 700;
+            user-select: none;
+        }
+
+        .diff-line .code {
+            flex: 1;
+            white-space: pre;
+            padding-right: 12px;
+        }
+
+        /* Context lines */
+        .diff-line.ctx {
+            background: transparent;
+        }
+
+        .diff-line.ctx .sign {
+            color: transparent;
+        }
+
+        /* Added lines */
+        .diff-line.add {
+            background: var(--diff-add-bg);
+        }
+
+        .diff-line.add .gutter {
+            background: var(--diff-add-gutter);
+            color: var(--accent-green);
+        }
+
+        .diff-line.add .sign {
+            color: var(--accent-green);
+        }
+
+        /* Removed lines */
+        .diff-line.del {
+            background: var(--diff-del-bg);
+        }
+
+        .diff-line.del .gutter {
+            background: var(--diff-del-gutter);
+            color: var(--accent-red);
+        }
+
+        .diff-line.del .sign {
+            color: var(--accent-red);
+        }
+
+        .diff-line.del .code {
+            opacity: 0.7;
+        }
+
+        /* Syntax */
+        .kw {
+            color: #C084FC;
+        }
+
+        .fn {
+            color: #60A5FA;
+        }
+
+        .str {
+            color: #4ADE80;
+        }
+
+        .cm {
+            color: #6B7280;
+            font-style: italic;
+        }
+
+        .num {
+            color: #F59E0B;
+        }
+
+        .op {
+            color: var(--text-secondary);
+        }
+
+        /* ==================== ACTION BAR (Bottom-Anchored) ==================== */
+        .action-bar {
+            flex-shrink: 0;
+            background: rgba(17, 17, 19, 0.92);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-top: 1px solid var(--border-subtle);
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .action-bar-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px 4px;
+        }
+
+        .action-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .risk-badge {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+        }
+
+        .risk-badge.high {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .risk-badge.med {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-yellow);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .action-bar-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* File List in Action Bar */
+        .action-bar-files {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .file-badge {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .file-badge::before {
+            content: '';
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--accent-purple);
+        }
+
+        .action-bar-timer {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .action-bar-timer.paused {
+            color: var(--accent-yellow);
+        }
+
+        .action-bar-buttons {
+            display: flex;
+            gap: 8px;
+            padding: 6px 16px 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px 8px;
+            border-radius: var(--radius-md);
+            font-family: var(--font-title);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .btn-reject {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: var(--accent-red);
+        }
+
+        .btn-reject:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-modify {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            color: var(--text-secondary);
+        }
+
+        .btn-modify:hover {
+            background: var(--bg-glass-hover);
+            color: var(--text-primary);
+        }
+
+        .btn-approve {
+            background: linear-gradient(135deg, #16A34A, var(--accent-green));
+            color: #fff;
+            box-shadow: 0 3px 12px rgba(34, 197, 94, 0.25);
+        }
+
+        .btn-approve:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(34, 197, 94, 0.35);
+        }
+
+        /* Hint for /y /n shortcuts */
+        .action-bar-hint {
+            text-align: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            padding: 0 0 6px;
+            font-family: var(--font-mono);
+        }
+
+        .action-bar-hint kbd {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-subtle);
+            border-radius: 3px;
+            padding: 0 4px;
+            font-size: 10px;
+        }
+
+        /* ==================== FUZZY SEARCH POPUP (@ Mentions) ==================== */
+        .fuzzy-search-popup {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 16px;
+            right: 16px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+            animation: slideUp 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .fuzzy-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .fuzzy-item:hover,
+        .fuzzy-item.active {
+            background: rgba(139, 92, 246, 0.2);
+        }
+
+        .fuzzy-item .icon {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        .fuzzy-item .name {
+            flex: 1;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .fuzzy-item .match {
+            color: var(--accent-purple);
+            font-weight: bold;
+            text-shadow: 0 0 8px rgba(167, 139, 250, 0.4);
+        }
+
+        /* ==================== INPUT AREA ==================== */
+        .input-area {
+            flex-shrink: 0;
+            padding: 6px 12px 10px;
+            background: rgba(17, 17, 19, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .symbol-bar {
+            display: flex;
+            gap: 5px;
+            padding: 2px 0 6px;
+            overflow-x: auto;
+        }
+
+        .symbol-btn {
+            padding: 3px 10px;
+            border-radius: var(--radius-full);
+            background: var(--bg-glass);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+
+        .symbol-btn:hover {
+            background: var(--bg-glass-hover);
+            color: var(--text-primary);
+        }
+
+        .symbol-btn.contextual {
+            border-color: rgba(168, 85, 247, 0.3);
+            color: var(--accent-purple);
+            background: rgba(168, 85, 247, 0.08);
+        }
+
+        .input-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .voice-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .voice-btn:hover {
+            background: var(--bg-glass-hover);
+            color: var(--text-primary);
+        }
+
+        .input-wrapper {
+            flex: 1;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-full);
+            padding: 8px 14px;
+            transition: border-color 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 14px;
+        }
+
+        .input-wrapper input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .send-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple), #7C3AED);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 10px rgba(168, 85, 247, 0.25);
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 14px rgba(168, 85, 247, 0.35);
+        }
+
+        /* ==================== FILE SIDEBAR ==================== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .sidebar-overlay.open {
+            display: block;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -80vw;
+            bottom: 0;
+            width: 72vw;
+            z-index: 101;
+            background: rgba(17, 17, 19, 0.94);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-right: 1px solid var(--border-glass);
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            font-family: var(--font-title);
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .sidebar-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: var(--font-mono);
+        }
+
+        .sidebar-item:hover {
+            background: var(--bg-glass-hover);
+            color: var(--text-primary);
+        }
+
+        .sidebar-item.active {
+            background: rgba(168, 85, 247, 0.1);
+            color: var(--accent-purple);
+        }
+
+        .sidebar-item .icon {
+            font-size: 14px;
+            width: 18px;
+            text-align: center;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-glow"></div>
+
+    <div class="app">
+        <!-- ===== HEADER ===== -->
+        <div class="header">
+            <div class="header-left">
+                <div>
+                    <div class="header-title">OpenVibe</div>
+                    <div class="header-status">
+                        <span class="status-dot"></span>
+                        <span>OpenCode &middot; Gemini 3.1 Pro</span>
+                    </div>
+                </div>
+                <div class="mode-indicator build" id="modeIndicator" onclick="toggleMode()">
+                    <span id="modeIcon">&#x1f6e0;</span>
+                    <span id="modeText">BUILD</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" onclick="toggleSidebar()">&#x1f4c1;</button>
+                <button class="header-btn stop">&#x23f9;</button>
+            </div>
+        </div>
+
+        <!-- ===== TERMINAL PANEL ===== -->
+        <div class="terminal-panel" id="terminalPanel" style="height: 160px;">
+            <div class="terminal-label">
+                <span>TERMINAL</span>
+                <span style="display:flex;align-items:center"><span class="thinking-dot"></span> Active</span>
+            </div>
+            <div class="terminal-content">
+                <div class="line"><span class="prompt">&gt;</span> Examining request: <span class="highlight">'refactor
+                        auth flow'</span></div>
+                <div class="line"><span class="prompt">&gt;</span> Analyzing codebase...</div>
+                <div class="line"><span class="prompt">&gt;</span> Found <span class="highlight">3</span> impacted
+                    files.</div>
+                <div class="line"><span class="prompt">&gt;</span> Proposing changes:</div>
+                <div class="line">&nbsp;&nbsp;- <span class="file">src/auth/login.js</span>: Implemented OAuth2.0</div>
+                <div class="line">&nbsp;&nbsp;- <span class="file">src/api/user.py</span>: Updated session handling
+                </div>
+                <div class="line">&nbsp;&nbsp;- <span class="file">config/security.yml</span>: Enforced 2FA</div>
+                <div class="subagent">
+                    <span class="thinking-dot"></span>
+                    Subagent: Running security audit on session handling...
+                </div>
+                <div class="line"><span class="error">&gt; ALERT: High risk modification in session handling
+                        detected.</span></div>
+                <div class="line"><span class="prompt">&gt;</span> <span class="warn">tool_call: write_file</span>
+                    &rarr; <span class="error">INTERCEPTED</span></div>
+            </div>
+        </div>
+
+        <!-- ===== RESIZE DIVIDER ===== -->
+        <div class="resize-divider" id="resizeDivider">
+            <div class="resize-handle"></div>
+        </div>
+
+        <!-- ===== CODE PANEL (Unified Diff) ===== -->
+        <div class="code-panel" id="codePanel">
+            <!-- File Tabs (Compact, No Blocking) -->
+            <div class="file-tabs">
+                <div class="file-tab active">
+                    <span class="tab-dot critical"></span>
+                    src/api/user.py
+                </div>
+                <div class="file-tab">
+                    <span class="tab-dot modified"></span>
+                    src/auth/login.js
+                </div>
+                <div class="file-tab">
+                    <span class="tab-dot modified"></span>
+                    config/security.yml
+                </div>
+            </div>
+
+            <!-- Unified Diff View -->
+            <div class="diff-content" id="diffContent">
+                <div class="diff-hunk-header">@@ -1,7 +1,18 @@ src/api/user.py</div>
+
+                <!-- Context -->
+                <div class="diff-line ctx">
+                    <span class="gutter">1</span><span class="sign"></span>
+                    <span class="code"><span class="kw">import</span> hashlib</span>
+                </div>
+                <div class="diff-line ctx">
+                    <span class="gutter">2</span><span class="sign"></span>
+                    <span class="code"><span class="kw">from</span> fastapi <span class="kw">import</span> Depends,
+                        HTTPException</span>
+                </div>
+                <div class="diff-line ctx">
+                    <span class="gutter">3</span><span class="sign"></span>
+                    <span class="code"><span class="kw">from</span> .auth <span class="kw">import</span>
+                        validate_token</span>
+                </div>
+                <div class="diff-line ctx">
+                    <span class="gutter">4</span><span class="sign"></span>
+                    <span class="code"></span>
+                </div>
+
+                <!-- Removed lines -->
+                <div class="diff-line del">
+                    <span class="gutter">5</span><span class="sign">-</span>
+                    <span class="code"><span class="kw">def</span> <span class="fn">get_session</span>(token: <span
+                            class="fn">str</span>):</span>
+                </div>
+                <div class="diff-line del">
+                    <span class="gutter">6</span><span class="sign">-</span>
+                    <span class="code"> <span class="cm"># Old: no validation</span></span>
+                </div>
+                <div class="diff-line del">
+                    <span class="gutter">7</span><span class="sign">-</span>
+                    <span class="code"> <span class="kw">return</span> sessions.get(token)</span>
+                </div>
+
+                <!-- Added lines -->
+                <div class="diff-line add">
+                    <span class="gutter">5</span><span class="sign">+</span>
+                    <span class="code"><span class="kw">async def</span> <span class="fn">get_session</span>(token:
+                        <span class="fn">str</span>, db = <span class="fn">Depends</span>(get_db)):</span>
+                </div>
+                <div class="diff-line add">
+                    <span class="gutter">6</span><span class="sign">+</span>
+                    <span class="code"> <span class="str">"""Validate and retrieve user session with
+                            2FA."""</span></span>
+                </div>
+                <div class="diff-line add">
+                    <span class="gutter">7</span><span class="sign">+</span>
+                    <span class="code"> <span class="kw">if not</span> validate_token(token):</span>
+                </div>
+                <div class="diff-line add">
+                    <span class="gutter">8</span><span class="sign">+</span>
+                    <span class="code"> <span class="kw">raise</span> <span
+                            class="fn">HTTPException</span>(status_code=<span class="num">401</span>)</span>
+                </div>
+                <div class="diff-line add">
+                    <span class="gutter">9</span><span class="sign">+</span>
+                    <span class="code"> session = <span class="kw">await</span> db.sessions.find_one({</span>
+                </div>
+                <div class="diff-line add">
+                    <span class="gutter">10</span><span class="sign">+</span>
+                    <span class="code"> <span class="str">"token_hash"</span>:
+                        hashlib.sha256(token.encode()).hexdigest()</span>
+                </div>
+                <div class="diff-line add">
+                    <span class="gutter">11</span><span class="sign">+</span>
+                    <span class="code"> })</span>
+                </div>
+                <div class="diff-line add">
+                    <span class="gutter">12</span><span class="sign">+</span>
+                    <span class="code"> <span class="kw">if not</span> session:</span>
+                </div>
+                <div class="diff-line add">
+                    <span class="gutter">13</span><span class="sign">+</span>
+                    <span class="code"> <span class="kw">raise</span> <span
+                            class="fn">HTTPException</span>(status_code=<span class="num">403</span>)</span>
+                </div>
+                <div class="diff-line add">
+                    <span class="gutter">14</span><span class="sign">+</span>
+                    <span class="code"> <span class="kw">return</span> session</span>
+                </div>
+
+                <!-- More context -->
+                <div class="diff-line ctx">
+                    <span class="gutter">15</span><span class="sign"></span>
+                    <span class="code"></span>
+                </div>
+                <div class="diff-line ctx">
+                    <span class="gutter">16</span><span class="sign"></span>
+                    <span class="code"><span class="kw">def</span> <span class="fn">revoke_session</span>(session_id:
+                        <span class="fn">str</span>):</span>
+                </div>
+                <div class="diff-line ctx">
+                    <span class="gutter">17</span><span class="sign"></span>
+                    <span class="code"> <span class="str">"""Revoke an active session."""</span></span>
+                </div>
+                <div class="diff-line ctx">
+                    <span class="gutter">18</span><span class="sign"></span>
+                    <span class="code"> <span class="kw">return</span> sessions.delete(session_id)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ACTION BAR (Bottom-Anchored, Never Blocks Code) ===== -->
+        <div class="action-bar" id="actionBar">
+            <div class="action-bar-info">
+                <div class="action-bar-left">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="risk-badge high">HIGH RISK</span>
+                            <span class="action-bar-label">write_file</span>
+                        </div>
+                        <div class="action-bar-files">
+                            <span class="file-badge">auth.py</span>
+                            <span class="file-badge">models.py</span>
+                            <span class="file-badge">main.py</span>
+                        </div>
+                    </div>
+                </div>
+                <span class="action-bar-timer" id="timerDisplay">1:30</span>
+            </div>
+            <div class="action-bar-buttons">
+                <button class="btn btn-reject" onclick="handleReject()">&#x2715; Reject</button>
+                <button class="btn btn-modify">&#x270f; Modify</button>
+                <button class="btn btn-approve" onclick="handleApprove()">&#x2713; Approve</button>
+            </div>
+            <div class="action-bar-hint">
+                or type <kbd>/y</kbd> to approve &middot; <kbd>/n reason</kbd> to reject
+            </div>
+        </div>
+
+        <!-- ===== INPUT AREA ===== -->
+        <div class="input-area">
+            <div class="symbol-bar">
+                <button class="symbol-btn contextual">/y</button>
+                <button class="symbol-btn contextual">/n</button>
+                <button class="symbol-btn">/fix</button>
+                <button class="symbol-btn">/add</button>
+                <button class="symbol-btn">/run</button>
+                <button class="symbol-btn">/test</button>
+                <button class="symbol-btn">/undo</button>
+            </div>
+            <div class="input-row">
+                <button class="voice-btn">&#x1f3a4;</button>
+                <!-- Fuzzy Search Popup for @ Mentions -->
+                <div class="fuzzy-search-popup" id="fuzzyPopup">
+                    <div class="fuzzy-item active">
+                        <span class="icon">📄</span>
+                        <span class="name"><span class="match">main</span>.py</span>
+                    </div>
+                    <div class="fuzzy-item">
+                        <span class="icon">📄</span>
+                        <span class="name">agents.md</span>
+                    </div>
+                    <div class="fuzzy-item">
+                        <span class="icon">📁</span>
+                        <span class="name">src/core/</span>
+                    </div>
+                </div>
+
+                <div class="input-container">
+                    <input type="text" id="cmdInput" placeholder="Type /y to approve, or ask anything..."
+                        onkeydown="handleInput(event)" oninput="handleInput(event)">
+                </div>
+                <button class="send-btn" onclick="handleSend()">&#x27a4;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== FILE SIDEBAR ===== -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            &#x1f4c1; Explorer
+            <button class="sidebar-close" onclick="toggleSidebar()">&#x2715;</button>
+        </div>
+        <div class="sidebar-list">
+            <div class="sidebar-item"><span class="icon">&#x1f4c2;</span> src/</div>
+            <div class="sidebar-item" style="padding-left:28px"><span class="icon">&#x1f4c2;</span> api/</div>
+            <div class="sidebar-item active" style="padding-left:48px"><span class="icon">&#x1f40d;</span> user.py</div>
+            <div class="sidebar-item" style="padding-left:48px"><span class="icon">&#x1f40d;</span> routes.py</div>
+            <div class="sidebar-item" style="padding-left:28px"><span class="icon">&#x1f4c2;</span> auth/</div>
+            <div class="sidebar-item" style="padding-left:48px"><span class="icon">&#x1f4dc;</span> login.js</div>
+            <div class="sidebar-item" style="padding-left:48px"><span class="icon">&#x1f4dc;</span> oauth.js</div>
+            <div class="sidebar-item"><span class="icon">&#x1f4c2;</span> config/</div>
+            <div class="sidebar-item" style="padding-left:28px"><span class="icon">&#x2699;</span> security.yml</div>
+            <div class="sidebar-item" style="padding-left:28px"><span class="icon">&#x2699;</span> app.yml</div>
+            <div class="sidebar-item"><span class="icon">&#x1f4c4;</span> README.md</div>
+            <div class="sidebar-item"><span class="icon">&#x1f433;</span> Dockerfile</div>
+        </div>
+    </div>
+
+    <script>
+        // ===== Sidebar Toggle =====
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('open');
+        }
+
+        // ===== Mode Toggle (Plan / Build) =====
+        let currentMode = 'build';
+        function toggleMode() {
+            const el = document.getElementById('modeIndicator');
+            const icon = document.getElementById('modeIcon');
+            const text = document.getElementById('modeText');
+            if (currentMode === 'build') {
+                currentMode = 'plan';
+                el.className = 'mode-indicator plan';
+                icon.innerHTML = '\u{1F5FA}';
+                text.textContent = 'PLAN';
+            } else {
+                currentMode = 'build';
+                el.className = 'mode-indicator build';
+                icon.innerHTML = '\u{1F6E0}';
+                text.textContent = 'BUILD';
+            }
+        }
+
+        // ===== Countdown Timer with Touch-Pause =====
+        let timerSeconds = 90;
+        let timerPaused = false;
+        const timerEl = document.getElementById('timerDisplay');
+        const diffContent = document.getElementById('diffContent');
+
+        function updateTimer() {
+            const m = Math.floor(timerSeconds / 60);
+            const s = timerSeconds % 60;
+            timerEl.textContent = m + ':' + String(s).padStart(2, '0');
+        }
+
+        setInterval(() => {
+            if (!timerPaused && timerSeconds > 0) {
+                timerSeconds--;
+                updateTimer();
+            }
+        }, 1000);
+
+        // Pause timer when user scrolls code
+        diffContent.addEventListener('touchstart', () => {
+            timerPaused = true;
+            timerEl.classList.add('paused');
+            timerEl.textContent += ' \u23F8';
+        });
+        diffContent.addEventListener('touchend', () => {
+            setTimeout(() => {
+                timerPaused = false;
+                timerEl.classList.remove('paused');
+                updateTimer();
+            }, 2000); // Resume 2s after user stops touching
+        });
+
+        // ===== Slash Command Input =====
+        const cmdInput = document.getElementById('cmdInput');
+
+        function handleInput(e) {
+            const val = e.target.value;
+            const popup = document.getElementById('fuzzyPopup');
+
+            // Show popup if '@' is typed
+            if (val.includes('@')) {
+                popup.style.display = 'flex';
+            } else {
+                popup.style.display = 'none';
+            }
+
+            if (e.key === 'Enter') {
+                handleSend();
+            }
+        }
+
+        function handleSend() {
+            const val = cmdInput.value.trim();
+            if (!val) return;
+
+            if (val === '/y' || val === '/yes') {
+                handleApprove();
+            } else if (val.startsWith('/n ') || val === '/n' || val === '/no') {
+                const reason = val.replace(/^\/n(o)?\s*/, '');
+                handleReject(reason);
+            } else {
+                // Normal message - flash placeholder
+                cmdInput.value = '';
+                cmdInput.placeholder = 'Sent: "' + val + '"';
+                setTimeout(() => { cmdInput.placeholder = 'Type /y to approve, or ask anything...'; }, 2000);
+            }
+        }
+
+        function handleApprove() {
+            const bar = document.getElementById('actionBar');
+            bar.innerHTML = '<div style="padding:14px 16px;text-align:center;color:var(--accent-green);font-weight:600">' +
+                '&#x2713; Approved &mdash; Changes applied to PC</div>';
+            cmdInput.value = '';
+            setTimeout(() => { bar.style.display = 'none'; }, 3000);
+        }
+
+        function handleReject(reason) {
+            const bar = document.getElementById('actionBar');
+            const reasonText = reason ? ' &mdash; "' + reason + '"' : '';
+            bar.innerHTML = '<div style="padding:14px 16px;text-align:center;color:var(--accent-red);font-weight:600">' +
+                '&#x2715; Rejected' + reasonText + '</div>';
+            cmdInput.value = '';
+            setTimeout(() => { bar.style.display = 'none'; }, 3000);
+        }
+
+        // ===== Resizable Panels =====
+        const divider = document.getElementById('resizeDivider');
+        const terminal = document.getElementById('terminalPanel');
+        let isDragging = false, startY, startHeight;
+
+        divider.addEventListener('mousedown', startDrag);
+        divider.addEventListener('touchstart', startDrag, { passive: false });
+
+        function startDrag(e) {
+            isDragging = true;
+            startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            startHeight = terminal.offsetHeight;
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        }
+
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('touchmove', onDrag, { passive: false });
+
+        function onDrag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            const delta = clientY - startY;
+            const newHeight = Math.max(60, Math.min(startHeight + delta, window.innerHeight * 0.5));
+            terminal.style.height = newHeight + 'px';
+        }
+
+        document.addEventListener('mouseup', stopDrag);
+        document.addEventListener('touchend', stopDrag);
+
+        function stopDrag() {
+            isDragging = false;
+            document.body.style.userSelect = '';
+        }
+
+        // Double-tap to collapse/expand
+        let lastTap = 0;
+        divider.addEventListener('click', () => {
+            const now = Date.now();
+            if (now - lastTap < 300) {
+                terminal.style.height = terminal.offsetHeight < 100 ? '160px' : '0px';
+            }
+            lastTap = now;
+        });
+
+        // ===== Clickable file names in terminal =====
+        document.querySelectorAll('.terminal-content .file').forEach(el => {
+            el.addEventListener('click', () => {
+                // Simulate jumping to that file's tab
+                document.querySelectorAll('.file-tab').forEach(tab => tab.classList.remove('active'));
+                const tabs = document.querySelectorAll('.file-tab');
+                const fileName = el.textContent;
+                tabs.forEach(tab => {
+                    if (tab.textContent.includes(fileName.split('/').pop())) {
+                        tab.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

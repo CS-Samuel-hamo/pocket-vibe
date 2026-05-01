@@ -1,0 +1,62 @@
+{
+  "task_id": "ext-pocketvibe-product-foundation-008",
+  "task": "Harden the codex-cli path into a genuinely usable primary runtime with explicit runtime lifecycle, reliable reply delivery, stable interrupt behavior, and operator-visible health state.",
+  "task_type": "productization",
+  "risk_level": "medium",
+  "task_mode": "planned-market",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "docs/productization_roadmap.md",
+    "docs/runtime_联调手册.md",
+    "docs/runtime_联调结果.md",
+    ".steward/reports/workstreams/pocket-vibe-v1-active-plan.md",
+    ".steward/reports/goals/pocket-vibe-productization.md"
+  ],
+  "matched_modules": [
+    "desktop-bridge",
+    "protocol-contract",
+    "core-runtime"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/desktop-bridge.yaml",
+    ".steward/modules/protocol-contract.yaml",
+    ".steward/modules/core-runtime.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries",
+    "global.require_tests_for_behavior_change",
+    "desktop-bridge.fallback_paths_must_emit_user-visible-status",
+    "protocol-contract.replay_and_audit_changes_require_targeted_tests"
+  ],
+  "constraints": [
+    "desktop-bridge.forbidden:silent-fallback-behavior",
+    "protocol-contract.forbidden:silent-protocol-drift"
+  ],
+  "required_checks": [
+    "runtime-smoke",
+    "bridge-build",
+    "backend-tests"
+  ],
+  "required_approvals": [
+    "main-orchestrator"
+  ],
+  "suggested_write_scope": [
+    "vscode-bridge/**",
+    "backend/**",
+    "src/**",
+    "tests/**",
+    "docs/**",
+    ".steward/**"
+  ],
+  "next_steps": [
+    "lock_codex_cli_path",
+    "add_explicit_runtime_lifecycle",
+    "verify_interrupt_and_reply_delivery",
+    "update_runtime_matrix"
+  ],
+  "decision": "task_ready"
+}

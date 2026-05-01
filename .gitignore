@@ -80,6 +80,10 @@ out/
 /frontend/.antigravity/
 /frontend/.git
 /backend/.git
+/backend/.antigravity/
+/infra/.git
+/infra/.antigravity/
+backend/test_ws2.py
 
 # Local generated reports and scratch outputs
 qg_*.txt

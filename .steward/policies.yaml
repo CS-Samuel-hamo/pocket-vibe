@@ -1,0 +1,65 @@
+version: 1
+
+gates:
+  pre_patch:
+    - resolve_modules
+    - load_constitution
+    - build_task_brief
+  pre_commit:
+    - policy_check
+    - tests_if_required
+    - audit_log_write
+  pre_merge:
+    - steward_approval
+    - audit_log_present
+
+routing:
+  strategy: path_first
+  fallback_to_semantic_match: true
+  max_modules_per_task: 3
+
+conflicts:
+  strategy: deny_by_default
+  on_rule_conflict: escalate_to_human
+  on_multi_module_conflict: block
+
+protected_paths:
+  - services/billing/**
+  - services/auth/**
+
+learning:
+  auto_promote: false
+  candidate_store: .steward/learning/candidates
+
+subagents:
+  registry: .steward/agents/registry.yaml
+  entrypoint: main-orchestrator
+  required_by_stage:
+    route:
+      - explorer-agent
+    review:
+      - review-agent
+    learning:
+      - learning-agent
+      - evals-agent
+  protected_module_requires:
+    steward_agent: true
+    review_agent: true
+
+crosscheck:
+  enabled: true
+  stages:
+    - route
+    - review
+    - evidence
+    - learning
+  require_independent_review: true
+  require_declared_rule_trace: true
+
+caller:
+  codex:
+    working_dir: repo_root
+    command_template:
+      - "{python_executable}"
+      - "{wrapper_path}"
+      - "{launch_request_path}"

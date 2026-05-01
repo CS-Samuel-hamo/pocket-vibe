@@ -1,0 +1,51 @@
+{
+  "task_id": "ext-pocketvibe-mobile-pwa-006",
+  "task": "Expose runtime capability states and diagnostics in the mobile PWA so unsupported approval, kill, and script actions are disabled with explicit reasons.",
+  "task_type": "feature",
+  "risk_level": "medium",
+  "task_mode": "planned-market",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "frontend/src/App.jsx",
+    "frontend/src/components/MobileControllerView.jsx",
+    "frontend/src/utils/runtimeCapabilities.js",
+    "frontend/tests/runtimeCapabilities.test.js"
+  ],
+  "matched_modules": [
+    "mobile-pwa"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/mobile-pwa.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries",
+    "global.require_tests_for_behavior_change",
+    "mobile-pwa.runtime-agnostic-ui_changes_require_capability_trace",
+    "mobile-pwa.kill_switch_and_approval_flows_require_visible_feedback",
+    "mobile-pwa.mobile_workspace_actions_must_respect_backend-contract"
+  ],
+  "constraints": [
+    "mobile-pwa.forbidden:localhost-only-assumptions",
+    "mobile-pwa.forbidden:runtime-branded-ui-regression",
+    "mobile-pwa.forbidden:hidden-risk-actions"
+  ],
+  "required_checks": [
+    "steward-approval"
+  ],
+  "required_approvals": [
+    "main-orchestrator"
+  ],
+  "suggested_write_scope": [
+    "frontend/**"
+  ],
+  "next_steps": [
+    "build_plan_before_patch",
+    "run_frontend_build",
+    "capture_capability-evidence"
+  ],
+  "decision": "task_ready"
+}

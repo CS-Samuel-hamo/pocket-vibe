@@ -1,0 +1,63 @@
+{
+  "task_id": "ext-pocketvibe-host-protocol-011",
+  "task": "Formalize a shared desktop host protocol so Pocket Vibe can register hosts, projects, runtimes, and routing targets without depending on VS Code-specific assumptions.",
+  "task_type": "productization",
+  "risk_level": "medium",
+  "task_mode": "planned-market",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "docs/platform_priority_matrix.md",
+    "docs/productization_roadmap.md",
+    ".steward/reports/workstreams/pocket-vibe-v1-active-plan.md",
+    "backend/main.py",
+    "src/domain/models/protocol.py",
+    "vscode-bridge/src/extension.ts"
+  ],
+  "matched_modules": [
+    "backend-api",
+    "protocol-contract",
+    "desktop-bridge"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/backend-api.yaml",
+    ".steward/modules/protocol-contract.yaml",
+    ".steward/modules/desktop-bridge.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries",
+    "global.require_tests_for_behavior_change",
+    "protocol-contract.replay_and_audit_changes_require_targeted_tests",
+    "desktop-bridge.fallback_paths_must_emit_user-visible-status"
+  ],
+  "constraints": [
+    "protocol-contract.forbidden:silent-protocol-drift",
+    "desktop-bridge.forbidden:silent-fallback-behavior"
+  ],
+  "required_checks": [
+    "backend-tests",
+    "bridge-build",
+    "host-registry-smoke"
+  ],
+  "required_approvals": [
+    "main-orchestrator"
+  ],
+  "suggested_write_scope": [
+    "backend/**",
+    "src/**",
+    "vscode-bridge/**",
+    "tests/**",
+    "docs/**",
+    ".steward/**"
+  ],
+  "next_steps": [
+    "define_host_descriptor",
+    "normalize_project_registry",
+    "remove_vscode_only_routing_assumptions",
+    "validate_reference_host_against_contract"
+  ],
+  "decision": "task_ready"
+}

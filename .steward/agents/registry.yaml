@@ -1,0 +1,231 @@
+﻿version: 1
+
+agents:
+  - id: main-orchestrator
+    category: coordinator
+    scope: global
+    prompt_file: main-orchestrator.md
+    description: Owns task decomposition, context assembly, delegation, and result integration.
+    when_to_use:
+      - multi-step tasks
+      - cross-module tasks
+      - tasks that touch both code and docs
+    default_inputs:
+      - task_brief
+      - module_matches
+      - rule_trace
+      - closure_criteria
+    preferred_write_paths:
+      - docs/**
+      - .steward/**
+    forbidden_write_paths:
+      - steward_cli/**
+      - tests/**
+    may_delegate_to:
+      - explorer-agent
+      - worker-agent
+      - review-agent
+      - evals-agent
+      - learning-agent
+      - docs-agent
+      - backend-api-steward
+      - core-runtime-steward
+      - billing-steward
+
+  - id: explorer-agent
+    category: explorer
+    scope: global
+    prompt_file: explorer-agent.md
+    description: Answers bounded codebase questions and surfaces risks before implementation.
+    when_to_use:
+      - routing questions
+      - config questions
+      - file ownership questions
+      - test discovery
+    default_inputs:
+      - code_paths
+      - target_question
+    preferred_write_paths: []
+    forbidden_write_paths:
+      - steward_cli/**
+      - tests/**
+      - .steward/**
+    may_delegate_to: []
+
+  - id: worker-agent
+    category: worker
+    scope: global
+    prompt_file: worker-agent.md
+    description: Implements bounded changes inside an explicit write scope.
+    when_to_use:
+      - isolated CLI changes
+      - isolated config/parser changes
+      - isolated test additions
+      - isolated product code changes
+    default_inputs:
+      - task_brief
+      - explicit_write_scope
+      - required_checks
+    preferred_write_paths:
+      - backend/**
+      - src/**
+      - frontend/**
+      - tests/**
+    forbidden_write_paths:
+      - .steward/learning/patterns.yaml
+      - .steward/learning/anti-patterns.yaml
+    may_delegate_to: []
+
+  - id: review-agent
+    category: reviewer
+    scope: global
+    prompt_file: review-agent.md
+    description: Performs independent review and crosscheck of executor output.
+    when_to_use:
+      - after worker completion
+      - before merge
+      - after governance or learning changes
+    default_inputs:
+      - changed_paths
+      - rule_trace
+      - tests_added
+    preferred_write_paths:
+      - docs/**
+      - tests/**
+    forbidden_write_paths:
+      - steward_cli/**
+      - .steward/learning/patterns.yaml
+      - .steward/learning/anti-patterns.yaml
+    may_delegate_to: []
+
+  - id: evals-agent
+    category: evals
+    scope: global
+    prompt_file: evals-agent.md
+    description: Maintains eval definitions and validates that promotion evidence is backed by registered evals.
+    when_to_use:
+      - new protected rule
+      - learning validation
+      - false positive analysis
+    default_inputs:
+      - module_scope
+      - candidate_asset
+      - eval_requirements
+    preferred_write_paths:
+      - .steward/evals/**
+      - tests/**
+    forbidden_write_paths:
+      - backend/**
+      - src/**
+    may_delegate_to: []
+
+  - id: learning-agent
+    category: learning
+    scope: global
+    prompt_file: learning-agent.md
+    description: Owns learning candidate generation, validation framing, promotion proposals, and rollback analysis.
+    when_to_use:
+      - learn command changes
+      - candidate triage
+      - pattern or anti-pattern proposals
+    default_inputs:
+      - audit_logs
+      - candidate_assets
+      - promotion_history
+    preferred_write_paths:
+      - .steward/learning/**
+      - docs/**
+    forbidden_write_paths:
+      - backend/**
+      - src/**
+    may_delegate_to:
+      - evals-agent
+      - review-agent
+
+  - id: docs-agent
+    category: docs
+    scope: global
+    prompt_file: docs-agent.md
+    description: Keeps README and design docs aligned with shipped behavior.
+    when_to_use:
+      - command changes
+      - config schema changes
+      - process changes
+    default_inputs:
+      - implemented_behavior
+      - changed_files
+    preferred_write_paths:
+      - README.md
+      - docs/**
+    forbidden_write_paths:
+      - backend/**
+      - src/**
+      - tests/**
+    may_delegate_to: []
+
+  - id: backend-api-steward
+    category: module-steward
+    scope: backend-api
+    prompt_file: backend-api-steward.md
+    description: Protects backend routes, websocket protocol entry points, and backend API contract changes.
+    when_to_use:
+      - backend-api module matched
+      - backend route or websocket behavior changes
+      - backend changes depend on core runtime behavior
+    default_inputs:
+      - backend_api_rule_trace
+      - backend_api_changed_paths
+      - backend_api_tests
+    preferred_write_paths:
+      - .steward/modules/backend-api.yaml
+      - .steward/agents/backend-api-steward.md
+      - backend/**
+    forbidden_write_paths:
+      - .steward/learning/**
+    may_delegate_to:
+      - review-agent
+      - evals-agent
+
+  - id: core-runtime-steward
+    category: module-steward
+    scope: core-runtime
+    prompt_file: core-runtime-steward.md
+    description: Protects runtime primitives, crypto, buffering, telemetry, and persistence semantics.
+    when_to_use:
+      - core-runtime module matched
+      - runtime, crypto, buffering, or persistence behavior changes
+      - backend depends on core runtime behavior
+    default_inputs:
+      - core_runtime_rule_trace
+      - core_runtime_changed_paths
+      - core_runtime_tests
+    preferred_write_paths:
+      - .steward/modules/core-runtime.yaml
+      - .steward/agents/core-runtime-steward.md
+      - src/core/**
+      - src/infra/**
+    forbidden_write_paths:
+      - .steward/learning/**
+    may_delegate_to:
+      - review-agent
+      - evals-agent
+
+  - id: billing-steward
+    category: module-steward
+    scope: billing
+    prompt_file: billing-steward.md
+    description: Archived sample steward kept only for bootstrap compatibility.
+    when_to_use:
+      - historical bootstrap sample inspection only
+    default_inputs:
+      - billing_rule_trace
+      - billing_changed_paths
+      - billing_evals
+    preferred_write_paths:
+      - .steward/modules/billing.yaml
+      - .steward/agents/billing-steward.md
+    forbidden_write_paths:
+      - backend/**
+      - src/**
+    may_delegate_to:
+      - review-agent

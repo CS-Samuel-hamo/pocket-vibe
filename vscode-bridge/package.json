@@ -1,0 +1,95 @@
+{
+    "name": "pocket-vibe-bridge",
+    "displayName": "Pocket Vibe Bridge",
+    "description": "VS Code Bridge for Pocket Vibe Mobile",
+    "version": "0.1.0",
+    "publisher": "pocket-vibe",
+    "engines": {
+        "vscode": "^1.109.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "pocket-vibe.connect",
+                "title": "Pocket Vibe: Connect to Backend"
+            },
+            {
+                "command": "pocket-vibe.disconnect",
+                "title": "Pocket Vibe: Disconnect"
+            },
+            {
+                "command": "pocket-vibe.launchPreferredRuntime",
+                "title": "Pocket Vibe: Launch Preferred Runtime"
+            },
+            {
+                "command": "pocket-vibe.attachPreferredRuntime",
+                "title": "Pocket Vibe: Attach Preferred Runtime"
+            }
+        ],
+        "menus": {
+            "statusBar/window": [
+                {
+                    "command": "pocket-vibe.connect",
+                    "when": "!pocketVibeConnected"
+                },
+                {
+                    "command": "pocket-vibe.disconnect",
+                    "when": "pocketVibeConnected"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "Pocket Vibe",
+            "properties": {
+                "pocketVibe.backendWsUrl": {
+                    "type": "string",
+                    "default": "ws://127.0.0.1:8000/ws",
+                    "description": "Pocket Vibe backend websocket URL."
+                },
+                "pocketVibe.authToken": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Auth token printed by the Pocket Vibe backend."
+                },
+                "pocketVibe.preferredRuntime": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Preferred runtime id when multiple Pocket Vibe runtimes are available."
+                },
+                "pocketVibe.autoLaunchPreferredRuntime": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically create a terminal for the preferred runtime when the bridge connects and no matching terminal exists."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "test:runtime": "npm run compile && node out/test/runtimeRegistry.test.js && node out/test/runtimeLaunch.test.js && node out/test/codexExec.test.js",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/node": "16.x",
+        "@types/vscode": "^1.109.0",
+        "@types/ws": "^8.18.1",
+        "@typescript-eslint/eslint-plugin": "^5.59.1",
+        "@typescript-eslint/parser": "^5.59.1",
+        "eslint": "^8.39.0",
+        "typescript": "^5.0.4"
+    },
+    "dependencies": {
+        "ws": "^8.19.0"
+    }
+}

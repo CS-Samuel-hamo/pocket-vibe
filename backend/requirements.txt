@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+websockets
+qrcode
+cryptography
+httpx

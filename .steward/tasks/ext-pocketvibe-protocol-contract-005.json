@@ -1,0 +1,56 @@
+{
+  "task_id": "ext-pocketvibe-protocol-contract-005",
+  "task": "Harden replay visibility, encrypted control-message handling, and backend lifespan startup behavior without changing the public websocket message family.",
+  "task_type": "hardening",
+  "risk_level": "medium",
+  "task_mode": "planned-market",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "backend/main.py",
+    "src/domain/models/protocol.py",
+    "tests/test_backend_main.py"
+  ],
+  "matched_modules": [
+    "protocol-contract",
+    "backend-api"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/protocol-contract.yaml",
+    ".steward/modules/backend-api.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries",
+    "global.require_tests_for_behavior_change",
+    "protocol-contract.websocket_contract_changes_require_explicit_trace",
+    "protocol-contract.replay_and_audit_changes_require_targeted_tests",
+    "backend-api.websocket_protocol_changes_require_explicit_trace"
+  ],
+  "constraints": [
+    "protocol-contract.forbidden:silent-protocol-drift",
+    "protocol-contract.forbidden:bypass-replay-semantics",
+    "backend-api.forbidden:silent-websocket-contract-drift"
+  ],
+  "required_checks": [
+    "backend-tests",
+    "steward-approval"
+  ],
+  "required_approvals": [
+    "main-orchestrator",
+    "backend-api-steward"
+  ],
+  "suggested_write_scope": [
+    "backend/**",
+    "src/domain/models/**",
+    "tests/**"
+  ],
+  "next_steps": [
+    "build_plan_before_patch",
+    "run_independent_review_crosscheck",
+    "collect_required_checks"
+  ],
+  "decision": "task_ready"
+}

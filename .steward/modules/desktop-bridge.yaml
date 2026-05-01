@@ -1,0 +1,47 @@
+version: 1
+
+module:
+  id: desktop-bridge
+  name: Desktop Bridge
+  description: Governs the VS Code bridge, runtime registry, host connection settings, runtime dispatch, focus/context integration, and fallback adapters.
+
+ownership:
+  steward_agent: main-orchestrator
+  human_owners:
+    - desktop-runtime
+  escalation_channel: "#desktop-bridge-review"
+
+match:
+  paths:
+    - vscode-bridge/**
+  dependencies:
+    - backend/main.py
+    - src/domain/models/protocol.py
+
+behavior:
+  allowed_actions:
+    - feature
+    - refactor
+    - hardening
+    - tests
+  forbidden_actions:
+    - runtime-detection-regression
+    - hidden-connection-configuration
+    - silent-fallback-behavior
+
+rules:
+  inherit_global_principles: true
+  extra_principles:
+    - runtime_catalog_changes_require_protocol_trace
+    - fallback_paths_must_emit_user-visible-status
+    - kill_and_approval_paths_require_explicit-handling
+
+checks:
+  required:
+    - steward-approval
+  optional:
+    - manual-runtime-smoke
+
+prompts:
+  task_template: default-task-template
+  review_template: default-review-template

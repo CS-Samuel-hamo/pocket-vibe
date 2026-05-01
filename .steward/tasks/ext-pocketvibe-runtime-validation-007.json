@@ -1,0 +1,60 @@
+{
+  "task_id": "ext-pocketvibe-runtime-validation-007",
+  "task": "Execute and record the first real runtime validation loop with codex-cli, then use the same matrix for claude-code, opencode, and antigravity without expanding feature scope.",
+  "task_type": "hardening",
+  "risk_level": "medium",
+  "task_mode": "planned-market",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "docs/runtime_联调手册.md",
+    "docs/runtime_联调结果.md",
+    "docs/runtime_联调记录模板.md",
+    "docs/runtime_验收_codex-cli.md",
+    ".steward/reports/workstreams/pocket-vibe-v1-active-plan.md"
+  ],
+  "matched_modules": [
+    "desktop-bridge",
+    "protocol-contract",
+    "mobile-pwa"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/desktop-bridge.yaml",
+    ".steward/modules/protocol-contract.yaml",
+    ".steward/modules/mobile-pwa.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries",
+    "global.require_tests_for_behavior_change",
+    "desktop-bridge.fallback_paths_must_emit_user-visible-status",
+    "protocol-contract.replay_and_audit_changes_require_targeted_tests",
+    "mobile-pwa.kill_switch_and_approval_flows_require_visible_feedback"
+  ],
+  "constraints": [
+    "desktop-bridge.forbidden:silent-fallback-behavior",
+    "protocol-contract.forbidden:silent-protocol-drift",
+    "mobile-pwa.forbidden:hidden-risk-actions"
+  ],
+  "required_checks": [
+    "manual-runtime-smoke",
+    "steward-approval"
+  ],
+  "required_approvals": [
+    "main-orchestrator"
+  ],
+  "suggested_write_scope": [
+    "docs/**",
+    ".steward/**",
+    "tasks/todo.md"
+  ],
+  "next_steps": [
+    "build_plan_before_patch",
+    "run_codex-cli_matrix",
+    "record_runtime_evidence",
+    "sync_findings_back_to_plan"
+  ],
+  "decision": "task_ready"
+}

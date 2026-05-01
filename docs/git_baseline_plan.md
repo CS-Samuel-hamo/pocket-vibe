@@ -4,15 +4,39 @@ Updated: 2026-05-01
 
 ## Current Finding
 
-Pocket Vibe is not currently a clean single-repo worktree.
+Pocket Vibe was not a clean single-repo worktree at the start of the v1 baseline work.
 
-The repo root is on `master`, but key product directories are themselves Git worktrees:
+The repo root is on `master`, but key product directories were themselves Git worktrees:
 
 - `backend/` points at `.git/worktrees/backend` and branch `backend`.
 - `frontend/` points at `.git/worktrees/frontend` and branch `frontend`.
 - The root worktree also has old prunable worktree entries under `.git/worktrees/`.
 
-Because of this, a root-level `git add backend/ frontend/` is unsafe. Git treats these directories as embedded repositories, which means a root commit would not contain their source files in the normal way.
+Because of this, a root-level `git add backend/ frontend/` was unsafe. Git treated these directories as embedded repositories, which means a root commit would not contain their source files in the normal way.
+
+## Current Resolution
+
+Option B has been selected for v1: single monorepo baseline.
+
+The `backend/.git` and `frontend/.git` pointer files have been backed up to:
+
+- `.git/pocket-vibe-worktree-backups/backend.gitfile`
+- `.git/pocket-vibe-worktree-backups/frontend.gitfile`
+
+Then the pointer files were removed from the product directories so root Git can stage normal backend and frontend source files.
+
+No source files were deleted.
+
+## Baseline Commit Gate Note
+
+The product tests and build gates are the v1 baseline acceptance checks:
+
+- `pytest tests -q`
+- `cd frontend; npm run test:capabilities`
+- `cd frontend; npm run build`
+- `cd vscode-bridge; npm run compile`
+
+The local pre-commit hook currently runs `scripts/quality_gate.py`, which applies strict refactor thresholds to the entire historical codebase. That hook blocks the first source baseline because existing files exceed the future-state limits. Treat those findings as post-baseline refactor debt, not as proof that the v1 runtime baseline is failing.
 
 ## Risk
 
@@ -25,7 +49,7 @@ If we continue with a naive root baseline:
 
 ## Decision Required Before v1 Baseline
 
-Choose exactly one baseline model.
+The decision has been made for v1, but the alternatives are retained here for context.
 
 ## Option A: Multi-Worktree Baseline
 
@@ -67,14 +91,16 @@ Reason: Pocket Vibe is currently one deployable product with one phone app, one 
 
 ## Safe Next Action
 
-Do not run `git add backend/ frontend/` from the root until the baseline model is chosen.
+Stage backend and frontend as normal source directories from the root repo.
 
-For now, stage only:
+Still do not stage:
 
-- `.gitignore`;
-- v1 docs;
-- release manifest;
-- Git baseline plan;
-- root README/QUICKSTART changes.
+- local runtime logs;
+- `.env`;
+- local databases;
+- VS Code user data;
+- generated build outputs;
+- root-level screenshots;
+- dependency folders.
 
-Then decide whether to consolidate worktrees before the v1 baseline commit.
+Run the v1 completion gate before committing the full source baseline.

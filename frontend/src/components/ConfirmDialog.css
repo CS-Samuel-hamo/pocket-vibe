@@ -1,0 +1,100 @@
+.confirm-header {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.confirm-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fa8c16;
+}
+
+.confirm-timer {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.timer-warning {
+  color: #ff4d4f;
+  font-weight: bold;
+}
+
+.confirm-content {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.context-box {
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.context-line {
+  padding: 2px 4px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.diff-line {
+  color: #1890ff;
+  font-weight: bold;
+}
+
+.confirm-prompt {
+  color: #fa8c16;
+  font-weight: bold;
+  font-size: 13px;
+  background: #fff7e6;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin: 4px 0;
+}
+
+.added-line {
+  color: #52c41a;
+  background: #f6ffed;
+}
+
+.removed-line {
+  color: #ff4d4f;
+  background: #fff1f0;
+}
+
+.normal-line {
+  color: #666;
+}
+
+.custom-response-section {
+  border-top: 1px solid #e8e8e8;
+  padding-top: 12px;
+}
+
+.custom-response-label {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.custom-response-input {
+  border-radius: 4px;
+}
+
+/* 按钮样式调整 */
+.adm-modal-footer {
+  padding: 12px;
+}
+
+.adm-modal-button {
+  font-size: 14px;
+}
+
+.adm-modal-button-primary {
+  background: #52c41a !important;
+  color: white !important;
+}

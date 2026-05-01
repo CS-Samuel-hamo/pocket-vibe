@@ -1,0 +1,51 @@
+﻿version: 1
+
+module:
+  id: core-runtime
+  name: Core Runtime
+  description: Protects runtime primitives, crypto, buffering, telemetry, and persistence used by the backend API.
+
+ownership:
+  steward_agent: core-runtime-steward
+  human_owners:
+    - runtime-platform
+  escalation_channel: "#core-runtime-review"
+
+match:
+  paths:
+    - src/core/**
+    - src/infra/**
+  dependencies:
+    - tests/test_crypto.py
+    - tests/test_message_buffer.py
+    - tests/test_monitor.py
+
+behavior:
+  allowed_actions:
+    - bugfix
+    - refactor
+    - tests
+    - hardening
+    - feature
+  forbidden_actions:
+    - weaken-crypto-guarantees
+    - bypass-rate-limits-without-review
+    - silent-runtime-state-drift
+
+rules:
+  inherit_global_principles: true
+  extra_principles:
+    - runtime_contract_changes_require_explicit_trace
+    - crypto_and_buffer_changes_require_targeted_tests
+    - telemetry_or_storage_changes_require_crosscheck
+
+checks:
+  required:
+    - core-runtime-tests
+    - steward-approval
+  optional:
+    - security-review
+
+prompts:
+  task_template: default-task-template
+  review_template: default-review-template

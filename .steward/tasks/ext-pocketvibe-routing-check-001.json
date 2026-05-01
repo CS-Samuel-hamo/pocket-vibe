@@ -1,0 +1,72 @@
+{
+  "task_id": "ext-pocketvibe-routing-check-001",
+  "task": "Validate backend-api and core-runtime dual-module routing after bootstrap remediation.",
+  "task_type": "hardening",
+  "risk_level": "medium",
+  "task_mode": "planned-market",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "backend/main.py",
+    "src/core/message_buffer.py",
+    "tests/test_message_buffer.py"
+  ],
+  "matched_modules": [
+    "backend-api",
+    "core-runtime"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/backend-api.yaml",
+    ".steward/agents/backend-api-steward.md",
+    ".steward/templates/default-task-template.md",
+    ".steward/templates/default-review-template.md",
+    ".steward/modules/core-runtime.yaml",
+    ".steward/agents/core-runtime-steward.md"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries",
+    "global.require_tests_for_behavior_change",
+    "global.explain_rule_exceptions",
+    "backend-api.backend_contract_changes_require_route_review",
+    "backend-api.websocket_protocol_changes_require_explicit_trace",
+    "backend-api.backend_changes_that_depend_on_core_runtime_require_boundary_review",
+    "core-runtime.runtime_contract_changes_require_explicit_trace",
+    "core-runtime.crypto_and_buffer_changes_require_targeted_tests",
+    "core-runtime.telemetry_or_storage_changes_require_crosscheck"
+  ],
+  "constraints": [
+    "backend-api.forbidden:bypass-auth-token-flow",
+    "backend-api.forbidden:silent-websocket-contract-drift",
+    "backend-api.forbidden:unsafe-path-resolution",
+    "core-runtime.forbidden:weaken-crypto-guarantees",
+    "core-runtime.forbidden:bypass-rate-limits-without-review",
+    "core-runtime.forbidden:silent-runtime-state-drift"
+  ],
+  "required_checks": [
+    "backend-tests",
+    "steward-approval",
+    "core-runtime-tests"
+  ],
+  "required_approvals": [
+    "backend-api-steward",
+    "core-runtime-steward"
+  ],
+  "suggested_write_scope": [
+    "backend/main.py",
+    "src/core/message_buffer.py",
+    "tests/test_message_buffer.py",
+    "backend/**",
+    "src/core/**",
+    "src/infra/**"
+  ],
+  "next_steps": [
+    "build_plan_before_patch",
+    "run_independent_review_crosscheck",
+    "collect_required_checks",
+    "request_steward_approval"
+  ],
+  "decision": "task_ready"
+}

@@ -1,0 +1,200 @@
+/* ==================== OPEN VIBE — APPLE DESIGN TOKENS ==================== */
+:root {
+    /* Apple System Colors - Dark Mode Base */
+    --bg-deep: #000000;
+    --bg-surface: #1C1C1E;
+    --bg-elevated: #2C2C2E;
+    --bg-glass: rgba(28, 28, 30, 0.7);
+    --bg-glass-hover: rgba(255, 255, 255, 0.1);
+
+    /* Semantic Colors */
+    --text-primary: #FFFFFF;
+    --text-secondary: #8E8E93;
+    --text-muted: #636366;
+
+    --accent-blue: #0A84FF;
+    --accent-purple: #BF5AF2;
+    --accent-green: #30D158;
+    --accent-red: #FF453A;
+    --accent-yellow: #FFD60A;
+    --accent-cyan: #64D2FF;
+
+    /* Borders & Glass */
+    --border-subtle: rgba(255, 255, 255, 0.1);
+    --border-glass: rgba(255, 255, 255, 0.15);
+
+    /* High-End Refinement */
+    --diff-add-bg: rgba(48, 209, 88, 0.15);
+    --diff-del-bg: rgba(255, 69, 58, 0.15);
+
+    /* Typography - SF Pro Stack */
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-title: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+    --font-mono: "SF Mono", "Menlo", "Monaco", "Cascadia Code", "JetBrains Mono", monospace;
+
+    /* Spacing & Radii */
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-full: 100px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 0.4;
+        transform: scale(0.8);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+@keyframes buildPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+    }
+}
+
+
+/* ==================== HEADER & BRAIN CONTROL ==================== */
+.header {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.header:hover {
+    background: var(--bg-glass-hover);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-title {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+.driver-badge {
+    background: var(--accent-blue);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    opacity: 0.8;
+}
+
+.mode-indicator {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+
+.mode-indicator.plan {
+    background: rgba(10, 132, 255, 0.15);
+    color: var(--accent-blue);
+}
+
+.mode-indicator.build {
+    background: rgba(255, 69, 58, 0.15);
+    color: var(--accent-red);
+    animation: buildPulse 2s infinite ease-in-out;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-dot.online {
+    background: var(--accent-green);
+    box-shadow: 0 0 8px var(--accent-green);
+}
+
+.status-dot.offline {
+    background: var(--accent-red);
+}

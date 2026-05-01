@@ -1,0 +1,50 @@
+﻿version: 1
+
+module:
+  id: backend-api
+  name: Backend API
+  description: Protects the FastAPI backend surface, websocket protocol entry points, and backend API contract changes.
+
+ownership:
+  steward_agent: backend-api-steward
+  human_owners:
+    - mobile-runtime
+  escalation_channel: "#backend-api-review"
+
+match:
+  paths:
+    - backend/**
+  dependencies:
+    - src/core/**
+    - src/domain/**
+    - src/infra/**
+
+behavior:
+  allowed_actions:
+    - bugfix
+    - refactor
+    - tests
+    - feature
+    - hardening
+  forbidden_actions:
+    - bypass-auth-token-flow
+    - silent-websocket-contract-drift
+    - unsafe-path-resolution
+
+rules:
+  inherit_global_principles: true
+  extra_principles:
+    - backend_contract_changes_require_route_review
+    - websocket_protocol_changes_require_explicit_trace
+    - backend_changes_that_depend_on_core_runtime_require_boundary_review
+
+checks:
+  required:
+    - backend-tests
+    - steward-approval
+  optional:
+    - protocol-review
+
+prompts:
+  task_template: default-task-template
+  review_template: default-review-template
