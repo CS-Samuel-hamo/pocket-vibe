@@ -1,0 +1,91 @@
+# Pocket Vibe Active Plan
+
+Updated: 2026-04-23
+Stage: v1 stabilization
+Status: in_progress
+
+## Current Position
+
+Pocket Vibe is being narrowed toward a v1 release baseline:
+- `mobile -> backend -> desktop host -> runtime` is verified end to end for the VS Code reference host.
+- Mobile pairing, runtime control, assistant replies, scripts, simplified tools, and remote/manual connection now work.
+- Project registry and mobile project switching now exist, so the next gap is no longer "single project remote control".
+- The immediate product question is no longer "what else can be added"; it is whether the reference path can be demonstrated, tested, committed, and tagged.
+
+Reference v1 path:
+
+`phone PWA -> FastAPI backend -> VS Code bridge -> codex-cli terminal`
+
+The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket_Vibe/docs/v1_done_definition.md).
+
+## Product Gaps
+
+1. The Git baseline is not clean enough for release.
+   Source, docs, local runtime state, logs, generated reports, screenshots, and VS Code user data are still mixed in one dirty worktree.
+2. The five-minute demo still needs a single authoritative acceptance script.
+   README and QUICKSTART describe the path, but release completion must be judged against one fixed v1 demo.
+3. `codex-cli` is the only runtime that should block v1.
+   Other runtimes and host families must remain degraded, unsupported, or backlog until the reference path is tagged.
+4. Host platform expansion is valid but paused.
+   The existing host-protocol and project-inbox work should be validated only insofar as it supports the v1 reference path.
+5. Remote trust and install flows remain important, but they are not a reason to expand scope before a v1 baseline exists.
+
+## Delivery Tracks
+
+| Track | Goal | Status | Primary Modules |
+| --- | --- | --- | --- |
+| `v1-baseline` | Clean Git scope and define the release gate | active | `docs`, `mobile-pwa`, `backend-api`, `desktop-bridge` |
+| `reference-demo` | Prove phone PWA -> backend -> VS Code bridge -> codex-cli in five minutes | pending-smoke | `mobile-pwa`, `desktop-bridge`, `core-runtime` |
+| `host-platform` | Preserve host-agnostic contracts without expanding adapters | paused-after-validation | `backend-api`, `protocol-contract`, `desktop-bridge` |
+
+## Near-Term Sprint
+
+### Current Gate
+- Add the v1 done definition and stop rule.
+- Expand `.gitignore` so runtime artifacts do not pollute the release baseline.
+- Review remaining untracked files by category before staging.
+- Run the completion gate:
+  `pytest tests -q`,
+  `cd frontend && npm run test:capabilities`,
+  `cd frontend && npm run build`,
+  `cd vscode-bridge && npm run compile`.
+- Execute the real-phone five-minute demo.
+
+## Host Platform Progress
+
+- Added project-aware routing to prompt, command, focus, approval, and kill flows.
+- Added a backend project registry surfaced in `session.state` and `capabilities`.
+- Added mobile project switching and project-aware file/context operations.
+- Kept the mobile surface chat-first while moving low-frequency controls into the `+` sheet.
+- Added an inline mobile project inbox strip so recent projects can be entered from the chat surface without falling back to a dashboard UI.
+- Preserved approval project/host ownership on mobile so approval responses and inbox warnings stay attached to the originating desktop project.
+- Updated runtime validation evidence for the observed `codex-cli` prompt round trip while leaving unverified approval, Kill, focus, and script items open.
+- Added a normalized desktop host descriptor helper in the protocol layer so host identity, capabilities, health, and failure state have one canonical shape.
+- Surfaced the same canonical host descriptor fields through backend `host_registry` and `capabilities.host`, preserving legacy `host_*` fields for current clients.
+- Published a host capability matrix that makes full, degraded, unsupported, and planned host/runtime behavior explicit.
+- Shifted backend project state to host-first naming with `host_projects`; `bridge_projects` remains as an alias for older tests and compatibility paths.
+- Selected native AI coding desktop apps as the first non-reference host feasibility family and documented stop conditions before adapter work expands.
+- Added a read-only `desktop-host` probe that can register a synthetic native-app project and return explicit unsupported events for all control actions.
+- Preserved host-level health and failure fields for non-runtime hosts, and disabled the mobile prompt composer when a selected project has no prompt-capable runtime.
+- Added a PowerShell launcher for the read-only native host probe so the non-reference project-inbox smoke can be run without composing Python arguments by hand.
+- Added mobile host-level capability fallback so a future native host can support prompt dispatch without pretending to expose a runtime catalog.
+
+## Exit Criteria For This Stage
+
+- `docs/v1_done_definition.md` is the source of truth for release completion.
+- The reference `codex-cli` path passes automated checks and real-phone smoke.
+- Runtime artifacts, local logs, local databases, screenshots, and VS Code user data are excluded from the release baseline.
+- A clean baseline commit can be created without mixing generated state into source history.
+
+## Active Work Order
+
+1. Freeze v1 scope.
+2. Clean Git baseline.
+3. Run the v1 completion gate.
+4. Tag or commit the v1 MVP baseline.
+
+## Notes
+
+- Do not chase platform count before the v1 reference path is tagged.
+- Do not let more hosts make the phone UI feel like a desktop control panel again.
+- Every host-facing action must still end in one of: success, degraded-with-reason, unsupported-with-reason, failed-with-reason.
