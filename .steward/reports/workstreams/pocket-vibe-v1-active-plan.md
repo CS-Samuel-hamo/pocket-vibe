@@ -1,7 +1,7 @@
 # Pocket Vibe Active Plan
 
-Updated: 2026-04-23
-Stage: v1 stabilization
+Updated: 2026-05-02
+Stage: post-baseline stabilization
 Status: in_progress
 
 ## Current Position
@@ -10,7 +10,8 @@ Pocket Vibe is being narrowed toward a v1 release baseline:
 - `mobile -> backend -> desktop host -> runtime` is verified end to end for the VS Code reference host.
 - Mobile pairing, runtime control, assistant replies, scripts, simplified tools, and remote/manual connection now work.
 - Project registry and mobile project switching now exist, so the next gap is no longer "single project remote control".
-- The immediate product question is no longer "what else can be added"; it is whether the reference path can be demonstrated, tested, committed, and tagged.
+- The v1 source baseline is now committed and tagged as `v1-baseline-2026-05-01`.
+- The immediate product question is no longer "what else can be added"; it is whether the reference path can stay stable while the large backend and bridge files are split into maintainable modules.
 
 Reference v1 path:
 
@@ -37,19 +38,16 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 | `v1-baseline` | Clean Git scope and define the release gate | active | `docs`, `mobile-pwa`, `backend-api`, `desktop-bridge` |
 | `reference-demo` | Prove phone PWA -> backend -> VS Code bridge -> codex-cli in five minutes | pending-smoke | `mobile-pwa`, `desktop-bridge`, `core-runtime` |
 | `host-platform` | Preserve host-agnostic contracts without expanding adapters | paused-after-validation | `backend-api`, `protocol-contract`, `desktop-bridge` |
+| `quality-debt` | Make the post-baseline codebase commit-safe and split oversized modules without protocol drift | active | `backend-api`, `desktop-bridge`, `core-runtime` |
 
 ## Near-Term Sprint
 
 ### Current Gate
-- Add the v1 done definition and stop rule.
-- Expand `.gitignore` so runtime artifacts do not pollute the release baseline.
-- Review remaining untracked files by category before staging.
-- Run the completion gate:
-  `pytest tests -q`,
-  `cd frontend && npm run test:capabilities`,
-  `cd frontend && npm run build`,
-  `cd vscode-bridge && npm run compile`.
-- Execute the real-phone five-minute demo.
+- Keep the v1 baseline tag intact as the rollback point.
+- Make `scripts/quality_gate.py` commit-safe without weakening the documented thresholds.
+- Split `backend/main.py` in small route/session/protocol slices.
+- Split `vscode-bridge/src/extension.ts` in small activation/client/runtime/UI slices.
+- After each slice, run the relevant targeted tests plus the v1 completion gate when behavior changes.
 
 ## Host Platform Progress
 
@@ -79,10 +77,11 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 
 ## Active Work Order
 
-1. Freeze v1 scope.
-2. Clean Git baseline.
-3. Run the v1 completion gate.
-4. Tag or commit the v1 MVP baseline.
+1. Preserve the v1 baseline commit and tag as the rollback point.
+2. Fix the quality gate helper so small future commits can pass without bypassing hooks.
+3. Split `backend/main.py` without websocket protocol drift.
+4. Split `vscode-bridge/src/extension.ts` without runtime dispatch regression.
+5. Re-run the real-phone reference smoke after the backend and bridge splits.
 
 ## Notes
 

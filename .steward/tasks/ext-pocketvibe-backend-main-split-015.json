@@ -1,0 +1,59 @@
+{
+  "task_id": "ext-pocketvibe-backend-main-split-015",
+  "task": "Split backend/main.py into focused modules for pairing, connection state, project registry, protocol routing, and websocket lifecycle without changing the public protocol.",
+  "task_type": "refactor",
+  "risk_level": "high",
+  "task_mode": "post-baseline",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "backend/main.py",
+    "tests/test_backend_main.py",
+    "src/domain/models/protocol.py",
+    "src/domain/services/project_state.py"
+  ],
+  "matched_modules": [
+    "backend-api",
+    "protocol-contract"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/backend-api.yaml",
+    ".steward/modules/protocol-contract.yaml",
+    ".steward/agents/backend-api-steward.md"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries",
+    "global.require_tests_for_behavior_change",
+    "backend-api.backend_contract_changes_require_route_review",
+    "backend-api.websocket_protocol_changes_require_explicit_trace"
+  ],
+  "constraints": [
+    "Do not change websocket message names or payload semantics.",
+    "Do not bypass auth token, pairing, replay, approval, or kill paths.",
+    "Keep the reference codex-cli path demonstrably working after each slice."
+  ],
+  "required_checks": [
+    "pytest tests/test_backend_main.py -q",
+    "pytest tests/test_protocol.py tests/test_project_state.py -q",
+    "python scripts/quality_gate.py <changed backend files>"
+  ],
+  "required_approvals": [
+    "backend-api-steward"
+  ],
+  "suggested_write_scope": [
+    "backend/**",
+    "src/domain/**",
+    "tests/test_backend_main.py",
+    "tests/test_protocol.py"
+  ],
+  "next_steps": [
+    "extract_pairing_page_builder",
+    "extract_connection_manager_state_helpers",
+    "extract_protocol_route_handlers",
+    "extract_websocket_lifecycle"
+  ],
+  "decision": "task_ready"
+}

@@ -1,0 +1,50 @@
+{
+  "task_id": "ext-pocketvibe-quality-gate-014",
+  "task": "Make the post-baseline quality gate safe to iterate on by refactoring scripts/quality_gate.py into small self-checking functions and covering UTF-8 BOM parsing.",
+  "task_type": "hardening",
+  "risk_level": "low",
+  "task_mode": "post-baseline",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "scripts/quality_gate.py",
+    "tests/test_quality_gate.py"
+  ],
+  "matched_modules": [
+    "core-runtime"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/core-runtime.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.require_tests_for_behavior_change",
+    "global.explain_rule_exceptions"
+  ],
+  "constraints": [
+    "Do not weaken the documented quality thresholds.",
+    "Do not require historical full-repo refactors before small future commits can be made.",
+    "Preserve the existing pre-commit entry point."
+  ],
+  "required_checks": [
+    "python scripts/quality_gate.py scripts/quality_gate.py tests/test_quality_gate.py",
+    "pytest tests/test_quality_gate.py -q",
+    "pytest tests -q"
+  ],
+  "required_approvals": [
+    "main-orchestrator"
+  ],
+  "suggested_write_scope": [
+    "scripts/quality_gate.py",
+    "tests/test_quality_gate.py",
+    ".steward/tasks/ext-pocketvibe-quality-gate-014.json"
+  ],
+  "next_steps": [
+    "commit_post_baseline_quality_gate_fix",
+    "open_backend_main_split_task",
+    "open_vscode_bridge_extension_split_task"
+  ],
+  "decision": "implemented"
+}
