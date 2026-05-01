@@ -27,4 +27,20 @@ def test_quality_gate_reports_long_function(tmp_path):
 
     errors = quality_gate.check_python(str(target))
 
-    assert any("too long" in error for error in errors)
+    assert any("too long" in error.message for error in errors)
+
+
+def test_quality_gate_suppresses_existing_baseline_violation():
+    quality_gate = load_quality_gate()
+    violation = quality_gate.Violation("legacy.py|file-lines", "legacy too long", 900)
+    baseline = {"legacy.py|file-lines": 900}
+
+    assert quality_gate.filter_new_violations([violation], baseline) == []
+
+
+def test_quality_gate_reports_worse_baseline_violation():
+    quality_gate = load_quality_gate()
+    violation = quality_gate.Violation("legacy.py|file-lines", "legacy too long", 901)
+    baseline = {"legacy.py|file-lines": 900}
+
+    assert quality_gate.filter_new_violations([violation], baseline) == [violation]

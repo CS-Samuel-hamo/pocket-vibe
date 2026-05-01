@@ -44,7 +44,7 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 
 ### Current Gate
 - Keep the v1 baseline tag intact as the rollback point.
-- Make `scripts/quality_gate.py` commit-safe without weakening the documented thresholds.
+- Make `scripts/quality_gate.py` commit-safe without weakening the documented thresholds, using `.steward/quality_gate_baseline.json` to block new or worse violations.
 - Split `backend/main.py` in small route/session/protocol slices.
 - Split `vscode-bridge/src/extension.ts` in small activation/client/runtime/UI slices.
 - After each slice, run the relevant targeted tests plus the v1 completion gate when behavior changes.
@@ -78,7 +78,7 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 ## Active Work Order
 
 1. Preserve the v1 baseline commit and tag as the rollback point.
-2. Fix the quality gate helper so small future commits can pass without bypassing hooks.
+2. Fix the quality gate helper and measured baseline so small future commits can pass without bypassing hooks.
 3. Split `backend/main.py` without websocket protocol drift.
 4. Split `vscode-bridge/src/extension.ts` without runtime dispatch regression.
 5. Re-run the real-phone reference smoke after the backend and bridge splits.

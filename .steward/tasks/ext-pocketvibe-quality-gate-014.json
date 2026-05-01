@@ -1,13 +1,14 @@
 {
   "task_id": "ext-pocketvibe-quality-gate-014",
-  "task": "Make the post-baseline quality gate safe to iterate on by refactoring scripts/quality_gate.py into small self-checking functions and covering UTF-8 BOM parsing.",
+  "task": "Make the post-baseline quality gate safe to iterate on by refactoring scripts/quality_gate.py into small self-checking functions, covering UTF-8 BOM parsing, and adding a measured baseline for existing violations.",
   "task_type": "hardening",
   "risk_level": "low",
   "task_mode": "post-baseline",
   "repo_root": "D:\\AI_projects\\Pocket_Vibe",
   "input_paths": [
     "scripts/quality_gate.py",
-    "tests/test_quality_gate.py"
+    "tests/test_quality_gate.py",
+    ".steward/quality_gate_baseline.json"
   ],
   "matched_modules": [
     "core-runtime"
@@ -25,11 +26,12 @@
   ],
   "constraints": [
     "Do not weaken the documented quality thresholds.",
-    "Do not require historical full-repo refactors before small future commits can be made.",
+    "Allow historical violations only while their measured value does not increase.",
     "Preserve the existing pre-commit entry point."
   ],
   "required_checks": [
     "python scripts/quality_gate.py scripts/quality_gate.py tests/test_quality_gate.py",
+    "python scripts/quality_gate.py <all tracked code files>",
     "pytest tests/test_quality_gate.py -q",
     "pytest tests -q"
   ],
@@ -39,6 +41,7 @@
   "suggested_write_scope": [
     "scripts/quality_gate.py",
     "tests/test_quality_gate.py",
+    ".steward/quality_gate_baseline.json",
     ".steward/tasks/ext-pocketvibe-quality-gate-014.json"
   ],
   "next_steps": [
