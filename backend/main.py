@@ -34,6 +34,7 @@ from backend.project_registry import (
     sort_host_registry,
     sort_project_registry,
 )
+from backend.project_state_payload import build_project_state_payload
 from backend.protocol_routes import (
     approval_id,
     build_bridge_offline_event,
@@ -180,19 +181,14 @@ def _project_state_payload(
     host_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     service = _get_project_state_service(target_dir) if target_dir else project_state
-    payload = dict(service.get_state())
-    payload.pop("type", None)
-    if project_id:
-        payload["project_id"] = project_id
-    if project_name:
-        payload["project_name"] = project_name
-    if workspace_path:
-        payload["workspace_path"] = workspace_path
-    if host_label:
-        payload["host_label"] = host_label
-    if host_id:
-        payload["host_id"] = host_id
-    return payload
+    return build_project_state_payload(
+        service.get_state(),
+        project_id=project_id,
+        project_name=project_name,
+        workspace_path=workspace_path,
+        host_label=host_label,
+        host_id=host_id,
+    )
 
 
 def _is_desktop_host_role(role: Optional[str]) -> bool:
