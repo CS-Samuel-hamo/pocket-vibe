@@ -37,26 +37,23 @@ from backend.project_registry import (
 from backend.protocol_routes import (
     approval_id,
     build_bridge_offline_event,
-    build_approval_audit_event,
     build_approval_offline_result,
     build_approval_response_payload,
-    build_approval_success_result,
     build_command_dispatch_event,
     build_command_dispatch_payload,
     build_context_request_payload,
     build_kill_audit_event,
     build_kill_offline_result,
     build_kill_request_payload,
-    build_prompt_dispatch_event,
     build_prompt_submit_payload,
     build_project_changed_event,
     build_project_unavailable_event,
-    build_user_prompt_event,
     build_workspace_focus_event,
     build_workspace_focus_payload,
     normalize_decision,
     project_id_from_data,
 )
+from backend.route_flows import emit_approval_completion_events, emit_prompt_submit_events
 from backend.snapshots import build_snapshot_packets
 from backend.socket_messages import (
     decrypt_if_needed,
@@ -1062,18 +1059,13 @@ async def _route_prompt_submit(
     target_project = _resolve_target_project(room_token, data)
     target_runtime = data.get("target_runtime")
 
-    await _emit_room_event(
-        room_token,
-        build_user_prompt_event(prompt, target_project=target_project, target_runtime=target_runtime),
+    await emit_prompt_submit_events(
+        room_token=room_token,
+        prompt=prompt,
+        target_project=target_project,
+        target_runtime=target_runtime,
         exclude_ws=websocket,
-        ignore_rate_limit=True,
-        buffer_message=True,
-    )
-    await _emit_room_event(
-        room_token,
-        build_prompt_dispatch_event(target_project=target_project, target_runtime=target_runtime),
-        ignore_rate_limit=True,
-        buffer_message=True,
+        emit_room_event=_emit_room_event,
     )
 
     if not manager.room_has_desktop_host(room_token):
@@ -1176,17 +1168,12 @@ async def _route_approval_response(
             target_project=target_project,
         )
     )
-    await _emit_room_event(
-        room_token,
-        build_approval_success_result(approval_id_value, decision, target_project=target_project),
-        ignore_rate_limit=True,
-        buffer_message=True,
-    )
-    await _emit_room_event(
-        room_token,
-        build_approval_audit_event(approval_id_value, decision, target_project=target_project),
-        ignore_rate_limit=True,
-        buffer_message=True,
+    await emit_approval_completion_events(
+        room_token=room_token,
+        approval_id_value=approval_id_value,
+        decision=decision,
+        target_project=target_project,
+        emit_room_event=_emit_room_event,
     )
 
 
