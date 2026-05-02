@@ -74,7 +74,8 @@
     "extract_project_host_registry_entry_builders",
     "extract_active_project_selection_helpers",
     "extract_host_session_state_update",
-    "extract_prompt_route_payload_builders"
+    "extract_prompt_route_payload_builders",
+    "extract_workspace_context_command_payload_builders"
   ],
   "next_steps": [
     "extract_connection_manager_state_helpers",

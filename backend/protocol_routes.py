@@ -13,6 +13,13 @@ def _connection_id(target_project: Optional[Dict[str, Any]]) -> Optional[str]:
     return target_project.get("connection_id") if target_project else None
 
 
+def _target_context(target_project: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    return {
+        "project_id": _project_id(target_project),
+        "target_connection_id": _connection_id(target_project),
+    }
+
+
 def build_user_prompt_event(
     prompt: str,
     *,
@@ -53,7 +60,86 @@ def build_prompt_submit_payload(
     return {
         "type": "prompt.submit",
         "prompt": prompt,
-        "project_id": _project_id(target_project),
-        "target_connection_id": _connection_id(target_project),
         "target_runtime": target_runtime,
+        **_target_context(target_project),
     }
+
+
+def build_workspace_focus_payload(
+    data: Dict[str, Any],
+    *,
+    target_project: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    return {
+        "type": "workspace.focus",
+        "file": data.get("file"),
+        "line": data.get("line"),
+        "flash": data.get("flash"),
+        **_target_context(target_project),
+    }
+
+
+def build_workspace_focus_event(
+    data: Dict[str, Any],
+    *,
+    target_project: Optional[Dict[str, Any]],
+    target_runtime: Optional[str],
+) -> Dict[str, Any]:
+    return build_execution_event(
+        "dispatch",
+        "Focus request sent to desktop host",
+        file=data.get("file"),
+        line=data.get("line"),
+        project_id=_project_id(target_project),
+        target_runtime=target_runtime,
+        reason="workspace.focus",
+    )
+
+
+def build_context_request_payload(
+    data: Dict[str, Any],
+    *,
+    target_project: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    return {
+        "type": "context.request",
+        "file": data.get("file"),
+        "line_start": data.get("line_start"),
+        "line_end": data.get("line_end"),
+        "position": data.get("position"),
+        **_target_context(target_project),
+    }
+
+
+def build_command_dispatch_payload(
+    data: Dict[str, Any],
+    *,
+    target_project: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    return {
+        "type": "command.dispatch",
+        "action": data.get("action"),
+        "command": data.get("command"),
+        "file": data.get("file"),
+        "line": data.get("line"),
+        "lines": data.get("lines", []),
+        "instruction": data.get("instruction"),
+        "target_runtime": data.get("target_runtime"),
+        **_target_context(target_project),
+    }
+
+
+def build_command_dispatch_event(
+    data: Dict[str, Any],
+    *,
+    target_project: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    return build_execution_event(
+        "dispatch",
+        "Command dispatched to desktop host",
+        action=data.get("action"),
+        project_id=_project_id(target_project),
+        target_runtime=data.get("target_runtime"),
+        file=data.get("file"),
+        reason="desktop_dispatch",
+    )

@@ -34,9 +34,14 @@ from backend.project_registry import (
 )
 from backend.protocol_routes import (
     build_bridge_offline_event,
+    build_command_dispatch_event,
+    build_command_dispatch_payload,
+    build_context_request_payload,
     build_prompt_dispatch_event,
     build_prompt_submit_payload,
     build_user_prompt_event,
+    build_workspace_focus_event,
+    build_workspace_focus_payload,
 )
 
 
@@ -1124,26 +1129,13 @@ async def _route_workspace_focus(
         )
         return
     await _ensure_driver_running(room_token)
-    await driver.dispatch_command(
-        {
-            "type": "workspace.focus",
-            "file": data.get("file"),
-            "line": data.get("line"),
-            "flash": data.get("flash"),
-            "project_id": target_project.get("project_id") if target_project else None,
-            "target_connection_id": target_project.get("connection_id") if target_project else None,
-        }
-    )
+    await driver.dispatch_command(build_workspace_focus_payload(data, target_project=target_project))
     await _emit_room_event(
         room_token,
-        build_execution_event(
-            "dispatch",
-            "Focus request sent to desktop host",
-            file=data.get("file"),
-            line=data.get("line"),
-            project_id=target_project.get("project_id") if target_project else None,
+        build_workspace_focus_event(
+            data,
+            target_project=target_project,
             target_runtime=target_project.get("active_runtime") if target_project else driver.get_active_runtime(),
-            reason="workspace.focus",
         ),
         ignore_rate_limit=True,
         buffer_message=True,
@@ -1163,17 +1155,7 @@ async def _route_context_request(
         )
         return
     await _ensure_driver_running(room_token)
-    await driver.dispatch_command(
-        {
-            "type": "context.request",
-            "file": data.get("file"),
-            "line_start": data.get("line_start"),
-            "line_end": data.get("line_end"),
-            "position": data.get("position"),
-            "project_id": target_project.get("project_id") if target_project else None,
-            "target_connection_id": target_project.get("connection_id") if target_project else None,
-        }
-    )
+    await driver.dispatch_command(build_context_request_payload(data, target_project=target_project))
 
 
 async def _route_command_dispatch(
@@ -1190,30 +1172,10 @@ async def _route_command_dispatch(
         return
 
     await _ensure_driver_running(room_token)
-    payload = {
-        "type": "command.dispatch",
-        "action": data.get("action"),
-        "command": data.get("command"),
-        "file": data.get("file"),
-        "line": data.get("line"),
-        "lines": data.get("lines", []),
-        "instruction": data.get("instruction"),
-        "project_id": target_project.get("project_id") if target_project else None,
-        "target_connection_id": target_project.get("connection_id") if target_project else None,
-        "target_runtime": data.get("target_runtime"),
-    }
-    await driver.dispatch_command(payload)
+    await driver.dispatch_command(build_command_dispatch_payload(data, target_project=target_project))
     await _emit_room_event(
         room_token,
-        build_execution_event(
-            "dispatch",
-            "Command dispatched to desktop host",
-            action=data.get("action"),
-            project_id=target_project.get("project_id") if target_project else None,
-            target_runtime=data.get("target_runtime"),
-            file=data.get("file"),
-            reason="desktop_dispatch",
-        ),
+        build_command_dispatch_event(data, target_project=target_project),
         ignore_rate_limit=True,
         buffer_message=True,
     )
