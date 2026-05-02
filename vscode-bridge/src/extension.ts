@@ -44,6 +44,7 @@ import {
     resolveWorkspaceRootPath,
     withProjectContext,
 } from './workspaceProjects';
+import { handleProjectAddFolder } from './workspaceFolderPicker';
 import { dispatchPromptToRuntime } from './promptDispatch';
 
 interface BackendMessage {
@@ -269,6 +270,10 @@ async function handleCommandDispatch(message: BackendMessage) {
     }
     if (action === 'runtime.attach') {
         await handleRuntimeAttach(message);
+        return;
+    }
+    if (action === 'project.addFolder') {
+        await handleProjectAddFolder(message, { sendToBackend, reportCapabilities });
         return;
     }
 

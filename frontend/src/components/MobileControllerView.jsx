@@ -159,6 +159,16 @@ export default function MobileControllerView({
         closeTools();
     };
 
+    const handleProjectAddFolder = () => {
+        if (!hostConnected) {
+            Toast.show({ icon: 'fail', content: 'Desktop host is offline.' });
+            return;
+        }
+
+        send({ type: 'command.dispatch', action: 'project.addFolder' });
+        Toast.show({ content: 'Open the VS Code folder picker on desktop.' });
+    };
+
     const handlePromptSkillDraft = (skill) => {
         setInputVal(skill.prompt);
         closeTools();
@@ -507,6 +517,22 @@ export default function MobileControllerView({
 
                         {toolsView === 'projects' && (
                             <div className="runtime-deck tools-runtime-deck">
+                                <section className="project-picker-action">
+                                    <div>
+                                        <div className="project-picker-title">Need another project?</div>
+                                        <div className="project-picker-copy">
+                                            Add a folder to the active VS Code workspace, then switch from this list.
+                                        </div>
+                                    </div>
+                                    <Button
+                                        size="mini"
+                                        fill="outline"
+                                        disabled={!hostConnected}
+                                        onClick={handleProjectAddFolder}
+                                    >
+                                        Add Folder
+                                    </Button>
+                                </section>
                                 {projectRegistry.length > 0 ? (
                                     projectRegistry.map((project) => {
                                         const switchState = getProjectSwitchState(
