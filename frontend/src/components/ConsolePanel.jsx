@@ -5,10 +5,13 @@ import { BrainCircuit, Terminal, Volume2 } from 'lucide-react';
 import { isFeatureEnabled } from '../config/features';
 import { buildConsoleEntries } from '../utils/consoleEntries';
 
+const LONG_USER_PROMPT_LIMIT = 260;
+
 const ConsolePanel = ({ messages, messagesEndRef, thinking }) => {
     const panelRef = useRef(null);
     const shouldStickToBottomRef = useRef(true);
     const [expandedGroups, setExpandedGroups] = useState({});
+    const [expandedEntries, setExpandedEntries] = useState({});
 
     const renderedMessages = useMemo(
         () => buildConsoleEntries(messages),
@@ -32,15 +35,37 @@ const ConsolePanel = ({ messages, messagesEndRef, thinking }) => {
     }, []);
 
     useEffect(() => {
-        if (shouldStickToBottomRef.current) {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        if (!shouldStickToBottomRef.current) {
+            return undefined;
         }
-    }, [messagesEndRef, renderedMessages]);
+
+        const scrollToBottom = () => {
+            const panel = panelRef.current;
+            if (panel) {
+                panel.scrollTop = panel.scrollHeight;
+            }
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        };
+
+        const animationFrame = window.requestAnimationFrame(scrollToBottom);
+        const timeout = window.setTimeout(scrollToBottom, 120);
+        return () => {
+            window.cancelAnimationFrame(animationFrame);
+            window.clearTimeout(timeout);
+        };
+    }, [messagesEndRef, renderedMessages.length]);
 
     const toggleGroup = (groupKey) => {
         setExpandedGroups((current) => ({
             ...current,
             [groupKey]: !current[groupKey],
+        }));
+    };
+
+    const toggleEntry = (entryKey) => {
+        setExpandedEntries((current) => ({
+            ...current,
+            [entryKey]: !current[entryKey],
         }));
     };
 
@@ -118,17 +143,32 @@ const ConsolePanel = ({ messages, messagesEndRef, thinking }) => {
                     }
 
                     const { entry } = item;
+                    const isLongUserPrompt =
+                        entry.variant === 'user' && entry.content.length > LONG_USER_PROMPT_LIMIT;
+                    const isExpanded = Boolean(expandedEntries[item.key]);
+                    const visibleContent = isLongUserPrompt && !isExpanded
+                        ? `${entry.content.slice(0, LONG_USER_PROMPT_LIMIT).trimEnd()}...`
+                        : entry.content;
+
                     return (
                         <article
                             key={item.key}
-                            className={`line ${entry.variant}${entry.local ? ' pending' : ''}`}
+                            className={`line ${entry.variant}${entry.local ? ' pending' : ''}${isLongUserPrompt ? ' compact-prompt' : ''}`}
                         >
                             <div className="line-header">
                                 <span className="line-label">{entry.label}</span>
                                 {entry.badge ? <span className="line-badge">{entry.badge}</span> : null}
+                                {isLongUserPrompt ? <span className="line-badge">PROMPT</span> : null}
                                 {entry.local ? <span className="line-meta">Sending...</span> : null}
                             </div>
-                            <div className="text">{entry.content}</div>
+                            <div className="text">{visibleContent}</div>
+                            {isLongUserPrompt ? (
+                                <div className="line-group-actions compact-prompt-actions">
+                                    <Button size="mini" fill="outline" onClick={() => toggleEntry(item.key)}>
+                                        {isExpanded ? 'Collapse Prompt' : 'Show Full Prompt'}
+                                    </Button>
+                                </div>
+                            ) : null}
                         </article>
                     );
                 })}

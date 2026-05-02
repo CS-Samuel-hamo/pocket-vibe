@@ -1522,6 +1522,20 @@
   border-color: rgba(191, 90, 242, 0.3);
 }
 
+.line.user.compact-prompt {
+  background: rgba(191, 90, 242, 0.09);
+}
+
+.line.user.compact-prompt .text {
+  max-height: 8.5em;
+  overflow: hidden;
+  color: rgba(244, 232, 255, 0.86);
+}
+
+.compact-prompt-actions {
+  margin-top: 8px;
+}
+
 .line.assistant {
   color: var(--text-primary);
   background: linear-gradient(180deg, rgba(48, 209, 88, 0.16), rgba(100, 210, 255, 0.1));
