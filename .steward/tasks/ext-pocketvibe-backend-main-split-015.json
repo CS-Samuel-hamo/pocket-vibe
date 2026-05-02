@@ -43,6 +43,7 @@
     "python scripts/quality_gate.py backend/main.py backend/connection_state.py tests/test_connection_state.py",
     "python scripts/quality_gate.py backend/main.py backend/snapshots.py tests/test_snapshots.py",
     "python scripts/quality_gate.py backend/main.py backend/protocol_routes.py tests/test_protocol_routes.py",
+    "python scripts/quality_gate.py backend/main.py backend/protocol_dispatch.py tests/test_protocol_dispatch.py",
     "pytest tests/test_pairing_page.py tests/test_backend_main.py -q",
     "pytest tests/test_connection_preflight.py tests/test_backend_main.py -q",
     "pytest tests/test_host_session.py tests/test_backend_main.py -q",
@@ -50,6 +51,7 @@
     "pytest tests/test_connection_state.py tests/test_backend_main.py -q",
     "pytest tests/test_snapshots.py tests/test_backend_main.py -q",
     "pytest tests/test_protocol_routes.py tests/test_backend_main.py -q",
+    "pytest tests/test_protocol_dispatch.py tests/test_backend_main.py -q",
     "pytest tests/test_backend_main.py -q",
     "pytest tests/test_protocol.py tests/test_project_state.py -q",
     "python scripts/quality_gate.py <changed backend files>"
@@ -66,6 +68,7 @@
     "tests/test_pairing_page.py",
     "tests/test_project_registry.py",
     "tests/test_protocol_routes.py",
+    "tests/test_protocol_dispatch.py",
     "tests/test_snapshots.py",
     "tests/test_backend_main.py",
     "tests/test_protocol.py"
@@ -81,7 +84,8 @@
     "extract_workspace_context_command_payload_builders",
     "extract_approval_and_kill_route_payload_builders",
     "extract_project_select_event_builders",
-    "extract_snapshot_packet_builders"
+    "extract_snapshot_packet_builders",
+    "extract_protocol_message_classification"
   ],
   "next_steps": [
     "extract_connection_manager_state_helpers",

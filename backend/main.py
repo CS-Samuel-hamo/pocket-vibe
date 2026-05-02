@@ -24,6 +24,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from backend.connection_preflight import build_connection_preflight
 from backend.connection_state import update_host_session_state
 from backend.pairing_page import build_pairing_page_html as _build_pairing_page_html
+from backend.protocol_dispatch import is_bridge_room_event, is_host_metadata_message
 from backend.project_registry import (
     active_project_candidate,
     host_registry_entry,
@@ -67,7 +68,6 @@ from src.core.crypto import Crypto
 from src.core.message_buffer import MessageBuffer, TokenBucket
 from src.domain.models.protocol import (
     build_audit_event,
-    build_capabilities,
     build_execution_event,
     build_host_descriptor,
     build_session_state,
@@ -1248,6 +1248,7 @@ async def _handle_bridge_room_event(
     )
 
 
+async def _skip_initial_snapshot(*_args: Any) -> None: return None
 async def _handle_protocol_message(
     data: Dict[str, Any],
     websocket: WebSocket,
@@ -1256,28 +1257,22 @@ async def _handle_protocol_message(
 ) -> None:
     msg_type = data.get("type")
 
-    if _is_desktop_host_role(role) and msg_type in {"hello", "capabilities", "session.state"}:
+    if is_host_metadata_message(role, msg_type, _is_desktop_host_role):
         await _sync_bridge_metadata(data, room_token, websocket)
-        if msg_type == "hello":
-            await _send_initial_snapshot(websocket, room_token, role)
+        await {"hello": _send_initial_snapshot}.get(msg_type, _skip_initial_snapshot)(websocket, room_token, role)
         return
 
-    if (_is_desktop_host_role(role) or role == "desktop") and msg_type in {
-        "assistant",
-        "command",
-        "context.result",
-        "execution.event",
-        "approval.request",
-        "approval.result",
-        "audit.event",
-        "kill.result",
-        "diff",
-        "file_content",
-    }:
+    if is_bridge_room_event(role, msg_type, _is_desktop_host_role):
         await _handle_bridge_room_event(data, room_token, websocket)
         return
 
-    dispatchers = {
+    handler = _protocol_dispatchers(data, websocket, room_token, role).get(msg_type)
+    if handler:
+        await handler()
+
+
+def _protocol_dispatchers(data: Dict[str, Any], websocket: WebSocket, room_token: str, role: str):
+    return {
         "hello": lambda: _send_initial_snapshot(websocket, room_token, role),
         "prompt.submit": lambda: _route_prompt_submit(data, room_token, websocket),
         "command.dispatch": lambda: _route_command_dispatch(data, room_token),
@@ -1288,10 +1283,6 @@ async def _handle_protocol_message(
         "kill.request": lambda: _route_kill_request(data, room_token),
         "ping": lambda: manager.send_packet(websocket, {"type": "pong"}, buffer_message=False),
     }
-
-    handler = dispatchers.get(msg_type)
-    if handler:
-        await handler()
 
 
 def _safe_json_loads(text: str) -> Optional[Dict[str, Any]]:
