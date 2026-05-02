@@ -1,10 +1,7 @@
 import * as vscode from 'vscode';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
 import { randomUUID } from 'crypto';
 import WebSocket from 'ws';
-import { spawn, spawnSync, type ChildProcessWithoutNullStreams } from 'child_process';
+import { spawnSync } from 'child_process';
 
 import {
     capabilityIsSupported,
@@ -14,8 +11,11 @@ import {
     type RuntimeDescriptor,
     type RuntimeId,
 } from './runtimeRegistry';
-import { buildCodexExecArgs, parseCodexExecLine } from './codexExec';
 import { looksLikeExecutablePath, resolveRuntimeLaunchSpec } from './runtimeLaunch';
+import {
+    startCodexExecPrompt as executeCodexExecPrompt,
+    terminateActiveRuntimeProcess,
+} from './codexExecRuntime';
 import {
     createRuntimeAdapters,
     isTerminalRuntimeAdapter,
@@ -50,8 +50,6 @@ let socket: WebSocket | null = null;
 let statusBarItem: vscode.StatusBarItem;
 let extensionContext: vscode.ExtensionContext;
 const runtimeErrorState = new Map<RuntimeId, string>();
-const activeRuntimeProcesses = new Map<RuntimeId, ChildProcessWithoutNullStreams>();
-const intentionallyStoppedProcesses = new Set<RuntimeId>();
 let reconnectTimer: NodeJS.Timeout | null = null;
 let reconnectAttempt = 0;
 let manualDisconnect = false;
@@ -328,7 +326,12 @@ async function handlePromptSubmit(message: BackendMessage) {
 
     try {
         if (runtimeContext.descriptor.id === 'codex-cli') {
-            await startCodexExecPrompt(prompt, runtimeContext.descriptor);
+            await executeCodexExecPrompt(prompt, runtimeContext.descriptor, {
+                sendToBackend,
+                reportCapabilities,
+                recordRuntimeError,
+                isCommandAvailable,
+            });
         } else {
             await runtimeContext.adapter.sendPrompt(prompt);
         }
@@ -767,149 +770,6 @@ function recordRuntimeError(runtimeId: RuntimeId, reason: string) {
 
 function clearRuntimeError(runtimeId: RuntimeId) {
     runtimeErrorState.delete(runtimeId);
-}
-
-async function startCodexExecPrompt(prompt: string, runtime: RuntimeDescriptor): Promise<void> {
-    const launchSpec = resolveRuntimeLaunchSpec(runtime.id);
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-    if (!launchSpec || !isCommandAvailable(launchSpec.command) || !workspaceFolder) {
-        throw new Error(`${runtime.label} exec bridge is unavailable.`);
-    }
-
-    terminateActiveRuntimeProcess(runtime.id);
-
-    const outputPath = path.join(os.tmpdir(), `pocket-vibe-${runtime.id}-${Date.now()}.txt`);
-    sendToBackend({
-        type: 'execution.event',
-        phase: 'thinking',
-        message: 'Codex CLI exec session started.',
-        target_runtime: runtime.id,
-        reason: 'codex.exec.started',
-    });
-
-    const child = spawn(launchSpec.command, buildCodexExecArgs(workspaceFolder, outputPath), {
-        cwd: workspaceFolder,
-        env: process.env,
-        shell: false,
-    });
-    activeRuntimeProcesses.set(runtime.id, child);
-
-    let stdoutBuffer = '';
-    let sawAssistantMessage = false;
-    let stderrTail = '';
-
-    const flushStdout = () => {
-        const lines = stdoutBuffer.split(/\r?\n/);
-        stdoutBuffer = lines.pop() || '';
-        for (const line of lines) {
-            const packets = parseCodexExecLine(line, runtime.id);
-            for (const packet of packets) {
-                if (packet.type === 'assistant') {
-                    sawAssistantMessage = true;
-                }
-                sendToBackend(packet as BackendMessage);
-            }
-        }
-    };
-
-    child.stdout.on('data', (chunk: Buffer) => {
-        stdoutBuffer += chunk.toString('utf8');
-        flushStdout();
-    });
-
-    child.stderr.on('data', (chunk: Buffer) => {
-        stderrTail = chunk.toString('utf8').trim() || stderrTail;
-    });
-
-    child.on('error', (error: Error) => {
-        activeRuntimeProcesses.delete(runtime.id);
-        recordRuntimeError(runtime.id, error.message);
-        sendToBackend({
-            type: 'execution.event',
-            phase: 'error',
-            message: `Codex CLI failed to start.`,
-            target_runtime: runtime.id,
-            reason: error.message,
-        });
-        void reportCapabilities();
-    });
-
-    child.on('close', (code) => {
-        flushStdout();
-        activeRuntimeProcesses.delete(runtime.id);
-        if (intentionallyStoppedProcesses.has(runtime.id)) {
-            intentionallyStoppedProcesses.delete(runtime.id);
-            void reportCapabilities();
-            return;
-        }
-
-        if (!sawAssistantMessage && fs.existsSync(outputPath)) {
-            const fallbackReply = fs
-                .readFileSync(outputPath, 'utf8')
-                .split(/\r?\n/)
-                .map((line) => line.trim())
-                .find((line) => line && !line.startsWith('202') && !line.startsWith('<html>'));
-            if (fallbackReply) {
-                sawAssistantMessage = true;
-                sendToBackend({
-                    type: 'execution.event',
-                    phase: 'output',
-                    message: 'Codex CLI reply recovered from output file.',
-                    target_runtime: runtime.id,
-                    reason: 'codex.exec.fallback',
-                });
-                sendToBackend({
-                    type: 'assistant',
-                    content: fallbackReply,
-                    message: fallbackReply,
-                    target_runtime: runtime.id,
-                });
-            }
-        }
-        if (fs.existsSync(outputPath)) {
-            fs.rmSync(outputPath, { force: true });
-        }
-
-        if (code !== 0 && code !== null) {
-            const reason = stderrTail || `codex exec exited with code ${code}`;
-            recordRuntimeError(runtime.id, reason);
-            sendToBackend({
-                type: 'execution.event',
-                phase: 'error',
-                message: 'Codex CLI execution failed.',
-                target_runtime: runtime.id,
-                reason,
-            });
-        } else if (!sawAssistantMessage) {
-            sendToBackend({
-                type: 'execution.event',
-                phase: 'output',
-                message: 'Codex CLI completed without a visible assistant reply.',
-                target_runtime: runtime.id,
-                reason: 'codex.exec',
-            });
-        }
-        void reportCapabilities();
-    });
-
-    child.stdin.write(prompt);
-    child.stdin.end();
-}
-
-function terminateActiveRuntimeProcess(runtimeId: RuntimeId): boolean {
-    const child = activeRuntimeProcesses.get(runtimeId);
-    if (!child) {
-        return false;
-    }
-
-    activeRuntimeProcesses.delete(runtimeId);
-    intentionallyStoppedProcesses.add(runtimeId);
-    if (process.platform === 'win32') {
-        spawnSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { shell: true });
-    } else {
-        child.kill('SIGTERM');
-    }
-    return true;
 }
 
 async function reportCapabilities(includeHello = false) {
