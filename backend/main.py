@@ -23,6 +23,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from backend.connection_preflight import build_connection_preflight
 from backend.connection_state import update_host_session_state
+from backend.driver_output import broadcast_driver_packets
 from backend.pairing_page import build_pairing_page_html as _build_pairing_page_html
 from backend.protocol_dispatch import is_bridge_room_event, is_host_metadata_message
 from backend.project_registry import (
@@ -1336,37 +1337,14 @@ async def _ws_loop(websocket: WebSocket, room_token: str, role: str) -> None:
 
 
 async def broadcast_driver_output(room_token: str) -> None:
-    try:
-        async for packet_text in driver.start():
-            packet = normalize_protocol_message(safe_json_loads(packet_text) or {"type": "log", "content": packet_text})
-            delivery = packet.get("delivery")
-            role_filter = packet.get("target_role")
-            if delivery == "desktop":
-                await _emit_room_event(
-                    room_token,
-                    packet,
-                    role_filter=role_filter,
-                    target_connection_id=packet.get("target_connection_id"),
-                    ignore_rate_limit=True,
-                    buffer_message=False,
-                )
-            else:
-                await _emit_room_event(
-                    room_token,
-                    packet,
-                    ignore_rate_limit=True,
-                    buffer_message=True,
-                )
-    except asyncio.CancelledError:
-        pass
-    except Exception as exc:
-        logger.error("Broadcast error: %s", exc)
-        await _emit_room_event(
-            room_token,
-            build_execution_event("error", f"Driver broadcast failed: {exc}", reason="driver_broadcast_error"),
-            ignore_rate_limit=True,
-            buffer_message=True,
-        )
+    await broadcast_driver_packets(
+        room_token,
+        packet_source=driver,
+        emit_room_event=_emit_room_event,
+        parse_json=safe_json_loads,
+        normalize_message=normalize_protocol_message,
+        logger=logger,
+    )
 
 
 async def _periodic_state_sync(room_token: str) -> None:

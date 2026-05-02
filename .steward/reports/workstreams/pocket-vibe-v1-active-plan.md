@@ -59,6 +59,7 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 - Eleventh backend split completed: snapshot session/capability packet builders moved to `backend/snapshots.py`, with direct snapshot tests.
 - Twelfth backend split completed: protocol message classification moved to `backend/protocol_dispatch.py`, removing `_handle_protocol_message` from the quality debt baseline.
 - Thirteenth backend split completed: socket message JSON parsing, handshake/resume gating, decrypt, and normalization moved to `backend/socket_messages.py`, with direct socket envelope tests.
+- Fourteenth backend split completed: desktop driver output parsing and delivery policy moved to `backend/driver_output.py`, removing `broadcast_driver_output` from the quality debt baseline.
 - Split `vscode-bridge/src/extension.ts` in small activation/client/runtime/UI slices.
 - After each slice, run the relevant targeted tests plus the v1 completion gate when behavior changes.
 
