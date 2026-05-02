@@ -229,14 +229,9 @@
       "message": "tests/test_project_state.py:6: Function 'test_get_available_commands_discovers_supported_workspace_scripts' too long (42 > 30)"
     },
     {
-      "key": "vscode-bridge/src/extension.ts|file-lines",
-      "value": 863,
-      "message": "vscode-bridge/src/extension.ts: File too long (863 lines > 800)"
-    },
-    {
       "key": "vscode-bridge/src/extension.ts|js-nesting",
       "value": 4,
-      "message": "vscode-bridge/src/extension.ts:234: JS/JSX block nesting deeper than 3"
+      "message": "vscode-bridge/src/extension.ts:240: JS/JSX block nesting deeper than 3"
     }
   ]
 }

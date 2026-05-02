@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { randomUUID } from 'crypto';
-import { spawnSync } from 'child_process';
 
 import {
     capabilityIsSupported,
@@ -25,6 +24,13 @@ import {
     type ConnectionOptions,
     type ConnectionStatus,
 } from './backendConnection';
+import {
+    persistConnectionSettings,
+    resolveAuthToken,
+    resolveBackendUrl,
+} from './bridgeSettings';
+import { isCommandAvailable } from './commandAvailability';
+import { formatLineTarget } from './messageFormatting';
 import {
     createRuntimeAdapters,
     isTerminalRuntimeAdapter,
@@ -777,85 +783,6 @@ async function manuallyAttachPreferredRuntime() {
 
 function sendToBackend(data: BackendMessage) {
     sendBackendMessage(backendConnection, data);
-}
-
-async function resolveBackendUrl(promptIfMissing = true): Promise<string | null> {
-    const config = vscode.workspace.getConfiguration('pocketVibe');
-    let backendUrl =
-        config.get<string>('backendWsUrl') ||
-        process.env.POCKET_VIBE_BACKEND_WS_URL ||
-        'ws://127.0.0.1:8000/ws';
-    backendUrl = backendUrl.trim();
-
-    if (backendUrl) {
-        return backendUrl;
-    }
-    if (!promptIfMissing) {
-        return null;
-    }
-
-    const input = await vscode.window.showInputBox({
-        prompt: 'Pocket Vibe backend WebSocket URL',
-        value: 'ws://127.0.0.1:8000/ws',
-        placeHolder: 'ws://127.0.0.1:8000/ws',
-    });
-    return input?.trim() || null;
-}
-
-async function resolveAuthToken(promptIfMissing = false): Promise<string | null> {
-    const config = vscode.workspace.getConfiguration('pocketVibe');
-    const existingToken = (config.get<string>('authToken') || process.env.POCKET_VIBE_TOKEN || '').trim();
-    if (existingToken) {
-        return existingToken;
-    }
-    if (!promptIfMissing) {
-        return null;
-    }
-    const input = await vscode.window.showInputBox({
-        prompt: 'Pocket Vibe auth token from the backend console',
-        password: true,
-        ignoreFocusOut: true,
-    });
-    return input?.trim() || null;
-}
-
-function persistConnectionSettings(backendUrl: string, authToken: string) {
-    const config = vscode.workspace.getConfiguration('pocketVibe');
-    void config.update('backendWsUrl', backendUrl, vscode.ConfigurationTarget.Global);
-    void config.update('authToken', authToken, vscode.ConfigurationTarget.Global);
-}
-
-function formatLineTarget(file?: string, lines?: number[], line?: number): string {
-    const selectedLines =
-        Array.isArray(lines) && lines.length > 0 ? lines.join(',') : line ? String(line) : 'unknown';
-    return `${file ?? 'unknown'}:${selectedLines}`;
-}
-
-function isCommandAvailable(command: string): boolean {
-    if (!command.trim()) {
-        return false;
-    }
-
-    if (looksLikeExecutablePath(command)) {
-        return true;
-    }
-
-    const lookup = process.platform === 'win32' ? 'where' : 'which';
-    const result = spawnSync(lookup, [command], { shell: true, encoding: 'utf8' });
-    if (result.status !== 0) {
-        return false;
-    }
-
-    const stdout = typeof result.stdout === 'string' ? result.stdout : '';
-    const matches = stdout
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean);
-    if (process.platform !== 'win32') {
-        return matches.length > 0;
-    }
-
-    return matches.some((candidate) => !candidate.toLowerCase().includes('\\windowsapps\\'));
 }
 
 export function deactivate() {

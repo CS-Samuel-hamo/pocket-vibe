@@ -12,6 +12,9 @@
     "vscode-bridge/src/workspaceActions.ts",
     "vscode-bridge/src/codexExecRuntime.ts",
     "vscode-bridge/src/backendConnection.ts",
+    "vscode-bridge/src/bridgeSettings.ts",
+    "vscode-bridge/src/commandAvailability.ts",
+    "vscode-bridge/src/messageFormatting.ts",
     "vscode-bridge/src/runtimeRegistry.ts",
     "vscode-bridge/src/runtimeLaunch.ts",
     "vscode-bridge/src/codexExec.ts"
@@ -55,7 +58,8 @@
     "extract_project_shell_execution",
     "extract_workspace_actions",
     "extract_codex_exec_runtime",
-    "extract_backend_connection"
+    "extract_backend_connection",
+    "extract_bridge_settings_and_utilities"
   ],
   "next_steps": [
     "extract_websocket_client",
