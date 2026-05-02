@@ -55,6 +55,7 @@ from backend.protocol_routes import (
     normalize_decision,
     project_id_from_data,
 )
+from backend.snapshots import build_snapshot_packets
 
 
 project_root = str(Path(__file__).parent.parent.absolute())
@@ -922,19 +923,13 @@ def _room_snapshot_payload(room_token: str) -> Dict[str, Any]:
 
 async def _broadcast_room_snapshot(room_token: str) -> None:
     snapshot = _room_snapshot_payload(room_token)
-    session_packet = build_session_state(
+    session_packet, capabilities_packet = build_snapshot_packets(
         room_token,
         "room",
-        bridge_connected=manager.room_has_desktop_host(room_token),
+        snapshot,
         host_connected=manager.room_has_desktop_host(room_token),
         auth_mode=AUTH_MODE,
         expires_at=TOKEN_EXPIRES_AT,
-        project_state=snapshot["project_state"],
-        project_registry=snapshot["project_registry"],
-        active_project_id=snapshot["active_project_id"],
-        host_registry=snapshot["host_registry"],
-        active_host_id=snapshot["active_host_id"],
-        active_runtime=snapshot["active_runtime"],
     )
     await manager.send_to_room(
         room_token,
@@ -944,17 +939,7 @@ async def _broadcast_room_snapshot(room_token: str) -> None:
     )
     await manager.send_to_room(
         room_token,
-        build_capabilities(
-            snapshot["runtime_catalog"],
-            session_capabilities=snapshot["session_capabilities"],
-            active_runtime=snapshot["active_runtime"],
-            active_project_id=snapshot["active_project_id"],
-            project_registry=snapshot["project_registry"],
-            host_registry=snapshot["host_registry"],
-            active_host_id=snapshot["active_host_id"],
-            bridge_label=snapshot["bridge_label"],
-            host=snapshot["host"],
-        ),
+        capabilities_packet,
         ignore_rate_limit=True,
         buffer_message=True,
     )
@@ -962,37 +947,22 @@ async def _broadcast_room_snapshot(room_token: str) -> None:
 
 async def _send_initial_snapshot(websocket: WebSocket, room_token: str, role: str) -> None:
     snapshot = _room_snapshot_payload(room_token)
+    session_packet, capabilities_packet = build_snapshot_packets(
+        room_token,
+        role,
+        snapshot,
+        host_connected=manager.room_has_desktop_host(room_token),
+        auth_mode=AUTH_MODE,
+        expires_at=TOKEN_EXPIRES_AT,
+    )
     await manager.send_packet(
         websocket,
-        build_session_state(
-            room_token,
-            role,
-            bridge_connected=manager.room_has_desktop_host(room_token),
-            host_connected=manager.room_has_desktop_host(room_token),
-            auth_mode=AUTH_MODE,
-            expires_at=TOKEN_EXPIRES_AT,
-            project_state=snapshot["project_state"],
-            project_registry=snapshot["project_registry"],
-            active_project_id=snapshot["active_project_id"],
-            host_registry=snapshot["host_registry"],
-            active_host_id=snapshot["active_host_id"],
-            active_runtime=snapshot["active_runtime"],
-        ),
+        session_packet,
         buffer_message=False,
     )
     await manager.send_packet(
         websocket,
-        build_capabilities(
-            snapshot["runtime_catalog"],
-            session_capabilities=snapshot["session_capabilities"],
-            active_runtime=snapshot["active_runtime"],
-            active_project_id=snapshot["active_project_id"],
-            project_registry=snapshot["project_registry"],
-            host_registry=snapshot["host_registry"],
-            active_host_id=snapshot["active_host_id"],
-            bridge_label=snapshot["bridge_label"],
-            host=snapshot["host"],
-        ),
+        capabilities_packet,
         buffer_message=False,
     )
 
