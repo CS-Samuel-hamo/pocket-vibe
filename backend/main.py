@@ -25,8 +25,10 @@ from backend.connection_preflight import build_connection_preflight
 from backend.host_session import build_host_session_payload
 from backend.pairing_page import build_pairing_page_html as _build_pairing_page_html
 from backend.project_registry import (
+    active_project_candidate,
     host_registry_entry,
     project_registry_entry,
+    should_update_project_selection,
     sort_host_registry,
     sort_project_registry,
 )
@@ -684,18 +686,8 @@ class ConnectionManager:
 
         selected_id = preferred_project_id or self.room_project_selection.get(room_token)
         selected = self.get_project_entry(room_token, selected_id)
-        if selected and selected.get("workspace_path"):
-            return selected
-
-        projects.sort(
-            key=lambda item: (
-                0 if item.get("workspace_path") else 1,
-                0 if item.get("runtime_health") == "ready" else 1,
-                -float(item.get("updated_at", 0) or 0),
-            )
-        )
-        fallback = projects[0]
-        if not selected_id or not selected or not selected.get("workspace_path"):
+        fallback = active_project_candidate(projects, selected)
+        if should_update_project_selection(selected_id, selected):
             self.room_project_selection[room_token] = fallback["project_id"]
         return fallback
 

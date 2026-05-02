@@ -1,8 +1,10 @@
 """Tests for project and host registry presentation helpers."""
 
 from backend.project_registry import (
+    active_project_candidate,
     host_registry_entry,
     project_registry_entry,
+    should_update_project_selection,
     sort_host_registry,
     sort_project_registry,
 )
@@ -72,3 +74,26 @@ def test_host_registry_sort_prioritizes_selected_host():
     sorted_entries = sort_host_registry(entries)
 
     assert [entry["host_id"] for entry in sorted_entries] == ["h1", "h2"]
+
+
+def test_active_project_candidate_keeps_selected_workspace_project():
+    selected = {"project_id": "p1", "workspace_path": "D:/repo", "runtime_health": "degraded"}
+    fallback = {"project_id": "p2", "workspace_path": "D:/repo2", "runtime_health": "ready"}
+
+    assert active_project_candidate([fallback], selected) == selected
+
+
+def test_active_project_candidate_prefers_workspace_and_ready_runtime():
+    projects = [
+        {"project_id": "p1", "workspace_path": None, "runtime_health": "ready", "updated_at": 20},
+        {"project_id": "p2", "workspace_path": "D:/repo2", "runtime_health": "ready", "updated_at": 10},
+        {"project_id": "p3", "workspace_path": "D:/repo3", "runtime_health": "offline", "updated_at": 30},
+    ]
+
+    assert active_project_candidate(projects, selected=None)["project_id"] == "p2"
+
+
+def test_project_selection_updates_only_when_selected_project_is_unusable():
+    assert should_update_project_selection(None, None) is True
+    assert should_update_project_selection("p1", {"project_id": "p1"}) is True
+    assert should_update_project_selection("p1", {"project_id": "p1", "workspace_path": "D:/repo"}) is False

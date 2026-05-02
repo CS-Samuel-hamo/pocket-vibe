@@ -65,7 +65,8 @@
     "extract_pairing_page_builder",
     "extract_connection_preflight_builder",
     "extract_host_session_metadata_builder",
-    "extract_project_host_registry_entry_builders"
+    "extract_project_host_registry_entry_builders",
+    "extract_active_project_selection_helpers"
   ],
   "next_steps": [
     "extract_connection_manager_state_helpers",

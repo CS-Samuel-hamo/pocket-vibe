@@ -1,6 +1,6 @@
 """Project and host registry presentation helpers."""
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 def project_registry_entry(
@@ -100,3 +100,32 @@ def sort_host_registry(entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             str(item.get("host_platform") or "").lower(),
         ),
     )
+
+
+def sort_active_project_candidates(projects: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return sorted(
+        projects,
+        key=lambda item: (
+            0 if item.get("workspace_path") else 1,
+            0 if item.get("runtime_health") == "ready" else 1,
+            -float(item.get("updated_at", 0) or 0),
+        ),
+    )
+
+
+def active_project_candidate(
+    projects: List[Dict[str, Any]],
+    selected: Optional[Dict[str, Any]],
+) -> Optional[Dict[str, Any]]:
+    if selected and selected.get("workspace_path"):
+        return selected
+    if not projects:
+        return None
+    return sort_active_project_candidates(projects)[0]
+
+
+def should_update_project_selection(
+    selected_id: Optional[str],
+    selected: Optional[Dict[str, Any]],
+) -> bool:
+    return not selected_id or not selected or not selected.get("workspace_path")
