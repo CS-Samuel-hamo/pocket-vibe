@@ -23,6 +23,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from backend.connection_preflight import build_connection_preflight
 from backend.connection_peers import filter_room_peers
+from backend.connection_disconnect import cleanup_disconnected_room, pop_connection_state
 from backend.connection_registry import (
     build_room_host_registry_entries,
     desktop_host_peers,
@@ -539,29 +540,26 @@ class ConnectionManager:
         self.connection_ids[websocket] = f"host-{uuid4().hex[:10]}"
 
     def disconnect(self, websocket: WebSocket) -> Optional[str]:
-        token = self.ws_to_room.pop(websocket, None)
-        self.roles.pop(websocket, None)
-        self.secrets.pop(websocket, None)
-        removed_connection_id = self.connection_ids.pop(websocket, None)
-        self.host_sessions.pop(websocket, None)
-        removed_project_id = self.host_projects.pop(websocket, {}).get("project_id")
-        if token and token in self.rooms:
-            if websocket in self.rooms[token]:
-                self.rooms[token].remove(websocket)
-            if not self.rooms[token]:
-                self.rooms.pop(token)
-                self.room_project_selection.pop(token, None)
-            else:
-                selected_project_id = self.room_project_selection.get(token)
-                if selected_project_id and selected_project_id == removed_project_id:
-                    replacement = self.get_active_host_project(token, preferred_project_id=None)
-                    if replacement:
-                        self.room_project_selection[token] = replacement["project_id"]
-                    else:
-                        self.room_project_selection.pop(token, None)
-        elif token and removed_connection_id:
-            self.room_project_selection.pop(token, None)
-        return token
+        record = pop_connection_state(
+            websocket,
+            roles=self.roles,
+            secrets=self.secrets,
+            ws_to_room=self.ws_to_room,
+            connection_ids=self.connection_ids,
+            host_sessions=self.host_sessions,
+            host_projects=self.host_projects,
+        )
+        cleanup_disconnected_room(
+            record,
+            websocket=websocket,
+            rooms=self.rooms,
+            room_project_selection=self.room_project_selection,
+            replacement_project=lambda: self.get_active_host_project(
+                record.token or "",
+                preferred_project_id=None,
+            ),
+        )
+        return record.token
 
     async def get_peers_in_room(
         self,
