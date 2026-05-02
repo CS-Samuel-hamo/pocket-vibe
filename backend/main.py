@@ -23,16 +23,19 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from backend.connection_preflight import build_connection_preflight
 from backend.connection_peers import filter_room_peers
+from backend.connection_registry import (
+    build_room_host_registry_entries,
+    desktop_host_peers,
+    find_metadata_by_id,
+)
 from backend.connection_state import update_host_session_state
 from backend.driver_output import broadcast_driver_packets
 from backend.pairing_page import build_pairing_page_html as _build_pairing_page_html
 from backend.protocol_dispatch import is_bridge_room_event, is_host_metadata_message
 from backend.project_registry import (
     active_project_candidate,
-    host_registry_entry,
     project_registry_entry,
     should_update_project_selection,
-    sort_host_registry,
     sort_project_registry,
 )
 from backend.project_state_payload import build_project_state_payload
@@ -658,15 +661,17 @@ class ConnectionManager:
         room_token: str,
         project_id: Optional[str],
     ) -> Optional[Dict[str, Any]]:
-        if not project_id:
-            return None
-        for peer in self.rooms.get(room_token, []):
-            if not _is_desktop_host_role(self.roles.get(peer)):
-                continue
-            metadata = self.host_projects.get(peer)
-            if metadata and metadata.get("project_id") == project_id:
-                return dict(metadata)
-        return None
+        peers = desktop_host_peers(
+            self.rooms.get(room_token, []),
+            roles=self.roles,
+            is_desktop_host_role=_is_desktop_host_role,
+        )
+        return find_metadata_by_id(
+            peers,
+            self.host_projects,
+            id_key="project_id",
+            id_value=project_id,
+        )
 
     def get_active_host_project(
         self,
@@ -708,39 +713,31 @@ class ConnectionManager:
         return None
 
     def list_room_hosts(self, room_token: str) -> List[Dict[str, Any]]:
-        entries: List[Dict[str, Any]] = []
         active_project = self.get_active_host_project(room_token)
         active_host_id = active_project.get("host_id") if active_project else None
-
-        for peer in self.rooms.get(room_token, []):
-            if not _is_desktop_host_role(self.roles.get(peer)):
-                continue
-            metadata = self.host_sessions.get(peer)
-            if not metadata:
-                continue
-            descriptor = _host_descriptor_from_metadata(metadata)
-            entries.append(
-                host_registry_entry(
-                    metadata,
-                    descriptor,
-                    active_host_id=active_host_id,
-                    default_host_label=DEFAULT_HOST_LABEL,
-                    default_platform=DEFAULT_HOST_PLATFORM,
-                )
-            )
-
-        return sort_host_registry(entries)
+        return build_room_host_registry_entries(
+            self.rooms.get(room_token, []),
+            roles=self.roles,
+            host_sessions=self.host_sessions,
+            active_host_id=active_host_id,
+            host_descriptor_from_metadata=_host_descriptor_from_metadata,
+            is_desktop_host_role=_is_desktop_host_role,
+            default_host_label=DEFAULT_HOST_LABEL,
+            default_platform=DEFAULT_HOST_PLATFORM,
+        )
 
     def get_host_entry(self, room_token: str, host_id: Optional[str]) -> Optional[Dict[str, Any]]:
-        if not host_id:
-            return None
-        for peer in self.rooms.get(room_token, []):
-            if not _is_desktop_host_role(self.roles.get(peer)):
-                continue
-            metadata = self.host_sessions.get(peer)
-            if metadata and metadata.get("host_id") == host_id:
-                return dict(metadata)
-        return None
+        peers = desktop_host_peers(
+            self.rooms.get(room_token, []),
+            roles=self.roles,
+            is_desktop_host_role=_is_desktop_host_role,
+        )
+        return find_metadata_by_id(
+            peers,
+            self.host_sessions,
+            id_key="host_id",
+            id_value=host_id,
+        )
 
     def get_active_host(self, room_token: str) -> Optional[Dict[str, Any]]:
         active_project = self.get_active_host_project(room_token)

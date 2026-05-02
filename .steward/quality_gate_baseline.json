@@ -5,43 +5,28 @@
   "violations": [
     {
       "key": "backend/main.py|file-lines",
-      "value": 1443,
-      "message": "backend/main.py: File too long (1443 lines > 800)"
+      "value": 1440,
+      "message": "backend/main.py: File too long (1440 lines > 800)"
     },
     {
       "key": "backend/main.py|function-has too deep nesting|disconnect",
       "value": 4,
-      "message": "backend/main.py:538: Function 'disconnect' has too deep nesting (4 > 3)"
+      "message": "backend/main.py:541: Function 'disconnect' has too deep nesting (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|disconnect",
       "value": 6,
-      "message": "backend/main.py:538: Function 'disconnect' has too many branches (6 > 3)"
-    },
-    {
-      "key": "backend/main.py|function-has too many branches|get_host_entry",
-      "value": 4,
-      "message": "backend/main.py:734: Function 'get_host_entry' has too many branches (4 > 3)"
-    },
-    {
-      "key": "backend/main.py|function-has too many branches|get_project_entry",
-      "value": 4,
-      "message": "backend/main.py:656: Function 'get_project_entry' has too many branches (4 > 3)"
-    },
-    {
-      "key": "backend/main.py|function-has too many branches|list_room_hosts",
-      "value": 4,
-      "message": "backend/main.py:710: Function 'list_room_hosts' has too many branches (4 > 3)"
+      "message": "backend/main.py:541: Function 'disconnect' has too many branches (6 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|websocket_endpoint",
       "value": 4,
-      "message": "backend/main.py:1392: Function 'websocket_endpoint' has too many branches (4 > 3)"
+      "message": "backend/main.py:1389: Function 'websocket_endpoint' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-too long|websocket_endpoint",
       "value": 45,
-      "message": "backend/main.py:1392: Function 'websocket_endpoint' too long (45 > 30)"
+      "message": "backend/main.py:1389: Function 'websocket_endpoint' too long (45 > 30)"
     },
     {
       "key": "backend/telemetry.py|function-too long|monitor",
