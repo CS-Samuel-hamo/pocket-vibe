@@ -129,3 +129,13 @@ def should_update_project_selection(
     selected: Optional[Dict[str, Any]],
 ) -> bool:
     return not selected_id or not selected or not selected.get("workspace_path")
+
+
+def should_replace_room_selection(
+    current_selection: Optional[str],
+    current_entry: Optional[Dict[str, Any]],
+    candidate: Dict[str, Any],
+) -> bool:
+    if not current_selection or not current_entry:
+        return True
+    return not current_entry.get("workspace_path") and bool(candidate.get("workspace_path"))

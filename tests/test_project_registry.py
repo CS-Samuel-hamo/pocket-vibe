@@ -5,6 +5,7 @@ from backend.project_registry import (
     host_registry_entry,
     project_registry_entry,
     should_update_project_selection,
+    should_replace_room_selection,
     sort_host_registry,
     sort_project_registry,
 )
@@ -97,3 +98,12 @@ def test_project_selection_updates_only_when_selected_project_is_unusable():
     assert should_update_project_selection(None, None) is True
     assert should_update_project_selection("p1", {"project_id": "p1"}) is True
     assert should_update_project_selection("p1", {"project_id": "p1", "workspace_path": "D:/repo"}) is False
+
+
+def test_room_selection_replacement_prefers_real_workspace():
+    candidate = {"project_id": "new", "workspace_path": "D:/repo"}
+
+    assert should_replace_room_selection(None, None, candidate) is True
+    assert should_replace_room_selection("old", None, candidate) is True
+    assert should_replace_room_selection("old", {"project_id": "old"}, candidate) is True
+    assert should_replace_room_selection("old", {"project_id": "old", "workspace_path": "D:/old"}, candidate) is False

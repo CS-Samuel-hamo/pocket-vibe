@@ -22,7 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from backend.connection_preflight import build_connection_preflight
-from backend.host_session import build_host_session_payload
+from backend.connection_state import update_host_session_state
 from backend.pairing_page import build_pairing_page_html as _build_pairing_page_html
 from backend.project_registry import (
     active_project_candidate,
@@ -585,37 +585,20 @@ class ConnectionManager:
         active_runtime: Optional[str] = None,
         bridge_label: str = DEFAULT_HOST_LABEL,
     ) -> Optional[Dict[str, Any]]:
-        if not _is_desktop_host_role(self.roles.get(websocket)):
-            return None
-
-        room_token = self.ws_to_room.get(websocket)
-        connection_id = self.connection_ids.get(websocket)
-        if not room_token or not connection_id:
-            return None
-
-        payload = build_host_session_payload(
-            bridge=bridge,
-            project=project,
-            session_capabilities=session_capabilities,
-            runtime_catalog=runtime_catalog,
-            active_runtime=active_runtime,
-            connection_id=connection_id,
-            bridge_label=bridge_label,
+        return update_host_session_state(
+            self,
+            websocket,
+            payload_options={
+                "bridge": bridge,
+                "project": project,
+                "session_capabilities": session_capabilities,
+                "runtime_catalog": runtime_catalog,
+                "active_runtime": active_runtime,
+                "bridge_label": bridge_label,
+            },
             default_platform=DEFAULT_HOST_PLATFORM,
+            is_desktop_host_role=_is_desktop_host_role,
         )
-        metadata = payload["project"]
-        project_id = metadata["project_id"]
-        self.host_sessions[websocket] = payload["session"]
-        self.host_projects[websocket] = metadata
-
-        current_selection = self.room_project_selection.get(room_token)
-        current_entry = self.get_project_entry(room_token, current_selection) if current_selection else None
-        if not current_selection or not current_entry:
-            self.room_project_selection[room_token] = project_id
-        elif not current_entry.get("workspace_path") and metadata.get("workspace_path"):
-            self.room_project_selection[room_token] = project_id
-
-        return metadata
 
     def update_bridge_project(
         self,
