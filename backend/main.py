@@ -21,6 +21,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
+from backend.connection_preflight import build_connection_preflight
 from backend.pairing_page import build_pairing_page_html as _build_pairing_page_html
 
 
@@ -192,71 +193,13 @@ async def _authenticate(websocket: WebSocket, token: Optional[str]) -> bool:
 
 
 def _build_connection_preflight(token: Optional[str]) -> Dict[str, Any]:
-    normalized_token = str(token or "").strip()
-    room_token = normalized_token or "default_room"
-
-    if AUTH_TOKEN and not normalized_token:
-        return {
-            "type": "connection.preflight",
-            "ok": False,
-            "reason": "token_missing",
-            "message": "Session token is required.",
-            "auth_mode": AUTH_MODE,
-            "expires_at": TOKEN_EXPIRES_AT,
-            "host_connected": False,
-            "host_count": 0,
-            "project_count": 0,
-            "active_project_name": None,
-            "active_runtime": None,
-        }
-
-    if AUTH_TOKEN and normalized_token != AUTH_TOKEN:
-        return {
-            "type": "connection.preflight",
-            "ok": False,
-            "reason": "token_mismatch",
-            "message": "Session token does not match the desktop host.",
-            "auth_mode": AUTH_MODE,
-            "expires_at": TOKEN_EXPIRES_AT,
-            "host_connected": False,
-            "host_count": 0,
-            "project_count": 0,
-            "active_project_name": None,
-            "active_runtime": None,
-        }
-
-    if AUTH_MODE == "ephemeral" and TOKEN_EXPIRES_AT and time.time() > TOKEN_EXPIRES_AT:
-        return {
-            "type": "connection.preflight",
-            "ok": False,
-            "reason": "token_expired",
-            "message": "Session token expired. Restart the desktop host.",
-            "auth_mode": AUTH_MODE,
-            "expires_at": TOKEN_EXPIRES_AT,
-            "host_connected": False,
-            "host_count": 0,
-            "project_count": 0,
-            "active_project_name": None,
-            "active_runtime": None,
-        }
-
-    active_project = manager.get_active_host_project(room_token)
-    projects = manager.list_room_projects(room_token)
-    hosts = manager.list_room_hosts(room_token)
-
-    return {
-        "type": "connection.preflight",
-        "ok": True,
-        "reason": "ok",
-        "message": "API and token are reachable.",
-        "auth_mode": AUTH_MODE,
-        "expires_at": TOKEN_EXPIRES_AT,
-        "host_connected": manager.room_has_desktop_host(room_token),
-        "host_count": len(hosts),
-        "project_count": len(projects),
-        "active_project_name": active_project.get("project_name") if active_project else None,
-        "active_runtime": active_project.get("active_runtime") if active_project else None,
-    }
+    return build_connection_preflight(
+        token,
+        auth_token=AUTH_TOKEN,
+        auth_mode=AUTH_MODE,
+        expires_at=TOKEN_EXPIRES_AT,
+        manager=manager,
+    )
 
 
 def _resolve_project_root(project_id: Optional[str] = None) -> Path:

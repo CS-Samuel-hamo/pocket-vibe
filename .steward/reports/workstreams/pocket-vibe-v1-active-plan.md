@@ -47,6 +47,7 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 - Make `scripts/quality_gate.py` commit-safe without weakening the documented thresholds, using `.steward/quality_gate_baseline.json` to block new or worse violations.
 - Split `backend/main.py` in small route/session/protocol slices.
 - First backend split completed: pairing page rendering moved to `backend/pairing_page.py`, with renderer tests.
+- Second backend split completed: connection preflight payload construction moved to `backend/connection_preflight.py`, with direct preflight tests.
 - Split `vscode-bridge/src/extension.ts` in small activation/client/runtime/UI slices.
 - After each slice, run the relevant targeted tests plus the v1 completion gate when behavior changes.
 
