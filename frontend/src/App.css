@@ -108,8 +108,84 @@
 }
 
 .remote-chat-shell {
-  padding: 8px 14px 0;
+  padding: 10px 14px 0;
+  gap: 10px;
+}
+
+.compact-actions {
   gap: 8px;
+}
+
+.remote-home-card {
+  padding: 14px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(100, 210, 255, 0.12), transparent 32%),
+    rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.remote-home-card.healthy {
+  border-color: rgba(78, 201, 176, 0.2);
+}
+
+.remote-home-card.danger {
+  border-color: rgba(255, 128, 128, 0.28);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 128, 128, 0.12), transparent 32%),
+    rgba(255, 128, 128, 0.04);
+}
+
+.remote-home-card-main {
+  min-width: 0;
+}
+
+.remote-home-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: #64d2ff;
+}
+
+.remote-home-title {
+  margin-top: 5px;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.6px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remote-home-meta {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.remote-home-meta span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.remote-home-actions {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.remote-home-actions .adm-button {
+  justify-content: center;
 }
 
 .remote-status-strip {
@@ -150,10 +226,10 @@
 .project-inbox-strip {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
+  gap: 8px;
+  padding: 10px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(255, 255, 255, 0.025);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -171,7 +247,7 @@
 }
 
 .project-inbox-copy {
-  margin-top: 4px;
+  margin-top: 2px;
   font-size: 11px;
   line-height: 1.45;
   color: var(--text-muted);
@@ -187,9 +263,9 @@
 }
 
 .project-inbox-card {
-  min-width: min(250px, calc(100vw - 76px));
-  max-width: min(280px, calc(100vw - 64px));
-  padding: 12px;
+  min-width: min(210px, calc(100vw - 92px));
+  max-width: min(240px, calc(100vw - 72px));
+  padding: 10px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
@@ -197,7 +273,7 @@
   text-align: left;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   appearance: none;
   cursor: pointer;
   font: inherit;
@@ -230,7 +306,7 @@
 }
 
 .project-inbox-card-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1.3;
   color: var(--text-primary);
@@ -282,6 +358,10 @@
   font-size: 12px;
   line-height: 1.5;
   color: #dbe1ea;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .remote-banner {

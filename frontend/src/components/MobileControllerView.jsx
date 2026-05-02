@@ -87,13 +87,6 @@ export default function MobileControllerView({
     );
 
     const connectionTone = status === 'connected' && hostConnected ? 'healthy' : 'danger';
-    const runtimeTone = activeRuntime?.health === 'ready'
-        ? 'healthy'
-        : activeRuntime?.health === 'degraded'
-            ? 'warning'
-            : 'danger';
-    const projectTone = activeProject ? 'healthy' : 'warning';
-    const approvalTone = pendingApproval ? 'warning' : 'healthy';
     const statusLabel = thinking
         ? 'EXECUTION ACTIVE'
         : hostConnected
@@ -103,6 +96,11 @@ export default function MobileControllerView({
         activeProject?.project_name ||
         sessionInfo.project_state?.project_name ||
         'Project unavailable';
+    const projectCountLabel = projectRegistry.length > 1
+        ? `${projectRegistry.length} projects`
+        : '1 project';
+    const activeRuntimeState = activeRuntime?.health || 'offline';
+    const activeProjectPreview = projectInboxEntries.find((entry) => entry.isActive) || projectInboxEntries[0];
 
     const runtimeBanner = runtimeSummaryState
         ? {
@@ -225,9 +223,9 @@ export default function MobileControllerView({
                             </div>
                         </div>
                     </div>
-                    <div className="header-actions" style={{ gap: 8 }}>
+                    <div className="header-actions compact-actions">
                         <Button size="mini" fill="outline" onClick={() => setToolsVisible(true)}>
-                            +
+                            Tools
                         </Button>
                         <Button
                             size="mini"
@@ -243,20 +241,30 @@ export default function MobileControllerView({
                 </header>
 
                 <div className="mobile-content remote-chat-shell" style={{ opacity: status === 'connected' ? 1 : 0.72 }}>
-                    <div className="remote-status-strip compact">
-                        <div className={`remote-status-pill ${projectTone}`}>
-                            Project {projectLabel}
+                    <section className={`remote-home-card ${connectionTone}`}>
+                        <div className="remote-home-card-main">
+                            <div className="remote-home-eyebrow">
+                                {hostConnected ? 'Host connected' : 'Host offline'}
+                            </div>
+                            <div className="remote-home-title">{projectLabel}</div>
+                            <div className="remote-home-meta">
+                                <span>{runtimeLabel}</span>
+                                <span>{activeRuntimeState}</span>
+                                <span>{pendingApproval ? 'approval pending' : 'approval clear'}</span>
+                            </div>
                         </div>
-                        <div className={`remote-status-pill ${connectionTone}`}>
-                            Host {hostConnected ? 'online' : 'offline'}
+                        <div className="remote-home-actions">
+                            <Button size="small" fill="solid" color="primary" onClick={() => openToolsView('skills')}>
+                                Vibe
+                            </Button>
+                            <Button size="small" fill="outline" onClick={() => openToolsView('files')}>
+                                Files
+                            </Button>
+                            <Button size="small" fill="outline" onClick={() => openToolsView('projects')}>
+                                {projectCountLabel}
+                            </Button>
                         </div>
-                        <div className={`remote-status-pill ${runtimeTone}`}>
-                            {runtimeLabel} {activeRuntime?.health || 'offline'}
-                        </div>
-                        <div className={`remote-status-pill ${approvalTone}`}>
-                            Approval {pendingApproval ? 'pending' : 'clear'}
-                        </div>
-                    </div>
+                    </section>
 
                     {projectInboxEntries.length > 1 && (
                         <section className="project-inbox-strip">
@@ -264,7 +272,7 @@ export default function MobileControllerView({
                                 <div>
                                     <div className="project-inbox-title">Projects</div>
                                     <div className="project-inbox-copy">
-                                        Switch between active desktop projects without leaving the chat flow.
+                                        Current: {activeProjectPreview?.project_name || projectLabel}
                                     </div>
                                 </div>
                                 <Button size="mini" fill="outline" onClick={() => openToolsView('projects')}>
@@ -287,10 +295,14 @@ export default function MobileControllerView({
                                             </span>
                                         </div>
                                         <div className="project-inbox-card-meta">
-                                            {entry.hostLabel} • {entry.runtimeLabel} • {entry.health}
+                                            {entry.hostLabel} - {entry.runtimeLabel} - {entry.health}
                                         </div>
-                                        <div className="project-inbox-card-preview-label">{entry.previewLabel}</div>
-                                        <div className="project-inbox-card-preview">{entry.previewText}</div>
+                                        {entry.isActive ? (
+                                            <>
+                                                <div className="project-inbox-card-preview-label">{entry.previewLabel}</div>
+                                                <div className="project-inbox-card-preview">{entry.previewText}</div>
+                                            </>
+                                        ) : null}
                                     </button>
                                 ))}
                             </div>
@@ -385,7 +397,7 @@ export default function MobileControllerView({
                             <div className="tools-sheet-kicker">Actions</div>
                             <div className="tools-sheet-title">
                                 {toolsView === 'menu'
-                                    ? 'Desktop controls'
+                                    ? 'Tools'
                                     : toolsView === 'skills'
                                         ? 'Vibe skills'
                                     : toolsView === 'scripts'
@@ -413,9 +425,9 @@ export default function MobileControllerView({
                         {toolsView === 'menu' && (
                             <div className="tools-menu-layout">
                                 <div className="tools-menu-section">
-                                    <div className="tools-menu-section-title">Quick Actions</div>
+                                    <div className="tools-menu-section-title">Main Actions</div>
                                     <div className="tools-menu-copy">
-                                        High-signal actions for phone control.
+                                        The actions you should need most from the phone.
                                     </div>
                                     <div className="tools-primary-actions">
                                         <Button block fill="solid" color="primary" onClick={() => openToolsView('skills')}>
@@ -424,17 +436,17 @@ export default function MobileControllerView({
                                         <Button block fill="outline" onClick={() => openToolsView('files')}>
                                             <FolderSearch size={16} /> Search Files
                                         </Button>
-                                        <Button block fill="outline" onClick={() => openToolsView('scripts')}>
-                                            <Terminal size={16} /> Run Script
+                                        <Button block fill="outline" onClick={() => openToolsView('projects')}>
+                                            <FolderTree size={16} /> Projects
                                         </Button>
                                     </div>
                                 </div>
 
                                 <div className="tools-menu-section subdued">
-                                    <div className="tools-menu-section-title">More</div>
+                                    <div className="tools-menu-section-title">Advanced</div>
                                     <div className="tools-secondary-actions">
-                                        <Button block fill="outline" onClick={() => openToolsView('projects')}>
-                                            <FolderTree size={16} /> Projects
+                                        <Button block fill="outline" onClick={() => openToolsView('scripts')}>
+                                            <Terminal size={16} /> Run Script
                                         </Button>
                                         <Button block fill="outline" onClick={() => openToolsView('runtime')}>
                                             <Layers size={16} /> Switch Runtime
@@ -516,7 +528,7 @@ export default function MobileControllerView({
                                                     </div>
                                                     <div className="runtime-card-meta">
                                                         {project.runtime_label || project.active_runtime || 'Desktop Host'}
-                                                        {' · '}
+                                                        {' - '}
                                                         {project.runtime_health || 'offline'}
                                                     </div>
                                                     <div className="runtime-card-detail">

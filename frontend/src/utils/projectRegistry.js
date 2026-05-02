@@ -22,7 +22,7 @@ function truncatePreview(value, limit = 110) {
     if (!text) {
         return '';
     }
-    return text.length > limit ? `${text.slice(0, limit - 1)}…` : text;
+    return text.length > limit ? `${text.slice(0, limit - 3)}...` : text;
 }
 
 function createProjectActivity(project) {
@@ -205,7 +205,7 @@ export function getProjectSwitchState(project, activeProjectId) {
     const detail =
         project.status_detail ||
         project.last_error ||
-        `${hostLabel} • ${runtimeLabel} • ${health}`;
+        `${hostLabel} - ${runtimeLabel} - ${health}`;
 
     return {
         isActive,
