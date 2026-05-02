@@ -52,7 +52,10 @@ See [QUICKSTART.md](/D:/AI_projects/Pocket_Vibe/QUICKSTART.md) for the exact loc
 
 ## Verification
 
+- v1 desktop gate: `.\scripts\v1_desktop_gate.ps1`
 - Backend tests: `pytest tests -q`
 - Frontend capability tests: `cd frontend && npm run test:capabilities`
 - Frontend build: `cd frontend && npm run build`
 - Bridge compile: `cd vscode-bridge && npm run compile`
+
+The real-phone v1 acceptance runbook is [v1_acceptance_script.md](/D:/AI_projects/Pocket_Vibe/docs/v1_acceptance_script.md).

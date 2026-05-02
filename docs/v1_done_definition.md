@@ -28,6 +28,8 @@ The demo is successful only if a fresh reviewer can complete this flow in five m
 6. Open `Vibe Skills`, send `Project Brief`, and receive a useful response or a clear runtime failure.
 7. Press `Kill` only if runtime capability is available; otherwise the button must be disabled with a reason.
 
+The canonical runbook for this demo is [v1_acceptance_script.md](/D:/AI_projects/Pocket_Vibe/docs/v1_acceptance_script.md).
+
 ## v1 Supported Scope
 
 - LAN phone-to-desktop pairing through the generated mobile link.
@@ -53,6 +55,7 @@ The demo is successful only if a fresh reviewer can complete this flow in five m
 
 v1 can be called complete when all items below are true:
 
+- `powershell -ExecutionPolicy Bypass -File scripts/v1_desktop_gate.ps1` passes without skip flags.
 - `pytest tests -q` passes.
 - `cd frontend && npm run test:capabilities` passes.
 - `cd frontend && npm run build` passes.
@@ -74,10 +77,10 @@ The only allowed post-gate changes before the tag are:
 
 ## Next Single Action
 
-Create a clean Git baseline for v1:
+Run the v1 acceptance gate and record real-phone evidence:
 
-1. Expand `.gitignore` so runtime artifacts stay out of source control.
-2. Review the remaining untracked files by category.
-3. Stage only source, tests, docs, scripts, and steward planning files needed for v1.
-4. Run the completion gate.
-5. Commit as `chore: establish pocket vibe v1 baseline`.
+1. Run `.\scripts\v1_desktop_gate.ps1`.
+2. Start `.\start.ps1`.
+3. Complete [v1_acceptance_script.md](/D:/AI_projects/Pocket_Vibe/docs/v1_acceptance_script.md) on a real phone.
+4. Record runtime evidence.
+5. Commit only source, tests, docs, scripts, and steward planning files needed for v1.

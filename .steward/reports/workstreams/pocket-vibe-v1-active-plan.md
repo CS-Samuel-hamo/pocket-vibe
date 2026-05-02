@@ -23,8 +23,8 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 
 1. The Git baseline is not clean enough for release.
    Source, docs, local runtime state, logs, generated reports, screenshots, and VS Code user data are still mixed in one dirty worktree.
-2. The five-minute demo still needs a single authoritative acceptance script.
-   README and QUICKSTART describe the path, but release completion must be judged against one fixed v1 demo.
+2. The five-minute demo now has a single authoritative acceptance script.
+   `docs/v1_acceptance_script.md` defines the real-phone runbook, and `scripts/v1_desktop_gate.ps1` covers automated desktop checks.
 3. `codex-cli` is the only runtime that should block v1.
    Other runtimes and host families must remain degraded, unsupported, or backlog until the reference path is tagged.
 4. Host platform expansion is valid but paused.
@@ -36,7 +36,7 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 | Track | Goal | Status | Primary Modules |
 | --- | --- | --- | --- |
 | `v1-baseline` | Clean Git scope and define the release gate | active | `docs`, `mobile-pwa`, `backend-api`, `desktop-bridge` |
-| `reference-demo` | Prove phone PWA -> backend -> VS Code bridge -> codex-cli in five minutes | pending-smoke | `mobile-pwa`, `desktop-bridge`, `core-runtime` |
+| `reference-demo` | Prove phone PWA -> backend -> VS Code bridge -> codex-cli in five minutes | desktop-gate-passed-phone-smoke-pending | `mobile-pwa`, `desktop-bridge`, `core-runtime` |
 | `host-platform` | Preserve host-agnostic contracts without expanding adapters | paused-after-validation | `backend-api`, `protocol-contract`, `desktop-bridge` |
 | `quality-debt` | Make the post-baseline codebase commit-safe and split oversized modules without protocol drift | active | `backend-api`, `desktop-bridge`, `core-runtime` |
 
@@ -78,6 +78,8 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 - Fifth VS Code bridge split completed: backend WebSocket connection state, reconnect handling, message parsing, and socket sending moved to `vscode-bridge/src/backendConnection.ts`, reducing `extension.ts` to 863 lines.
 - Sixth VS Code bridge split completed: connection settings, command availability detection, and line-target formatting moved to focused helpers, reducing `extension.ts` to 790 lines and removing the bridge file-length quality debt.
 - Seventh VS Code bridge cleanup completed: prompt dispatch dependencies and runtime attach terminal readiness were flattened, keeping `extension.ts` under 800 lines and removing its remaining JS nesting debt.
+- V1 reference demo gate added: `scripts/v1_desktop_gate.ps1` runs the automated desktop checks, and `docs/v1_acceptance_script.md` defines the real-phone smoke without pretending phone validation is automated.
+- Desktop v1 gate passed on 2026-05-02: backend tests, frontend capability tests, frontend production build, VS Code bridge runtime tests, and repository quality gate all passed through `scripts/v1_desktop_gate.ps1`.
 - Continue splitting `vscode-bridge/src/extension.ts` in small activation/client/runtime/UI slices.
 - After each slice, run the relevant targeted tests plus the v1 completion gate when behavior changes.
 
@@ -113,7 +115,7 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 2. Fix the quality gate helper and measured baseline so small future commits can pass without bypassing hooks.
 3. Split `backend/main.py` without websocket protocol drift.
 4. Split `vscode-bridge/src/extension.ts` without runtime dispatch regression.
-5. Re-run the real-phone reference smoke after the backend and bridge splits.
+5. Run the desktop gate and then re-run the real-phone reference smoke.
 
 ## Notes
 

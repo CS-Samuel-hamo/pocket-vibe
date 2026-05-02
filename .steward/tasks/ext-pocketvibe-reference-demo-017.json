@@ -1,0 +1,56 @@
+{
+  "task_id": "ext-pocketvibe-reference-demo-017",
+  "task": "Create the single v1 reference acceptance script and desktop gate for phone PWA -> backend -> VS Code bridge -> codex-cli validation.",
+  "task_type": "release-readiness",
+  "risk_level": "medium",
+  "task_mode": "post-baseline",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "docs/v1_done_definition.md",
+    "docs/v1_acceptance_script.md",
+    "scripts/v1_desktop_gate.ps1",
+    "README.md",
+    "QUICKSTART.md"
+  ],
+  "matched_modules": [
+    "docs",
+    "desktop-bridge",
+    "mobile-pwa",
+    "backend-api"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.require_tests_for_behavior_change",
+    "desktop-bridge.fallback_paths_must_emit_user-visible-status",
+    "mobile-pwa.kill_switch_and_approval_flows_require_visible_feedback"
+  ],
+  "constraints": [
+    "Do not mark the phone smoke as passed without real-phone evidence.",
+    "Do not expand v1 scope beyond codex-cli reference validation.",
+    "Keep automated desktop checks separate from manual phone acceptance."
+  ],
+  "required_checks": [
+    "powershell -ExecutionPolicy Bypass -File scripts/v1_desktop_gate.ps1",
+    "manual-real-phone-smoke"
+  ],
+  "required_approvals": [
+    "main-orchestrator"
+  ],
+  "suggested_write_scope": [
+    "docs/**",
+    "scripts/**",
+    ".steward/**",
+    "README.md",
+    "QUICKSTART.md"
+  ],
+  "completed_slices": [
+    "add_desktop_gate",
+    "add_reference_acceptance_script",
+    "desktop_gate_passed_2026_05_02"
+  ],
+  "next_steps": [
+    "run_real_phone_smoke",
+    "record_runtime_evidence"
+  ],
+  "decision": "desktop_gate_passed_phone_smoke_pending"
+}

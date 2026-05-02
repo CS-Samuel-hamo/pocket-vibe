@@ -86,6 +86,16 @@ The PWA will connect to the backend, bootstrap the session, then show:
 
 ## 4. Verify the stack
 
+For the full desktop-side v1 gate, run:
+
+```powershell
+.\scripts\v1_desktop_gate.ps1
+```
+
+This does not replace the real-phone smoke. It only verifies the automated desktop checks.
+
+Individual checks:
+
 Run these from the repo root:
 
 ```powershell
@@ -118,4 +128,4 @@ For v1, validate the reference path before testing other runtimes or hosts:
 phone PWA -> FastAPI backend -> VS Code bridge -> codex-cli terminal
 ```
 
-The five-minute acceptance demo is defined in [docs/v1_done_definition.md](/D:/AI_projects/Pocket_Vibe/docs/v1_done_definition.md). If this path is not stable, do not expand native host adapters, dashboards, or extra runtime features.
+The five-minute acceptance demo is defined in [docs/v1_acceptance_script.md](/D:/AI_projects/Pocket_Vibe/docs/v1_acceptance_script.md) and governed by [docs/v1_done_definition.md](/D:/AI_projects/Pocket_Vibe/docs/v1_done_definition.md). If this path is not stable, do not expand native host adapters, dashboards, or extra runtime features.
