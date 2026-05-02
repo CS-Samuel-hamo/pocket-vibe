@@ -4,3 +4,4 @@ websockets
 qrcode
 cryptography
 httpx
+psutil

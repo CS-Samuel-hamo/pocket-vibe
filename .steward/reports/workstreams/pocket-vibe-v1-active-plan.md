@@ -83,6 +83,7 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 - Remaining untracked files were narrowed to a review queue in `docs/v1_release_manifest.md`; generated steward runtime state is now ignored, while CI, legacy planning, marketing, scaffold, and infra files remain explicit human-review items.
 - Release infrastructure review completed for `.github/` and `.pre-commit-config.yaml`; both now use existing v1 gate/quality-gate commands instead of missing `steward_cli` entrypoints.
 - Module README review completed for `backend/README.md` and `frontend/README.md`; both now describe the current v1 backend/PWA responsibilities and verification commands.
+- Backend runtime dependency gap fixed: `psutil` is now declared because pairing IP detection imports it.
 - Continue splitting `vscode-bridge/src/extension.ts` in small activation/client/runtime/UI slices.
 - After each slice, run the relevant targeted tests plus the v1 completion gate when behavior changes.
 
