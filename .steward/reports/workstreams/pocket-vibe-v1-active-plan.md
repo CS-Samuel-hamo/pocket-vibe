@@ -81,6 +81,7 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 - V1 reference demo gate added: `scripts/v1_desktop_gate.ps1` runs the automated desktop checks, and `docs/v1_acceptance_script.md` defines the real-phone smoke without pretending phone validation is automated.
 - Desktop v1 gate passed on 2026-05-02: backend tests, frontend capability tests, frontend production build, VS Code bridge runtime tests, and repository quality gate all passed through `scripts/v1_desktop_gate.ps1`.
 - Remaining untracked files were narrowed to a review queue in `docs/v1_release_manifest.md`; generated steward runtime state is now ignored, while CI, legacy planning, marketing, scaffold, and infra files remain explicit human-review items.
+- Release infrastructure review completed for `.github/` and `.pre-commit-config.yaml`; both now use existing v1 gate/quality-gate commands instead of missing `steward_cli` entrypoints.
 - Continue splitting `vscode-bridge/src/extension.ts` in small activation/client/runtime/UI slices.
 - After each slice, run the relevant targeted tests plus the v1 completion gate when behavior changes.
 

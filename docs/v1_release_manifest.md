@@ -42,7 +42,7 @@ The following categories need human review before they enter the baseline:
 
 As of 2026-05-02, the remaining untracked files should be handled as follows before a release baseline:
 
-- Candidate release infrastructure, validate before staging: `.github/`, `.pre-commit-config.yaml`.
+- Release infrastructure, now validated against existing repo commands and safe to stage: `.github/`, `.pre-commit-config.yaml`.
 - Candidate docs, validate for current v1 wording before staging: `backend/README.md`, `frontend/README.md`.
 - Marketing or distribution backlog, do not stage for v1 runtime baseline by default: `docs/App_Store_Description.md`, `docs/Beta_Invites.md`, `docs/Discord_Post.md`.
 - Historical planning backlog, keep local or move to archive after review: `Phase 2 Logic & Migration.md`, `Restarting System Components.md`, `docs/implementation_plan_phase2.md`, `docs/implementation_plan_phase3.md`, `plan.md`, `task.md`.
