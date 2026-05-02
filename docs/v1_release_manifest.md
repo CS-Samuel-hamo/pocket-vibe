@@ -38,6 +38,18 @@ The following categories need human review before they enter the baseline:
 - external agent config folders such as `.antigravity/` and `.github/`;
 - legacy top-level planning files: `plan.md`, `task.md`, `agents.md`, `GEMINI.md`.
 
+## Current Untracked Review Queue
+
+As of 2026-05-02, the remaining untracked files should be handled as follows before a release baseline:
+
+- Candidate release infrastructure, validate before staging: `.github/`, `.pre-commit-config.yaml`.
+- Candidate docs, validate for current v1 wording before staging: `backend/README.md`, `frontend/README.md`.
+- Marketing or distribution backlog, do not stage for v1 runtime baseline by default: `docs/App_Store_Description.md`, `docs/Beta_Invites.md`, `docs/Discord_Post.md`.
+- Historical planning backlog, keep local or move to archive after review: `Phase 2 Logic & Migration.md`, `Restarting System Components.md`, `docs/implementation_plan_phase2.md`, `docs/implementation_plan_phase3.md`, `plan.md`, `task.md`.
+- Legacy agent/scaffold material, do not stage without a separate template decision: `GEMINI.md`, `agents.md`, `scaffold.py`, `scaffold_ai_project.ps1`, `init_cluster.ps1`, `init_cluster_bootstrap.ps1`, `docs/.antigravity/`.
+- Legacy startup alias, stage only if it remains a documented supported path: `start_openvibe.ps1`.
+- Infrastructure folder, review independently before staging: `infra/`.
+
 ## Current Git Metadata Blocker
 
 At the start of baseline work, `backend/` and `frontend/` were nested Git worktrees, not ordinary root-repo directories. This blocker is now resolved for v1 by backing up and removing the nested `.git` pointer files. See [git_baseline_plan.md](/D:/AI_projects/Pocket_Vibe/docs/git_baseline_plan.md) for the recorded decision.
