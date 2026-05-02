@@ -14,31 +14,17 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
-from uuid import uuid4
 
 import psutil
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
+from backend.connection_manager import ConnectionManager, ConnectionManagerDependencies
 from backend.connection_preflight import build_connection_preflight
-from backend.connection_peers import filter_room_peers
-from backend.connection_disconnect import cleanup_disconnected_room, pop_connection_state
-from backend.connection_registry import (
-    build_room_host_registry_entries,
-    desktop_host_peers,
-    find_metadata_by_id,
-)
-from backend.connection_state import update_host_session_state
 from backend.driver_output import broadcast_driver_packets
 from backend.pairing_page import build_pairing_page_html as _build_pairing_page_html
 from backend.protocol_dispatch import is_bridge_room_event, is_host_metadata_message
-from backend.project_registry import (
-    active_project_candidate,
-    project_registry_entry,
-    should_update_project_selection,
-    sort_project_registry,
-)
 from backend.project_state_payload import build_project_state_payload
 from backend.protocol_routes import (
     approval_id,
@@ -524,348 +510,21 @@ async def add_phrase(data: Dict[str, str]):
     return {"status": "success"}
 
 
-class ConnectionManager:
-    def __init__(self) -> None:
-        self.rooms: Dict[str, List[WebSocket]] = {}
-        self.roles: Dict[WebSocket, str] = {}
-        self.secrets: Dict[WebSocket, bytes] = {}
-        self.ws_to_room: Dict[WebSocket, str] = {}
-        self.connection_ids: Dict[WebSocket, str] = {}
-        self.host_sessions: Dict[WebSocket, Dict[str, Any]] = {}
-        self.host_projects: Dict[WebSocket, Dict[str, Any]] = {}
-        self.bridge_projects = self.host_projects
-        self.room_project_selection: Dict[str, str] = {}
-
-    async def connect(self, websocket: WebSocket, token: str, role: str) -> None:
-        await websocket.accept()
-        self.rooms.setdefault(token, []).append(websocket)
-        self.roles[websocket] = role
-        self.ws_to_room[websocket] = token
-        self.connection_ids[websocket] = f"host-{uuid4().hex[:10]}"
-
-    def disconnect(self, websocket: WebSocket) -> Optional[str]:
-        record = pop_connection_state(
-            websocket,
-            roles=self.roles,
-            secrets=self.secrets,
-            ws_to_room=self.ws_to_room,
-            connection_ids=self.connection_ids,
-            host_sessions=self.host_sessions,
-            host_projects=self.host_projects,
-        )
-        cleanup_disconnected_room(
-            record,
-            websocket=websocket,
-            rooms=self.rooms,
-            room_project_selection=self.room_project_selection,
-            replacement_project=lambda: self.get_active_host_project(
-                record.token or "",
-                preferred_project_id=None,
-            ),
-        )
-        return record.token
-
-    async def get_peers_in_room(
-        self,
-        room_token: str,
-        *,
-        exclude_ws: Optional[WebSocket] = None,
-        role_filter: Optional[str] = None,
-        target_connection_id: Optional[str] = None,
-    ) -> List[WebSocket]:
-        return filter_room_peers(
-            self.rooms.get(room_token, []),
-            roles=self.roles,
-            connection_ids=self.connection_ids,
-            exclude_ws=exclude_ws,
-            role_filter=role_filter,
-            target_connection_id=target_connection_id,
-            desktop_target_role=DESKTOP_TARGET_ROLE,
-            is_desktop_host_role=_is_desktop_host_role,
-        )
-
-    def room_has_role(self, room_token: str, role: str) -> bool:
-        return any(self.roles.get(peer) == role for peer in self.rooms.get(room_token, []))
-
-    def room_has_desktop_host(self, room_token: str) -> bool:
-        return any(_is_desktop_host_role(self.roles.get(peer)) for peer in self.rooms.get(room_token, []))
-
-    def get_connection_id(self, websocket: WebSocket) -> Optional[str]:
-        return self.connection_ids.get(websocket)
-
-    def update_host_session(
-        self,
-        websocket: WebSocket,
-        *,
-        bridge: Optional[Dict[str, Any]] = None,
-        project: Optional[Dict[str, Any]] = None,
-        session_capabilities: Optional[List[str]] = None,
-        runtime_catalog: Optional[List[Dict[str, Any]]] = None,
-        active_runtime: Optional[str] = None,
-        bridge_label: str = DEFAULT_HOST_LABEL,
-    ) -> Optional[Dict[str, Any]]:
-        return update_host_session_state(
-            self,
-            websocket,
-            payload_options={
-                "bridge": bridge,
-                "project": project,
-                "session_capabilities": session_capabilities,
-                "runtime_catalog": runtime_catalog,
-                "active_runtime": active_runtime,
-                "bridge_label": bridge_label,
-            },
-            default_platform=DEFAULT_HOST_PLATFORM,
-            is_desktop_host_role=_is_desktop_host_role,
-        )
-
-    def update_bridge_project(
-        self,
-        websocket: WebSocket,
-        *,
-        project: Optional[Dict[str, Any]] = None,
-        runtime_catalog: Optional[List[Dict[str, Any]]] = None,
-        active_runtime: Optional[str] = None,
-        bridge_label: str = "VS Code Host",
-    ) -> Optional[Dict[str, Any]]:
-        return self.update_host_session(
-            websocket,
-            bridge={"label": bridge_label},
-            project=project,
-            runtime_catalog=runtime_catalog,
-            active_runtime=active_runtime,
-            bridge_label=bridge_label,
-        )
-
-    def list_room_projects(self, room_token: str) -> List[Dict[str, Any]]:
-        entries: List[Dict[str, Any]] = []
-        selected_id = self.room_project_selection.get(room_token)
-
-        for peer in self.rooms.get(room_token, []):
-            if not _is_desktop_host_role(self.roles.get(peer)):
-                continue
-            metadata = self.host_projects.get(peer)
-            if not metadata:
-                continue
-            entries.append(
-                project_registry_entry(
-                    metadata,
-                    selected_id=selected_id,
-                    default_host_label=DEFAULT_HOST_LABEL,
-                    default_platform=DEFAULT_HOST_PLATFORM,
-                )
-            )
-
-        return sort_project_registry(entries)
-
-    def get_project_entry(
-        self,
-        room_token: str,
-        project_id: Optional[str],
-    ) -> Optional[Dict[str, Any]]:
-        peers = desktop_host_peers(
-            self.rooms.get(room_token, []),
-            roles=self.roles,
-            is_desktop_host_role=_is_desktop_host_role,
-        )
-        return find_metadata_by_id(
-            peers,
-            self.host_projects,
-            id_key="project_id",
-            id_value=project_id,
-        )
-
-    def get_active_host_project(
-        self,
-        room_token: str,
-        preferred_project_id: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
-        projects = [
-            dict(self.host_projects[peer])
-            for peer in self.rooms.get(room_token, [])
-            if _is_desktop_host_role(self.roles.get(peer)) and peer in self.host_projects
-        ]
-        if not projects:
-            return None
-
-        selected_id = preferred_project_id or self.room_project_selection.get(room_token)
-        selected = self.get_project_entry(room_token, selected_id)
-        fallback = active_project_candidate(projects, selected)
-        if should_update_project_selection(selected_id, selected):
-            self.room_project_selection[room_token] = fallback["project_id"]
-        return fallback
-
-    def get_active_bridge_project(
-        self,
-        room_token: str,
-        preferred_project_id: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
-        return self.get_active_host_project(room_token, preferred_project_id=preferred_project_id)
-
-    def select_project(self, room_token: str, project_id: str) -> bool:
-        if not self.get_project_entry(room_token, project_id):
-            return False
-        self.room_project_selection[room_token] = project_id
-        return True
-
-    def find_project(self, project_id: str) -> Optional[Dict[str, Any]]:
-        for metadata in self.host_projects.values():
-            if metadata.get("project_id") == project_id:
-                return dict(metadata)
-        return None
-
-    def list_room_hosts(self, room_token: str) -> List[Dict[str, Any]]:
-        active_project = self.get_active_host_project(room_token)
-        active_host_id = active_project.get("host_id") if active_project else None
-        return build_room_host_registry_entries(
-            self.rooms.get(room_token, []),
-            roles=self.roles,
-            host_sessions=self.host_sessions,
-            active_host_id=active_host_id,
-            host_descriptor_from_metadata=_host_descriptor_from_metadata,
-            is_desktop_host_role=_is_desktop_host_role,
-            default_host_label=DEFAULT_HOST_LABEL,
-            default_platform=DEFAULT_HOST_PLATFORM,
-        )
-
-    def get_host_entry(self, room_token: str, host_id: Optional[str]) -> Optional[Dict[str, Any]]:
-        peers = desktop_host_peers(
-            self.rooms.get(room_token, []),
-            roles=self.roles,
-            is_desktop_host_role=_is_desktop_host_role,
-        )
-        return find_metadata_by_id(
-            peers,
-            self.host_sessions,
-            id_key="host_id",
-            id_value=host_id,
-        )
-
-    def get_active_host(self, room_token: str) -> Optional[Dict[str, Any]]:
-        active_project = self.get_active_host_project(room_token)
-        if active_project:
-            active_host = self.get_host_entry(room_token, active_project.get("host_id"))
-            if active_host:
-                return active_host
-        hosts = self.list_room_hosts(room_token)
-        return hosts[0] if hosts else None
-
-    def get_active_host_id(self, room_token: str) -> Optional[str]:
-        active_host = self.get_active_host(room_token)
-        return active_host.get("host_id") if active_host else None
-
-    def get_project_connection_id(
-        self,
-        room_token: str,
-        project_id: Optional[str] = None,
-    ) -> Optional[str]:
-        project = self.get_active_host_project(room_token, preferred_project_id=project_id)
-        if not project:
-            return None
-        return project.get("connection_id")
-
-    async def replay_since(
-        self,
-        websocket: WebSocket,
-        last_seq_id: int,
-        role: Optional[str] = None,
-    ) -> None:
-        current_role = role or self.roles.get(websocket)
-        for packet in await message_buffer.get_since(last_seq_id):
-            if not self._packet_visible_to_role(packet, current_role):
-                continue
-            await websocket.send_text(await self._serialize_for_connection(packet, websocket))
-
-    async def send_packet(
-        self,
-        websocket: WebSocket,
-        packet: Dict[str, Any],
-        *,
-        buffer_message: bool = False,
-    ) -> Optional[Dict[str, Any]]:
-        buffered = await self._buffer_packet(packet, buffer_message)
-        try:
-            await websocket.send_text(await self._serialize_for_connection(buffered, websocket))
-            return buffered
-        except Exception as exc:
-            logger.warning("Send failed for client: %s", exc)
-            self.disconnect(websocket)
-            return None
-
-    async def send_to_room(
-        self,
-        room_token: str,
-        packet: Dict[str, Any],
-        *,
-        role_filter: Optional[str] = None,
-        exclude_ws: Optional[WebSocket] = None,
-        target_connection_id: Optional[str] = None,
-        ignore_rate_limit: bool = False,
-        buffer_message: bool = True,
-    ) -> Optional[Dict[str, Any]]:
-        if not await self._can_deliver(packet, ignore_rate_limit):
-            return None
-
-        buffered = await self._buffer_packet(packet, buffer_message)
-        peers = await self.get_peers_in_room(
-            room_token,
-            exclude_ws=exclude_ws,
-            role_filter=role_filter,
-            target_connection_id=target_connection_id,
-        )
-        for peer in peers:
-            try:
-                await peer.send_text(await self._serialize_for_connection(buffered, peer))
-            except Exception as exc:
-                logger.warning("Broadcast failed for client: %s", exc)
-                self.disconnect(peer)
-        return buffered
-
-    async def _can_deliver(self, packet: Dict[str, Any], ignore_rate_limit: bool) -> bool:
-        if ignore_rate_limit:
-            return True
-        packet_type = packet.get("type")
-        if packet_type == "log":
-            return await rate_limiter.consume()
-        if packet_type == "execution.event" and packet.get("phase") in {"thinking", "output"}:
-            return await rate_limiter.consume()
-        return True
-
-    async def _buffer_packet(
-        self, packet: Dict[str, Any], buffer_message: bool
-    ) -> Dict[str, Any]:
-        if not buffer_message:
-            return dict(packet)
-        if "seq_id" in packet and "timestamp" in packet:
-            return dict(packet)
-        return await message_buffer.push_and_get(packet)
-
-    async def _serialize_for_connection(
-        self, packet: Dict[str, Any], websocket: WebSocket
-    ) -> str:
-        if packet.get("type") in {"key_exchange", "pong"}:
-            return _json_dumps(packet)
-        if settings.E2EE_ENABLED and websocket in self.secrets:
-            encrypted = Crypto.encrypt(_json_dumps(packet), self.secrets[websocket])
-            return _json_dumps({"type": "encrypted", **encrypted})
-        return _json_dumps(packet)
-
-    def _packet_visible_to_role(
-        self,
-        packet: Dict[str, Any],
-        role: Optional[str],
-    ) -> bool:
-        target_role = packet.get("target_role")
-        if target_role:
-            if target_role == DESKTOP_TARGET_ROLE:
-                return _is_desktop_host_role(role)
-            return role == target_role
-        if packet.get("delivery") == "desktop":
-            return role == "desktop" or _is_desktop_host_role(role)
-        return True
-
-
-manager = ConnectionManager()
+manager = ConnectionManager(
+    ConnectionManagerDependencies(
+        desktop_target_role=DESKTOP_TARGET_ROLE,
+        default_host_label=DEFAULT_HOST_LABEL,
+        default_host_platform=DEFAULT_HOST_PLATFORM,
+        is_desktop_host_role=_is_desktop_host_role,
+        host_descriptor_from_metadata=_host_descriptor_from_metadata,
+        message_buffer=message_buffer,
+        rate_limiter=rate_limiter,
+        json_dumps=_json_dumps,
+        e2ee_enabled=lambda: settings.E2EE_ENABLED,
+        encrypt=Crypto.encrypt,
+        logger=logger,
+    )
+)
 
 
 def _selected_project_state(room_token: str) -> Dict[str, Any]:

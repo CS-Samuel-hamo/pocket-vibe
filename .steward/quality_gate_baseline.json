@@ -5,8 +5,8 @@
   "violations": [
     {
       "key": "backend/main.py|file-lines",
-      "value": 1417,
-      "message": "backend/main.py: File too long (1417 lines > 800)"
+      "value": 1076,
+      "message": "backend/main.py: File too long (1076 lines > 800)"
     },
     {
       "key": "backend/telemetry.py|function-too long|monitor",
