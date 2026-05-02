@@ -11,26 +11,21 @@ import {
     createRuntimeDescriptor,
     selectActiveRuntime,
     type Capability,
-    type RuntimeDefinition,
     type RuntimeDescriptor,
-    type RuntimeDetection,
     type RuntimeId,
 } from './runtimeRegistry';
 import { buildCodexExecArgs, parseCodexExecLine } from './codexExec';
-import { looksLikeExecutablePath, resolveRuntimeLaunchSpec, type RuntimeLaunchSpec } from './runtimeLaunch';
+import { looksLikeExecutablePath, resolveRuntimeLaunchSpec } from './runtimeLaunch';
+import {
+    createRuntimeAdapters,
+    isTerminalRuntimeAdapter,
+    type RuntimeAdapter,
+    type TerminalRuntimeAdapter,
+} from './runtimeAdapters';
 
 interface BackendMessage {
     type: string;
     [key: string]: any;
-}
-
-interface RuntimeAdapter {
-    definition: RuntimeDefinition;
-    detect(): RuntimeDetection;
-    sendPrompt(prompt: string): Promise<void>;
-    runScript(command: string): Promise<void>;
-    approve(decision: string): Promise<void>;
-    kill(): Promise<void>;
 }
 
 interface ConnectionOptions {
@@ -61,134 +56,17 @@ let manualDisconnect = false;
 let lastConnectionConfig: { backendUrl: string; authToken: string } | null = null;
 let cachedHostInstanceId: string | null = null;
 
+const runtimeAdapters: RuntimeAdapter[] = createRuntimeAdapters({
+    runCommandInProjectShell,
+    isCommandAvailable,
+    getRuntimeError: (runtimeId) => runtimeErrorState.get(runtimeId),
+});
+
 const artilleryFlashDecoration = vscode.window.createTextEditorDecorationType({
     backgroundColor: 'rgba(78, 201, 176, 0.3)',
     border: '1px solid rgba(78, 201, 176, 0.8)',
     isWholeLine: true,
 });
-
-class TerminalRuntimeAdapter implements RuntimeAdapter {
-    constructor(
-        public readonly definition: RuntimeDefinition,
-        private readonly patterns: string[],
-    ) {}
-
-    detect(): RuntimeDetection {
-        const terminal = this.findTerminal();
-        const launchSpec = this.getLaunchSpec();
-        const launchable = Boolean(launchSpec && isCommandAvailable(launchSpec.command));
-        if (terminal) {
-            return {
-                available: true,
-                attached: true,
-                launchable,
-                terminalName: terminal.name,
-                last_error: runtimeErrorState.get(this.definition.id),
-                status_detail: `${this.definition.label} is attached to terminal ${terminal.name}.`,
-            };
-        }
-
-        if (launchable) {
-            return {
-                available: true,
-                attached: false,
-                launchable: true,
-                last_error: runtimeErrorState.get(this.definition.id),
-                status_detail:
-                    runtimeErrorState.get(this.definition.id) ||
-                    `${this.definition.label} is available to launch from VS Code.`,
-            };
-        }
-
-        return {
-            available: false,
-            attached: false,
-            launchable: false,
-            last_error: runtimeErrorState.get(this.definition.id) || `${this.definition.label} terminal was not found.`,
-        };
-    }
-
-    async sendPrompt(prompt: string): Promise<void> {
-        const terminal = await this.getOrStartTerminal();
-        terminal.show();
-        terminal.sendText(prompt, true);
-    }
-
-    async runScript(command: string): Promise<void> {
-        await runCommandInProjectShell(command, this.definition.id);
-    }
-
-    async approve(decision: string): Promise<void> {
-        const terminal = await this.getOrStartTerminal();
-        terminal.show();
-        terminal.sendText(decision === 'approved' ? 'y' : 'n', true);
-    }
-
-    async kill(): Promise<void> {
-        const terminal = this.requireTerminal();
-        terminal.show();
-        await vscode.commands.executeCommand('workbench.action.terminal.sendSequence', { text: '\u0003' });
-    }
-
-    findTerminal(): vscode.Terminal | undefined {
-        return vscode.window.terminals.find((terminal) => {
-            const name = terminal.name.toLowerCase();
-            return this.patterns.some((pattern) => name.includes(pattern));
-        });
-    }
-
-    async ensureRunning(launchSpec?: RuntimeLaunchSpec | null): Promise<vscode.Terminal> {
-        const existing = this.findTerminal();
-        if (existing) {
-            existing.show();
-            return existing;
-        }
-
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        const terminalOptions: vscode.TerminalOptions = {
-            name: launchSpec?.terminalName || `Pocket Vibe · ${this.definition.id}`,
-            cwd: workspaceFolder,
-        };
-        if (launchSpec?.command && looksLikeExecutablePath(launchSpec.command)) {
-            terminalOptions.shellPath = launchSpec.command;
-        }
-
-        const terminal = vscode.window.createTerminal(terminalOptions);
-        terminal.show();
-        if (!launchSpec?.command || !looksLikeExecutablePath(launchSpec.command)) {
-            terminal.sendText(launchSpec?.command || this.definition.id, true);
-        }
-        return terminal;
-    }
-
-    private requireTerminal(): vscode.Terminal {
-        const terminal = this.findTerminal();
-        if (!terminal) {
-            throw new Error(`${this.definition.label} terminal is not running.`);
-        }
-        return terminal;
-    }
-
-    private getLaunchSpec(): RuntimeLaunchSpec | null {
-        return resolveRuntimeLaunchSpec(this.definition.id);
-    }
-
-    private async getOrStartTerminal(): Promise<vscode.Terminal> {
-        const existing = this.findTerminal();
-        if (existing) {
-            return existing;
-        }
-
-        const launchSpec = this.getLaunchSpec();
-        if (!launchSpec || !isCommandAvailable(launchSpec.command)) {
-            throw new Error(`${this.definition.label} terminal is not running.`);
-        }
-
-        const terminal = await this.ensureRunning(launchSpec);
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-        return terminal;
-    }
-}
 
 function getWorkspaceFolderPath(): string | undefined {
     return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -276,18 +154,14 @@ async function waitForShellIntegration(
     return new Promise((resolve) => {
         let settled = false;
         const timer = setTimeout(() => {
-            if (settled) {
-                return;
-            }
+            if (settled) return;
             settled = true;
             disposable.dispose();
             resolve(undefined);
         }, timeoutMs);
 
         const disposable = vscode.window.onDidChangeTerminalShellIntegration((event) => {
-            if (event.terminal !== terminal || settled) {
-                return;
-            }
+            if (event.terminal !== terminal || settled) return;
             settled = true;
             clearTimeout(timer);
             disposable.dispose();
@@ -302,12 +176,59 @@ async function waitForShellExecutionEnd(
 ): Promise<number | undefined> {
     return new Promise((resolve) => {
         const disposable = vscode.window.onDidEndTerminalShellExecution((event) => {
-            if (event.terminal !== terminal || event.execution !== execution) {
-                return;
-            }
+            if (event.terminal !== terminal || event.execution !== execution) return;
             disposable.dispose();
             resolve(event.exitCode);
         });
+    });
+}
+
+interface ShellOutputState {
+    emittedLines: number;
+    truncated: boolean;
+}
+
+function splitShellOutputBuffer(buffer: string, final: boolean): { completeLines: string[]; remainder: string } {
+    const lines = buffer.split('\n');
+    return {
+        completeLines: final ? lines : lines.slice(0, -1),
+        remainder: final ? '' : lines[lines.length - 1] || '',
+    };
+}
+
+function emitShellOutputTruncated(state: ShellOutputState, targetRuntime?: string) {
+    if (state.truncated) return;
+    state.truncated = true;
+    sendToBackend({
+        type: 'execution.event',
+        phase: 'output',
+        message: `Script output was truncated on mobile after ${MAX_SCRIPT_OUTPUT_LINES} lines.`,
+        action: 'run_script',
+        target_runtime: targetRuntime,
+        reason: 'workspace_shell.truncated',
+    });
+}
+
+function emitShellOutputLine(
+    rawLine: string,
+    command: string,
+    state: ShellOutputState,
+    targetRuntime?: string,
+) {
+    const normalized = normalizeShellOutputLine(rawLine, command);
+    if (!normalized) return;
+
+    if (state.emittedLines >= MAX_SCRIPT_OUTPUT_LINES) {
+        emitShellOutputTruncated(state, targetRuntime);
+        return;
+    }
+
+    state.emittedLines += 1;
+    sendToBackend({
+        type: 'command',
+        content: normalized,
+        target_runtime: targetRuntime,
+        source: 'workspace_shell',
     });
 }
 
@@ -317,43 +238,15 @@ async function streamShellExecutionOutput(
     targetRuntime?: string,
 ): Promise<void> {
     let buffer = '';
-    let emittedLines = 0;
-    let truncated = false;
+    const state: ShellOutputState = {
+        emittedLines: 0,
+        truncated: false,
+    };
 
     const flushLines = (final = false) => {
-        const lines = buffer.split('\n');
-        const completeLines = final ? lines : lines.slice(0, -1);
-        buffer = final ? '' : lines[lines.length - 1] || '';
-
-        for (const rawLine of completeLines) {
-            const normalized = normalizeShellOutputLine(rawLine, command);
-            if (!normalized) {
-                continue;
-            }
-
-            if (emittedLines >= MAX_SCRIPT_OUTPUT_LINES) {
-                if (!truncated) {
-                    truncated = true;
-                    sendToBackend({
-                        type: 'execution.event',
-                        phase: 'output',
-                        message: `Script output was truncated on mobile after ${MAX_SCRIPT_OUTPUT_LINES} lines.`,
-                        action: 'run_script',
-                        target_runtime: targetRuntime,
-                        reason: 'workspace_shell.truncated',
-                    });
-                }
-                continue;
-            }
-
-            emittedLines += 1;
-            sendToBackend({
-                type: 'command',
-                content: normalized,
-                target_runtime: targetRuntime,
-                source: 'workspace_shell',
-            });
-        }
+        const split = splitShellOutputBuffer(buffer, final);
+        buffer = split.remainder;
+        split.completeLines.forEach((rawLine) => emitShellOutputLine(rawLine, command, state, targetRuntime));
     };
 
     for await (const chunk of execution.read()) {
@@ -432,157 +325,6 @@ async function runCommandInProjectShell(command: string, targetRuntime?: string)
         reason: 'workspace_shell.unknown_exit_code',
     });
 }
-
-class ExtensionFallbackAdapter implements RuntimeAdapter {
-    constructor(
-        public readonly definition: RuntimeDefinition,
-        private readonly extensionPatterns: string[],
-    ) {}
-
-    detect(): RuntimeDetection {
-        const extension = this.findExtension();
-        if (!extension) {
-            return {
-                available: false,
-                attached: false,
-                launchable: false,
-                last_error: runtimeErrorState.get(this.definition.id) || `${this.definition.label} extension was not detected.`,
-            };
-        }
-        return {
-            available: true,
-            attached: true,
-            launchable: false,
-            extensionId: extension.id,
-            last_error: runtimeErrorState.get(this.definition.id),
-            status_detail:
-                runtimeErrorState.get(this.definition.id) ||
-                `${this.definition.label} is attached via clipboard fallback.`,
-        };
-    }
-
-    async sendPrompt(prompt: string): Promise<void> {
-        await vscode.env.clipboard.writeText(prompt);
-        void vscode.window.showInformationMessage(`${this.definition.label}: prompt copied to clipboard.`);
-    }
-
-    async runScript(_command: string): Promise<void> {
-        throw new Error(`${this.definition.label} cannot run scripts directly. Clipboard fallback only supports prompt dispatch.`);
-    }
-
-    async approve(_decision: string): Promise<void> {
-        throw new Error(`${this.definition.label} does not support approval responses.`);
-    }
-
-    async kill(): Promise<void> {
-        throw new Error(`${this.definition.label} does not support interrupt requests.`);
-    }
-
-    private findExtension(): vscode.Extension<any> | undefined {
-        return vscode.extensions.all.find((candidate) =>
-            this.extensionPatterns.some((pattern) => candidate.id.includes(pattern)),
-        );
-    }
-}
-
-const runtimeAdapters: RuntimeAdapter[] = [
-    new TerminalRuntimeAdapter(
-        {
-            id: 'codex-cli',
-            label: 'Codex CLI',
-            source: 'terminal',
-            supports: [...SESSION_CAPABILITIES],
-            dispatch_mode: 'raw_prompt',
-            approval_mode: 'terminal_yes_no',
-            interrupt_mode: 'ctrl_c',
-        },
-        ['codex'],
-    ),
-    new TerminalRuntimeAdapter(
-        {
-            id: 'claude-code',
-            label: 'Claude Code',
-            source: 'terminal',
-            supports: [...SESSION_CAPABILITIES],
-            dispatch_mode: 'raw_prompt',
-            approval_mode: 'terminal_yes_no',
-            interrupt_mode: 'ctrl_c',
-        },
-        ['claude-code', 'claude'],
-    ),
-    new TerminalRuntimeAdapter(
-        {
-            id: 'opencode',
-            label: 'OpenCode',
-            source: 'terminal',
-            supports: [...SESSION_CAPABILITIES],
-            dispatch_mode: 'raw_prompt',
-            approval_mode: 'terminal_yes_no',
-            interrupt_mode: 'ctrl_c',
-        },
-        ['opencode'],
-    ),
-    new TerminalRuntimeAdapter(
-        {
-            id: 'antigravity',
-            label: 'Antigravity',
-            source: 'terminal',
-            supports: [...SESSION_CAPABILITIES],
-            dispatch_mode: 'raw_prompt',
-            approval_mode: 'terminal_yes_no',
-            interrupt_mode: 'ctrl_c',
-        },
-        ['antigravity'],
-    ),
-    new ExtensionFallbackAdapter(
-        {
-            id: 'continue-ext',
-            label: 'Continue',
-            source: 'extension',
-            supports: ['prompt', 'focus', 'read_context'],
-            dispatch_mode: 'clipboard_fallback',
-            approval_mode: 'unsupported',
-            interrupt_mode: 'unsupported',
-        },
-        ['continue'],
-    ),
-    new ExtensionFallbackAdapter(
-        {
-            id: 'cline-ext',
-            label: 'Cline',
-            source: 'extension',
-            supports: ['prompt', 'focus', 'read_context'],
-            dispatch_mode: 'clipboard_fallback',
-            approval_mode: 'unsupported',
-            interrupt_mode: 'unsupported',
-        },
-        ['cline'],
-    ),
-    new ExtensionFallbackAdapter(
-        {
-            id: 'roo-ext',
-            label: 'Roo Code',
-            source: 'extension',
-            supports: ['prompt', 'focus', 'read_context'],
-            dispatch_mode: 'clipboard_fallback',
-            approval_mode: 'unsupported',
-            interrupt_mode: 'unsupported',
-        },
-        ['roo-code'],
-    ),
-    new ExtensionFallbackAdapter(
-        {
-            id: 'copilot-ext',
-            label: 'Copilot',
-            source: 'extension',
-            supports: ['prompt', 'focus', 'read_context'],
-            dispatch_mode: 'clipboard_fallback',
-            approval_mode: 'unsupported',
-            interrupt_mode: 'unsupported',
-        },
-        ['copilot'],
-    ),
-];
 
 export function activate(context: vscode.ExtensionContext) {
     extensionContext = context;
@@ -1151,7 +893,7 @@ async function handleRuntimeLaunch(message: BackendMessage) {
         return;
     }
 
-    if (!(adapter instanceof TerminalRuntimeAdapter)) {
+    if (!isTerminalRuntimeAdapter(adapter)) {
         sendToBackend({
             type: 'execution.event',
             phase: 'error',
@@ -1234,7 +976,7 @@ async function handleRuntimeAttach(message: BackendMessage) {
 
     try {
         await setPreferredRuntime(runtimeId);
-        if (adapter instanceof TerminalRuntimeAdapter) {
+        if (isTerminalRuntimeAdapter(adapter)) {
             const terminal = adapter.findTerminal();
             if (!terminal) {
                 if (!descriptor.launchable) {
@@ -1532,7 +1274,7 @@ async function ensurePreferredRuntimeReady() {
 
     const adapter = runtimeAdapters.find(
         (candidate): candidate is TerminalRuntimeAdapter =>
-            candidate instanceof TerminalRuntimeAdapter && candidate.definition.id === launchSpec.runtimeId,
+            isTerminalRuntimeAdapter(candidate) && candidate.definition.id === launchSpec.runtimeId,
     );
     if (!adapter || adapter.findTerminal()) {
         return;

@@ -7,6 +7,7 @@
   "repo_root": "D:\\AI_projects\\Pocket_Vibe",
   "input_paths": [
     "vscode-bridge/src/extension.ts",
+    "vscode-bridge/src/runtimeAdapters.ts",
     "vscode-bridge/src/runtimeRegistry.ts",
     "vscode-bridge/src/runtimeLaunch.ts",
     "vscode-bridge/src/codexExec.ts"
@@ -45,11 +46,14 @@
     "vscode-bridge/src/**",
     "vscode-bridge/src/test/**"
   ],
+  "completed_slices": [
+    "extract_runtime_adapters"
+  ],
   "next_steps": [
     "extract_websocket_client",
     "extract_terminal_runtime_dispatch",
     "extract_project_registry_sync",
     "extract_status_and_diagnostics"
   ],
-  "decision": "task_ready"
+  "decision": "in_progress"
 }

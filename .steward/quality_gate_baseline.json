@@ -230,13 +230,13 @@
     },
     {
       "key": "vscode-bridge/src/extension.ts|file-lines",
-      "value": 1671,
-      "message": "vscode-bridge/src/extension.ts: File too long (1671 lines > 800)"
+      "value": 1413,
+      "message": "vscode-bridge/src/extension.ts: File too long (1413 lines > 800)"
     },
     {
       "key": "vscode-bridge/src/extension.ts|js-nesting",
       "value": 4,
-      "message": "vscode-bridge/src/extension.ts:81: JS/JSX block nesting deeper than 3"
+      "message": "vscode-bridge/src/extension.ts:624: JS/JSX block nesting deeper than 3"
     }
   ]
 }
