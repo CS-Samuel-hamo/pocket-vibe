@@ -38,8 +38,10 @@
   "required_checks": [
     "python scripts/quality_gate.py backend/main.py backend/pairing_page.py tests/test_pairing_page.py",
     "python scripts/quality_gate.py backend/main.py backend/connection_preflight.py tests/test_connection_preflight.py",
+    "python scripts/quality_gate.py backend/main.py backend/host_session.py tests/test_host_session.py",
     "pytest tests/test_pairing_page.py tests/test_backend_main.py -q",
     "pytest tests/test_connection_preflight.py tests/test_backend_main.py -q",
+    "pytest tests/test_host_session.py tests/test_backend_main.py -q",
     "pytest tests/test_backend_main.py -q",
     "pytest tests/test_protocol.py tests/test_project_state.py -q",
     "python scripts/quality_gate.py <changed backend files>"
@@ -50,13 +52,16 @@
   "suggested_write_scope": [
     "backend/**",
     "src/domain/**",
+    "tests/test_connection_preflight.py",
+    "tests/test_host_session.py",
     "tests/test_pairing_page.py",
     "tests/test_backend_main.py",
     "tests/test_protocol.py"
   ],
   "completed_slices": [
     "extract_pairing_page_builder",
-    "extract_connection_preflight_builder"
+    "extract_connection_preflight_builder",
+    "extract_host_session_metadata_builder"
   ],
   "next_steps": [
     "extract_connection_manager_state_helpers",

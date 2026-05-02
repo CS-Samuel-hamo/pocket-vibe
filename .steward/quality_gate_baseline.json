@@ -5,173 +5,173 @@
   "violations": [
     {
       "key": "backend/main.py|file-lines",
-      "value": 1814,
-      "message": "backend/main.py: File too long (1814 lines > 800)"
+      "value": 1725,
+      "message": "backend/main.py: File too long (1725 lines > 800)"
     },
     {
       "key": "backend/main.py|function-has too deep nesting|disconnect",
       "value": 4,
-      "message": "backend/main.py:505: Function 'disconnect' has too deep nesting (4 > 3)"
+      "message": "backend/main.py:506: Function 'disconnect' has too deep nesting (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|_handle_protocol_message",
       "value": 4,
-      "message": "backend/main.py:1539: Function '_handle_protocol_message' has too many branches (4 > 3)"
+      "message": "backend/main.py:1450: Function '_handle_protocol_message' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|_handle_socket_message",
       "value": 5,
-      "message": "backend/main.py:1622: Function '_handle_socket_message' has too many branches (5 > 3)"
+      "message": "backend/main.py:1533: Function '_handle_socket_message' has too many branches (5 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|_project_state_payload",
       "value": 6,
-      "message": "backend/main.py:138: Function '_project_state_payload' has too many branches (6 > 3)"
+      "message": "backend/main.py:139: Function '_project_state_payload' has too many branches (6 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|_room_snapshot_payload",
       "value": 7,
-      "message": "backend/main.py:1025: Function '_room_snapshot_payload' has too many branches (7 > 3)"
+      "message": "backend/main.py:936: Function '_room_snapshot_payload' has too many branches (7 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|_route_approval_response",
       "value": 6,
-      "message": "backend/main.py:1385: Function '_route_approval_response' has too many branches (6 > 3)"
+      "message": "backend/main.py:1296: Function '_route_approval_response' has too many branches (6 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|_route_command_dispatch",
       "value": 4,
-      "message": "backend/main.py:1342: Function '_route_command_dispatch' has too many branches (4 > 3)"
+      "message": "backend/main.py:1253: Function '_route_command_dispatch' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|_route_kill_request",
       "value": 5,
-      "message": "backend/main.py:1443: Function '_route_kill_request' has too many branches (5 > 3)"
+      "message": "backend/main.py:1354: Function '_route_kill_request' has too many branches (5 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|_route_project_select",
       "value": 4,
-      "message": "backend/main.py:1485: Function '_route_project_select' has too many branches (4 > 3)"
+      "message": "backend/main.py:1396: Function '_route_project_select' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|_route_prompt_submit",
       "value": 6,
-      "message": "backend/main.py:1224: Function '_route_prompt_submit' has too many branches (6 > 3)"
+      "message": "backend/main.py:1135: Function '_route_prompt_submit' has too many branches (6 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|_route_workspace_focus",
       "value": 5,
-      "message": "backend/main.py:1277: Function '_route_workspace_focus' has too many branches (5 > 3)"
+      "message": "backend/main.py:1188: Function '_route_workspace_focus' has too many branches (5 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|disconnect",
       "value": 6,
-      "message": "backend/main.py:505: Function 'disconnect' has too many branches (6 > 3)"
+      "message": "backend/main.py:506: Function 'disconnect' has too many branches (6 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|get_active_host_project",
       "value": 5,
-      "message": "backend/main.py:774: Function 'get_active_host_project' has too many branches (5 > 3)"
+      "message": "backend/main.py:685: Function 'get_active_host_project' has too many branches (5 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|get_host_entry",
       "value": 4,
-      "message": "backend/main.py:872: Function 'get_host_entry' has too many branches (4 > 3)"
+      "message": "backend/main.py:783: Function 'get_host_entry' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|get_peers_in_room",
       "value": 4,
-      "message": "backend/main.py:530: Function 'get_peers_in_room' has too many branches (4 > 3)"
+      "message": "backend/main.py:531: Function 'get_peers_in_room' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|get_project_entry",
       "value": 4,
-      "message": "backend/main.py:759: Function 'get_project_entry' has too many branches (4 > 3)"
+      "message": "backend/main.py:670: Function 'get_project_entry' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|list_room_hosts",
       "value": 5,
-      "message": "backend/main.py:823: Function 'list_room_hosts' has too many branches (5 > 3)"
+      "message": "backend/main.py:734: Function 'list_room_hosts' has too many branches (5 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|list_room_projects",
       "value": 4,
-      "message": "backend/main.py:719: Function 'list_room_projects' has too many branches (4 > 3)"
+      "message": "backend/main.py:630: Function 'list_room_projects' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|update_host_session",
-      "value": 12,
-      "message": "backend/main.py:568: Function 'update_host_session' has too many branches (12 > 3)"
+      "value": 5,
+      "message": "backend/main.py:569: Function 'update_host_session' has too many branches (5 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|websocket_endpoint",
       "value": 4,
-      "message": "backend/main.py:1763: Function 'websocket_endpoint' has too many branches (4 > 3)"
+      "message": "backend/main.py:1674: Function 'websocket_endpoint' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-too long|_broadcast_room_snapshot",
       "value": 37,
-      "message": "backend/main.py:1053: Function '_broadcast_room_snapshot' too long (37 > 30)"
+      "message": "backend/main.py:964: Function '_broadcast_room_snapshot' too long (37 > 30)"
     },
     {
       "key": "backend/main.py|function-too long|_handle_protocol_message",
       "value": 43,
-      "message": "backend/main.py:1539: Function '_handle_protocol_message' too long (43 > 30)"
+      "message": "backend/main.py:1450: Function '_handle_protocol_message' too long (43 > 30)"
     },
     {
       "key": "backend/main.py|function-too long|_route_approval_response",
       "value": 55,
-      "message": "backend/main.py:1385: Function '_route_approval_response' too long (55 > 30)"
+      "message": "backend/main.py:1296: Function '_route_approval_response' too long (55 > 30)"
     },
     {
       "key": "backend/main.py|function-too long|_route_command_dispatch",
       "value": 40,
-      "message": "backend/main.py:1342: Function '_route_command_dispatch' too long (40 > 30)"
+      "message": "backend/main.py:1253: Function '_route_command_dispatch' too long (40 > 30)"
     },
     {
       "key": "backend/main.py|function-too long|_route_kill_request",
       "value": 39,
-      "message": "backend/main.py:1443: Function '_route_kill_request' too long (39 > 30)"
+      "message": "backend/main.py:1354: Function '_route_kill_request' too long (39 > 30)"
     },
     {
       "key": "backend/main.py|function-too long|_route_prompt_submit",
       "value": 50,
-      "message": "backend/main.py:1224: Function '_route_prompt_submit' too long (50 > 30)"
+      "message": "backend/main.py:1135: Function '_route_prompt_submit' too long (50 > 30)"
     },
     {
       "key": "backend/main.py|function-too long|_route_workspace_focus",
       "value": 36,
-      "message": "backend/main.py:1277: Function '_route_workspace_focus' too long (36 > 30)"
+      "message": "backend/main.py:1188: Function '_route_workspace_focus' too long (36 > 30)"
     },
     {
       "key": "backend/main.py|function-too long|_send_initial_snapshot",
       "value": 34,
-      "message": "backend/main.py:1093: Function '_send_initial_snapshot' too long (34 > 30)"
+      "message": "backend/main.py:1004: Function '_send_initial_snapshot' too long (34 > 30)"
     },
     {
       "key": "backend/main.py|function-too long|broadcast_driver_output",
       "value": 31,
-      "message": "backend/main.py:1649: Function 'broadcast_driver_output' too long (31 > 30)"
+      "message": "backend/main.py:1560: Function 'broadcast_driver_output' too long (31 > 30)"
     },
     {
       "key": "backend/main.py|function-too long|list_room_hosts",
       "value": 47,
-      "message": "backend/main.py:823: Function 'list_room_hosts' too long (47 > 30)"
+      "message": "backend/main.py:734: Function 'list_room_hosts' too long (47 > 30)"
     },
     {
       "key": "backend/main.py|function-too long|list_room_projects",
       "value": 38,
-      "message": "backend/main.py:719: Function 'list_room_projects' too long (38 > 30)"
+      "message": "backend/main.py:630: Function 'list_room_projects' too long (38 > 30)"
     },
     {
       "key": "backend/main.py|function-too long|update_host_session",
-      "value": 131,
-      "message": "backend/main.py:568: Function 'update_host_session' too long (131 > 30)"
+      "value": 41,
+      "message": "backend/main.py:569: Function 'update_host_session' too long (41 > 30)"
     },
     {
       "key": "backend/main.py|function-too long|websocket_endpoint",
       "value": 45,
-      "message": "backend/main.py:1763: Function 'websocket_endpoint' too long (45 > 30)"
+      "message": "backend/main.py:1674: Function 'websocket_endpoint' too long (45 > 30)"
     },
     {
       "key": "backend/telemetry.py|function-too long|monitor",

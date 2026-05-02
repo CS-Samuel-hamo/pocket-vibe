@@ -22,6 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from backend.connection_preflight import build_connection_preflight
+from backend.host_session import build_host_session_payload
 from backend.pairing_page import build_pairing_page_html as _build_pairing_page_html
 
 
@@ -584,109 +585,19 @@ class ConnectionManager:
         if not room_token or not connection_id:
             return None
 
-        bridge_payload = dict(bridge or {})
-        project_payload = dict(project or {})
-        root_path = project_payload.get("root_path")
-        normalized_root = str(Path(root_path).resolve()) if root_path else None
-        runtime_entries = list(runtime_catalog or [])
-        host_id = (
-            bridge_payload.get("host_id")
-            or bridge_payload.get("id")
-            or project_payload.get("host_id")
-            or connection_id
+        payload = build_host_session_payload(
+            bridge=bridge,
+            project=project,
+            session_capabilities=session_capabilities,
+            runtime_catalog=runtime_catalog,
+            active_runtime=active_runtime,
+            connection_id=connection_id,
+            bridge_label=bridge_label,
+            default_platform=DEFAULT_HOST_PLATFORM,
         )
-        host_label = (
-            bridge_payload.get("label")
-            or project_payload.get("host_label")
-            or project_payload.get("bridge_label")
-            or bridge_label
-        )
-        host_platform = (
-            bridge_payload.get("platform")
-            or project_payload.get("host_platform")
-            or project_payload.get("platform")
-            or DEFAULT_HOST_PLATFORM
-        )
-        host_kind = bridge_payload.get("kind") or "desktop-host"
-        host_version = (
-            bridge_payload.get("version")
-            or bridge_payload.get("bridge_version")
-            or project_payload.get("host_version")
-        )
-        normalized_session_capabilities = list(
-            session_capabilities
-            or bridge_payload.get("session_capabilities")
-            or bridge_payload.get("capabilities")
-            or []
-        )
-        active_descriptor = next(
-            (runtime for runtime in runtime_entries if runtime.get("id") == active_runtime),
-            None,
-        )
-        host_health = (
-            active_descriptor.get("health")
-            if active_descriptor
-            else bridge_payload.get("health") or "offline"
-        )
-        host_status_detail = (
-            active_descriptor.get("status_detail")
-            if active_descriptor
-            else bridge_payload.get("status_detail")
-        )
-        host_last_error = (
-            active_descriptor.get("last_error")
-            if active_descriptor
-            else bridge_payload.get("last_error")
-        )
-        project_name = (
-            project_payload.get("name")
-            or project_payload.get("project_name")
-            or (Path(normalized_root).name if normalized_root else None)
-            or f"Workspace {connection_id[-4:]}"
-        )
-        default_project_id = (
-            f"{host_id}::{normalized_root.lower()}"
-            if normalized_root
-            else f"{host_id}::default"
-        )
-        project_id = project_payload.get("id") or project_payload.get("project_id") or default_project_id
-
-        metadata = {
-            "project_id": project_id,
-            "connection_id": connection_id,
-            "project_name": project_name,
-            "workspace_path": normalized_root,
-            "host_id": host_id,
-            "host_label": host_label,
-            "host_platform": host_platform,
-            "host_kind": host_kind,
-            "host_version": host_version,
-            "bridge_label": host_label,
-            "active_runtime": active_runtime,
-            "runtime_catalog": runtime_entries,
-            "runtime_label": active_descriptor.get("label") if active_descriptor else (active_runtime or "Desktop Host"),
-            "runtime_health": host_health,
-            "status_detail": host_status_detail,
-            "last_error": host_last_error,
-            "updated_at": time.time(),
-        }
-        self.host_sessions[websocket] = {
-            "host_id": host_id,
-            "connection_id": connection_id,
-            "host_label": host_label,
-            "host_platform": host_platform,
-            "host_kind": host_kind,
-            "host_version": host_version,
-            "session_capabilities": normalized_session_capabilities,
-            "active_project_id": project_id,
-            "active_runtime": active_runtime,
-            "runtime_catalog": runtime_entries,
-            "runtime_label": metadata["runtime_label"],
-            "runtime_health": metadata["runtime_health"],
-            "status_detail": metadata["status_detail"],
-            "last_error": metadata["last_error"],
-            "updated_at": metadata["updated_at"],
-        }
+        metadata = payload["project"]
+        project_id = metadata["project_id"]
+        self.host_sessions[websocket] = payload["session"]
         self.host_projects[websocket] = metadata
 
         current_selection = self.room_project_selection.get(room_token)
