@@ -1,15 +1,24 @@
 """Tests for backend protocol route payload builders."""
 
 from backend.protocol_routes import (
+    approval_id,
     build_bridge_offline_event,
+    build_approval_audit_event,
+    build_approval_offline_result,
+    build_approval_response_payload,
+    build_approval_success_result,
     build_command_dispatch_event,
     build_command_dispatch_payload,
     build_context_request_payload,
+    build_kill_audit_event,
+    build_kill_offline_result,
+    build_kill_request_payload,
     build_prompt_dispatch_event,
     build_prompt_submit_payload,
     build_user_prompt_event,
     build_workspace_focus_event,
     build_workspace_focus_payload,
+    normalize_decision,
 )
 
 
@@ -107,3 +116,42 @@ def test_command_dispatch_payload_and_event_share_target_context():
     assert payload["target_connection_id"] == "host-1"
     assert event["phase"] == "dispatch"
     assert event["reason"] == "desktop_dispatch"
+
+
+def test_approval_payloads_normalize_decision_and_target_project():
+    data = {"approval_id": "a1", "decision": "YES", "target_runtime": "codex-cli"}
+    decision = normalize_decision(data["decision"])
+
+    payload = build_approval_response_payload(approval_id(data), decision, data, target_project=_target_project())
+    result = build_approval_success_result("a1", decision, target_project=_target_project())
+    audit = build_approval_audit_event("a1", decision, target_project=_target_project())
+
+    assert payload["decision"] == "approved"
+    assert payload["target_connection_id"] == "host-1"
+    assert result["ok"] is True
+    assert audit["category"] == "approval"
+
+
+def test_approval_offline_result_preserves_runtime_and_reason():
+    result = build_approval_offline_result(
+        {"approval_id": "a1", "decision": "no", "target_runtime": "codex-cli"},
+        target_project=_target_project(),
+    )
+
+    assert result["type"] == "approval.result"
+    assert result["ok"] is False
+    assert result["reason"] == "bridge_offline"
+    assert result["target_runtime"] == "codex-cli"
+
+
+def test_kill_payloads_preserve_reason_and_target_context():
+    data = {"target_runtime": "codex-cli", "reason": "manual-test"}
+
+    payload = build_kill_request_payload(data, target_project=_target_project())
+    offline = build_kill_offline_result(data, target_project=_target_project())
+    audit = build_kill_audit_event(data, target_project=_target_project())
+
+    assert payload["type"] == "kill.request"
+    assert payload["reason"] == "manual-test"
+    assert offline["reason"] == "bridge_offline"
+    assert audit["category"] == "kill"

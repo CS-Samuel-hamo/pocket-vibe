@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, Optional
 
-from src.domain.models.protocol import build_execution_event
+from src.domain.models.protocol import approval_result_from_response, build_audit_event, build_execution_event
 
 
 def _project_id(target_project: Optional[Dict[str, Any]]) -> Optional[str]:
@@ -141,5 +141,117 @@ def build_command_dispatch_event(
         project_id=_project_id(target_project),
         target_runtime=data.get("target_runtime"),
         file=data.get("file"),
+        reason="desktop_dispatch",
+    )
+
+
+def approval_id(data: Dict[str, Any]) -> str:
+    return str(data.get("approval_id") or "")
+
+
+def normalize_decision(value: Any) -> str:
+    raw = str(value or "").strip().lower()
+    if raw in {"approved", "approve", "y", "yes", "true"}:
+        return "approved"
+    if raw in {"rejected", "reject", "n", "no", "false"}:
+        return "rejected"
+    return raw or "unknown"
+
+
+def build_approval_offline_result(
+    data: Dict[str, Any],
+    *,
+    target_project: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    return {
+        **approval_result_from_response(approval_id(data), str(data.get("decision") or ""), False),
+        "reason": "bridge_offline",
+        "project_id": _project_id(target_project),
+        "target_runtime": data.get("target_runtime"),
+    }
+
+
+def build_approval_response_payload(
+    approval_id_value: str,
+    decision: str,
+    data: Dict[str, Any],
+    *,
+    target_project: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    return {
+        "type": "approval.response",
+        "approval_id": approval_id_value,
+        "decision": decision,
+        "target_runtime": data.get("target_runtime"),
+        **_target_context(target_project),
+    }
+
+
+def build_approval_success_result(
+    approval_id_value: str,
+    decision: str,
+    *,
+    target_project: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    return {
+        **approval_result_from_response(approval_id_value, decision, True),
+        "project_id": _project_id(target_project),
+    }
+
+
+def build_approval_audit_event(
+    approval_id_value: str,
+    decision: str,
+    *,
+    target_project: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    return build_audit_event(
+        "approval",
+        "Approval response forwarded",
+        approval_id=approval_id_value,
+        decision=decision,
+        ok=True,
+        project_id=_project_id(target_project),
+    )
+
+
+def build_kill_offline_result(
+    data: Dict[str, Any],
+    *,
+    target_project: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    return {
+        "type": "kill.result",
+        "ok": False,
+        "message": "No desktop host is connected",
+        "reason": "bridge_offline",
+        "project_id": _project_id(target_project),
+        "target_runtime": data.get("target_runtime"),
+    }
+
+
+def build_kill_request_payload(
+    data: Dict[str, Any],
+    *,
+    target_project: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    return {
+        "type": "kill.request",
+        "target_runtime": data.get("target_runtime"),
+        "reason": data.get("reason"),
+        **_target_context(target_project),
+    }
+
+
+def build_kill_audit_event(
+    data: Dict[str, Any],
+    *,
+    target_project: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    return build_audit_event(
+        "kill",
+        "Kill request sent to desktop host",
+        project_id=_project_id(target_project),
+        target_runtime=data.get("target_runtime"),
         reason="desktop_dispatch",
     )

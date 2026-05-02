@@ -33,15 +33,24 @@ from backend.project_registry import (
     sort_project_registry,
 )
 from backend.protocol_routes import (
+    approval_id,
     build_bridge_offline_event,
+    build_approval_audit_event,
+    build_approval_offline_result,
+    build_approval_response_payload,
+    build_approval_success_result,
     build_command_dispatch_event,
     build_command_dispatch_payload,
     build_context_request_payload,
+    build_kill_audit_event,
+    build_kill_offline_result,
+    build_kill_request_payload,
     build_prompt_dispatch_event,
     build_prompt_submit_payload,
     build_user_prompt_event,
     build_workspace_focus_event,
     build_workspace_focus_payload,
+    normalize_decision,
 )
 
 
@@ -53,7 +62,6 @@ from src.core.config import settings
 from src.core.crypto import Crypto
 from src.core.message_buffer import MessageBuffer, TokenBucket
 from src.domain.models.protocol import (
-    approval_result_from_response,
     build_audit_event,
     build_capabilities,
     build_execution_event,
@@ -1032,23 +1040,9 @@ async def _shutdown_room_tasks(room_token: str) -> None:
         await driver.stop()
 
 
-def _normalize_decision(decision: Any) -> str:
-    raw = str(decision or "").strip().lower()
-    if raw in {"approved", "approve", "y", "yes", "true"}:
-        return "approved"
-    if raw in {"rejected", "reject", "n", "no", "false"}:
-        return "rejected"
-    return raw or "unknown"
-
-
 def _resolve_target_project(room_token: str, data: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
     requested_project_id = str((data or {}).get("project_id") or "").strip() or None
     return manager.get_active_host_project(room_token, preferred_project_id=requested_project_id)
-
-
-def _target_connection_id(room_token: str, data: Optional[Dict[str, Any]] = None) -> Optional[str]:
-    project = _resolve_target_project(room_token, data)
-    return project.get("connection_id") if project else None
 
 
 async def _sync_bridge_metadata(data: Dict[str, Any], room_token: str, websocket: WebSocket) -> None:
@@ -1188,52 +1182,30 @@ async def _route_approval_response(
     if not manager.room_has_desktop_host(room_token):
         await _emit_room_event(
             room_token,
-            {
-                **approval_result_from_response(
-                    str(data.get("approval_id") or ""),
-                    str(data.get("decision") or ""),
-                    False,
-                ),
-                "reason": "bridge_offline",
-                "project_id": target_project.get("project_id") if target_project else None,
-                "target_runtime": data.get("target_runtime"),
-            },
+            build_approval_offline_result(data, target_project=target_project),
             ignore_rate_limit=True,
             buffer_message=True,
         )
         return
-    approval_id = str(data.get("approval_id") or "")
-    decision = _normalize_decision(data.get("decision"))
+    approval_id_value = approval_id(data)
+    decision = normalize_decision(data.get("decision"))
     await driver.dispatch_command(
-        {
-            "type": "approval.response",
-            "approval_id": approval_id,
-            "decision": decision,
-            "project_id": target_project.get("project_id") if target_project else None,
-            "target_connection_id": target_project.get("connection_id") if target_project else None,
-            "target_runtime": data.get("target_runtime"),
-        }
+        build_approval_response_payload(
+            approval_id_value,
+            decision,
+            data,
+            target_project=target_project,
+        )
     )
-    success = True
     await _emit_room_event(
         room_token,
-        {
-            **approval_result_from_response(approval_id, decision, success),
-            "project_id": target_project.get("project_id") if target_project else None,
-        },
+        build_approval_success_result(approval_id_value, decision, target_project=target_project),
         ignore_rate_limit=True,
         buffer_message=True,
     )
     await _emit_room_event(
         room_token,
-        build_audit_event(
-            "approval",
-            "Approval response forwarded",
-            approval_id=approval_id,
-            decision=decision,
-            ok=success,
-            project_id=target_project.get("project_id") if target_project else None,
-        ),
+        build_approval_audit_event(approval_id_value, decision, target_project=target_project),
         ignore_rate_limit=True,
         buffer_message=True,
     )
@@ -1244,38 +1216,17 @@ async def _route_kill_request(data: Dict[str, Any], room_token: str) -> None:
     if not manager.room_has_desktop_host(room_token):
         await _emit_room_event(
             room_token,
-            {
-                "type": "kill.result",
-                "ok": False,
-                "message": "No desktop host is connected",
-                "reason": "bridge_offline",
-                "project_id": target_project.get("project_id") if target_project else None,
-                "target_runtime": data.get("target_runtime"),
-            },
+            build_kill_offline_result(data, target_project=target_project),
             ignore_rate_limit=True,
             buffer_message=True,
         )
         return
 
     await _ensure_driver_running(room_token)
-    await driver.dispatch_command(
-        {
-            "type": "kill.request",
-            "project_id": target_project.get("project_id") if target_project else None,
-            "target_connection_id": target_project.get("connection_id") if target_project else None,
-            "target_runtime": data.get("target_runtime"),
-            "reason": data.get("reason"),
-        }
-    )
+    await driver.dispatch_command(build_kill_request_payload(data, target_project=target_project))
     await _emit_room_event(
         room_token,
-        build_audit_event(
-            "kill",
-            "Kill request sent to desktop host",
-            project_id=target_project.get("project_id") if target_project else None,
-            target_runtime=data.get("target_runtime"),
-            reason="desktop_dispatch",
-        ),
+        build_kill_audit_event(data, target_project=target_project),
         ignore_rate_limit=True,
         buffer_message=True,
     )
