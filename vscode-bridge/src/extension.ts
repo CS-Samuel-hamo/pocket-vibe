@@ -23,6 +23,10 @@ import {
     type TerminalRuntimeAdapter,
 } from './runtimeAdapters';
 import { runCommandInProjectShell as executeProjectShellCommand } from './shellExecution';
+import {
+    handleContextRequest as requestWorkspaceContext,
+    handleWorkspaceFocus as focusWorkspace,
+} from './workspaceActions';
 
 interface BackendMessage {
     type: string;
@@ -56,16 +60,14 @@ let cachedHostInstanceId: string | null = null;
 
 const runCommandInProjectShell = (command: string, targetRuntime?: string) =>
     executeProjectShellCommand(command, targetRuntime, { sendToBackend });
+const workspaceActionDependencies = {
+    sendToBackend,
+    getActiveRuntimeId: () => getActiveRuntimeDescriptor()?.id,
+};
 const runtimeAdapters: RuntimeAdapter[] = createRuntimeAdapters({
     runCommandInProjectShell,
     isCommandAvailable,
     getRuntimeError: (runtimeId) => runtimeErrorState.get(runtimeId),
-});
-
-const artilleryFlashDecoration = vscode.window.createTextEditorDecorationType({
-    backgroundColor: 'rgba(78, 201, 176, 0.3)',
-    border: '1px solid rgba(78, 201, 176, 0.8)',
-    isWholeLine: true,
 });
 
 function buildProjectMetadata() {
@@ -290,10 +292,10 @@ async function handleMessage(message: BackendMessage) {
             await handleCommandDispatch(message);
             return;
         case 'workspace.focus':
-            await handleWorkspaceFocus(message);
+            await focusWorkspace(message, workspaceActionDependencies);
             return;
         case 'context.request':
-            await handleContextRequest(message);
+            await requestWorkspaceContext(message, workspaceActionDependencies);
             return;
         case 'approval.response':
             await handleApprovalResponse(message);
@@ -356,7 +358,7 @@ async function handlePromptSubmit(message: BackendMessage) {
 async function handleCommandDispatch(message: BackendMessage) {
     const action = String(message.action ?? '').trim() || 'run_script';
     if (action === 'focus') {
-        await handleWorkspaceFocus(message);
+        await focusWorkspace(message, workspaceActionDependencies);
         return;
     }
     if (action === 'runtime.launch') {
@@ -404,7 +406,7 @@ async function handleCommandDispatch(message: BackendMessage) {
             const instruction = String(message.instruction ?? action);
             await runtimeContext.adapter.sendPrompt(`${action.toUpperCase()}: ${instruction}\nTARGET: ${lineTarget}`);
             if (message.file) {
-                await handleWorkspaceFocus(message);
+                await focusWorkspace(message, workspaceActionDependencies);
             }
         } else {
             await runtimeContext.adapter.sendPrompt(JSON.stringify(message));
@@ -435,103 +437,6 @@ async function handleCommandDispatch(message: BackendMessage) {
     }
 
     await reportCapabilities();
-}
-
-async function handleWorkspaceFocus(message: BackendMessage) {
-    const file = String(message.file ?? '');
-    if (!file) {
-        return;
-    }
-
-    try {
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders || workspaceFolders.length === 0) {
-            throw new Error('No workspace is open in VS Code.');
-        }
-
-        const uri = vscode.Uri.joinPath(workspaceFolders[0].uri, file);
-        const doc = await vscode.workspace.openTextDocument(uri);
-        const line = typeof message.line === 'number' ? message.line : undefined;
-        const editor = await vscode.window.showTextDocument(doc, {
-            selection: line ? new vscode.Range(line - 1, 0, line - 1, 0) : undefined,
-            preview: false,
-        });
-
-        if (line) {
-            const range = new vscode.Range(line - 1, 0, line - 1, 0);
-            editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
-            if (message.flash) {
-                editor.setDecorations(artilleryFlashDecoration, [range]);
-                setTimeout(() => editor.setDecorations(artilleryFlashDecoration, []), 800);
-            }
-        }
-
-        sendToBackend({
-            type: 'execution.event',
-            phase: 'focused',
-            message: `Focused ${file}${line ? `:${line}` : ''}.`,
-            file,
-            line,
-            reason: 'workspace.focus',
-            target_runtime: getActiveRuntimeDescriptor()?.id,
-        });
-    } catch (error) {
-        const reason = error instanceof Error ? error.message : String(error);
-        sendToBackend({
-            type: 'execution.event',
-            phase: 'error',
-            message: `Focus failed for ${file}.`,
-            file,
-            reason,
-            target_runtime: getActiveRuntimeDescriptor()?.id,
-        });
-    }
-}
-
-async function handleContextRequest(message: BackendMessage) {
-    const file = String(message.file ?? '');
-    if (!file) {
-        return;
-    }
-
-    try {
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders || workspaceFolders.length === 0) {
-            throw new Error('No workspace is open in VS Code.');
-        }
-
-        const uri = vscode.Uri.joinPath(workspaceFolders[0].uri, file);
-        const doc = await vscode.workspace.openTextDocument(uri);
-        const start = Math.max(1, Number(message.line_start ?? 1));
-        const end = Math.max(start, Number(message.line_end ?? start));
-        const lines: string[] = [];
-
-        for (let lineIndex = start - 1; lineIndex < end; lineIndex += 1) {
-            if (lineIndex < 0 || lineIndex >= doc.lineCount) {
-                continue;
-            }
-            lines.push(doc.lineAt(lineIndex).text);
-        }
-
-        sendToBackend({
-            type: 'context.result',
-            file,
-            lines,
-            position: message.position,
-            line_start: start,
-            line_end: end,
-        });
-    } catch (error) {
-        const reason = error instanceof Error ? error.message : String(error);
-        sendToBackend({
-            type: 'execution.event',
-            phase: 'error',
-            message: `Context request failed for ${file}.`,
-            file,
-            reason,
-            target_runtime: getActiveRuntimeDescriptor()?.id,
-        });
-    }
 }
 
 async function handleApprovalResponse(message: BackendMessage) {

@@ -73,6 +73,7 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 - Twenty-fifth backend split completed: protocol routing orchestration moved to `backend/protocol_router.py`, reducing `backend/main.py` to 662 lines and removing the final `backend/main.py` quality debt entry.
 - First VS Code bridge split completed: terminal and extension fallback runtime adapters moved to `vscode-bridge/src/runtimeAdapters.ts`, reducing `extension.ts` to 1413 lines while leaving remaining file-length and JS nesting debt tracked for the next bridge slices.
 - Second VS Code bridge split completed: Project Shell script execution, shell integration waiting, output streaming, truncation, and exit-code reporting moved to `vscode-bridge/src/shellExecution.ts`, reducing `extension.ts` to 1195 lines.
+- Third VS Code bridge split completed: workspace focus, flash decoration, and context reading moved to `vscode-bridge/src/workspaceActions.ts`, reducing `extension.ts` to 1100 lines.
 - Continue splitting `vscode-bridge/src/extension.ts` in small activation/client/runtime/UI slices.
 - After each slice, run the relevant targeted tests plus the v1 completion gate when behavior changes.
 

@@ -9,6 +9,7 @@
     "vscode-bridge/src/extension.ts",
     "vscode-bridge/src/runtimeAdapters.ts",
     "vscode-bridge/src/shellExecution.ts",
+    "vscode-bridge/src/workspaceActions.ts",
     "vscode-bridge/src/runtimeRegistry.ts",
     "vscode-bridge/src/runtimeLaunch.ts",
     "vscode-bridge/src/codexExec.ts"
@@ -49,7 +50,8 @@
   ],
   "completed_slices": [
     "extract_runtime_adapters",
-    "extract_project_shell_execution"
+    "extract_project_shell_execution",
+    "extract_workspace_actions"
   ],
   "next_steps": [
     "extract_websocket_client",
