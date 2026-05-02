@@ -55,6 +55,8 @@
     "python scripts/quality_gate.py backend/main.py backend/websocket_lifecycle.py tests/test_websocket_lifecycle.py",
     "python scripts/quality_gate.py backend/main.py backend/connection_manager.py tests/test_connection_manager.py",
     "python scripts/quality_gate.py backend/main.py backend/pairing_context.py tests/test_pairing_context.py",
+    "python scripts/quality_gate.py backend/main.py backend/file_api.py tests/test_file_api.py",
+    "python scripts/quality_gate.py backend/main.py backend/protocol_router.py tests/test_protocol_router.py",
     "pytest tests/test_pairing_page.py tests/test_backend_main.py -q",
     "pytest tests/test_connection_preflight.py tests/test_backend_main.py -q",
     "pytest tests/test_host_session.py tests/test_backend_main.py -q",
@@ -74,6 +76,8 @@
     "pytest tests/test_websocket_lifecycle.py tests/test_backend_main.py -q",
     "pytest tests/test_connection_manager.py tests/test_backend_main.py -q",
     "pytest tests/test_pairing_context.py tests/test_backend_main.py -q",
+    "pytest tests/test_file_api.py tests/test_backend_main.py -q",
+    "pytest tests/test_protocol_router.py tests/test_backend_main.py -q",
     "pytest tests/test_backend_main.py -q",
     "pytest tests/test_protocol.py tests/test_project_state.py -q",
     "python scripts/quality_gate.py <changed backend files>"
@@ -102,6 +106,8 @@
     "tests/test_websocket_lifecycle.py",
     "tests/test_connection_manager.py",
     "tests/test_pairing_context.py",
+    "tests/test_file_api.py",
+    "tests/test_protocol_router.py",
     "tests/test_snapshots.py",
     "tests/test_backend_main.py",
     "tests/test_protocol.py"
@@ -129,7 +135,9 @@
     "extract_connection_disconnect_cleanup",
     "extract_websocket_lifecycle_helpers",
     "extract_connection_manager_class",
-    "extract_pairing_context_helpers"
+    "extract_pairing_context_helpers",
+    "extract_file_api_helpers",
+    "extract_protocol_router"
   ],
   "next_steps": [
     "extract_connection_manager_state_helpers",

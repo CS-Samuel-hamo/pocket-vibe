@@ -69,6 +69,8 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 - Twenty-first backend split completed: websocket endpoint lifecycle orchestration moved to `backend/websocket_lifecycle.py`, removing `websocket_endpoint` length and branch complexity from the quality debt baseline.
 - Twenty-second backend split completed: `ConnectionManager` moved to `backend/connection_manager.py` with explicit dependencies, reducing `backend/main.py` to 1076 lines while preserving replay, E2EE serialization, room routing, and host/project registry behavior.
 - Twenty-third backend split completed: pairing context, IP detection, URL rewriting, env flags, and QR SVG rendering moved to `backend/pairing_context.py`, reducing `backend/main.py` to 912 lines.
+- Twenty-fourth backend split completed: file browsing and file read helpers moved to `backend/file_api.py`, preserving existing endpoint wrappers and file access behavior.
+- Twenty-fifth backend split completed: protocol routing orchestration moved to `backend/protocol_router.py`, reducing `backend/main.py` to 662 lines and removing the final `backend/main.py` quality debt entry.
 - Split `vscode-bridge/src/extension.ts` in small activation/client/runtime/UI slices.
 - After each slice, run the relevant targeted tests plus the v1 completion gate when behavior changes.
 

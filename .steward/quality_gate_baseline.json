@@ -4,11 +4,6 @@
   "policy": "Existing violations are allowed only while their measured value does not increase. New or worse violations fail the quality gate.",
   "violations": [
     {
-      "key": "backend/main.py|file-lines",
-      "value": 912,
-      "message": "backend/main.py: File too long (912 lines > 800)"
-    },
-    {
       "key": "backend/telemetry.py|function-too long|monitor",
       "value": 71,
       "message": "backend/telemetry.py:12: Function 'monitor' too long (71 > 30)"

@@ -18,6 +18,13 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from backend.connection_manager import ConnectionManager, ConnectionManagerDependencies
 from backend.connection_preflight import build_connection_preflight
 from backend.driver_output import broadcast_driver_packets
+from backend.file_api import (
+    list_files_payload,
+    read_file_payload,
+    resolve_project_root,
+    safe_resolve,
+    validate_read_path,
+)
 from backend.pairing_page import build_pairing_page_html as _build_pairing_page_html
 from backend.pairing_context import (
     build_pairing_context_payload,
@@ -26,28 +33,11 @@ from backend.pairing_context import (
     render_qr_svg as _render_qr_svg,
     resolve_mobile_base_url as _resolve_mobile_base_url,
 )
-from backend.protocol_dispatch import is_bridge_room_event, is_host_metadata_message
-from backend.project_state_payload import build_project_state_payload
-from backend.protocol_routes import (
-    approval_id,
-    build_bridge_offline_event,
-    build_approval_offline_result,
-    build_approval_response_payload,
-    build_command_dispatch_event,
-    build_command_dispatch_payload,
-    build_context_request_payload,
-    build_kill_audit_event,
-    build_kill_offline_result,
-    build_kill_request_payload,
-    build_prompt_submit_payload,
-    build_project_changed_event,
-    build_project_unavailable_event,
-    build_workspace_focus_event,
-    build_workspace_focus_payload,
-    normalize_decision,
-    project_id_from_data,
+from backend.protocol_router import (
+    ProtocolRouter,
+    ProtocolRouterDependencies,
 )
-from backend.route_flows import emit_approval_completion_events, emit_prompt_submit_events
+from backend.project_state_payload import build_project_state_payload
 from backend.room_snapshot_payload import build_room_snapshot_payload
 from backend.snapshots import build_snapshot_packets
 from backend.socket_messages import (
@@ -232,21 +222,15 @@ def _build_connection_preflight(token: Optional[str]) -> Dict[str, Any]:
 
 
 def _resolve_project_root(project_id: Optional[str] = None) -> Path:
-    if not project_id:
-        return Path(settings.TARGET_DIR).resolve()
-    project_entry = manager.find_project(project_id)
-    workspace_path = project_entry.get("workspace_path") if project_entry else None
-    return Path(workspace_path or settings.TARGET_DIR).resolve()
+    return resolve_project_root(
+        project_id,
+        target_dir=settings.TARGET_DIR,
+        find_project=manager.find_project,
+    )
 
 
 def _safe_resolve(path: str, project_id: Optional[str] = None) -> Path:
-    target = _resolve_project_root(project_id)
-    requested = (target / path).resolve()
-    try:
-        requested.relative_to(target)
-    except ValueError as exc:
-        raise ValueError("Path traversal detected") from exc
-    return requested
+    return safe_resolve(path, project_id, resolve_project_root=_resolve_project_root)
 
 
 async def _build_pairing_context() -> Dict[str, Any]:
@@ -271,68 +255,29 @@ async def get_local_ip():
     return get_local_ip_payload(logger)
 
 
-def _build_file_list(root: Path, base_target: Path) -> List[Dict[str, Any]]:
-    files: List[Dict[str, Any]] = []
-    for entry in root.iterdir():
-        try:
-            files.append(
-                {
-                    "name": entry.name,
-                    "is_dir": entry.is_dir(),
-                    "path": str(entry.relative_to(base_target)).replace("\\", "/"),
-                }
-            )
-        except ValueError:
-            continue
-    return files
-
-
 @app.get("/api/files/list")
 async def list_files(path: str = ".", project_id: Optional[str] = None):
-    try:
-        root = _safe_resolve(path, project_id)
-        base_target = _resolve_project_root(project_id)
-    except ValueError:
-        return {"error": "Invalid path"}
-
-    if not root.exists() or not root.is_dir():
-        return {"error": "Path not found or not a dir"}
-
-    try:
-        raw = _build_file_list(root, base_target)
-        return sorted(raw, key=lambda item: (not item["is_dir"], item["name"]))
-    except PermissionError:
-        return {"error": "Permission denied"}
+    return list_files_payload(
+        path,
+        project_id,
+        resolve_path=_safe_resolve,
+        resolve_project_root=_resolve_project_root,
+    )
 
 
 def _validate_read_path(path: str, project_id: Optional[str] = None) -> Optional[Path]:
-    try:
-        full_path = _safe_resolve(path, project_id)
-        if not full_path.exists() or full_path.is_dir():
-            return None
-        return full_path
-    except ValueError:
-        return None
+    return validate_read_path(path, project_id, resolve_path=_safe_resolve)
 
 
 @app.get("/api/files/read")
 async def read_file(path: str, project_id: Optional[str] = None):
-    full_path = _validate_read_path(path, project_id)
-    if not full_path:
-        return {"error": "Invalid file access"}
-
-    try:
-        if full_path.stat().st_size > settings.MAX_FILE_READ_BYTES:
-            return {"error": f"File too large (Max {settings.MAX_FILE_READ_BYTES} bytes)"}
-        return {"content": full_path.read_text(encoding="utf-8")}
-    except UnicodeDecodeError:
-        return {"error": "Invalid text encoding"}
-    except OSError as exc:
-        logger.warning("File read failed for %s: %s", full_path, exc)
-        return {"error": "Failed to read file"}
-    except Exception:
-        logger.exception("Unexpected file read failure for %s", full_path)
-        return {"error": "Failed to read file"}
+    return read_file_payload(
+        path,
+        project_id,
+        validate_path=_validate_read_path,
+        max_file_read_bytes=settings.MAX_FILE_READ_BYTES,
+        logger=logger,
+    )
 
 
 @app.get("/api/phrases")
@@ -485,266 +430,71 @@ async def _shutdown_room_tasks(room_token: str) -> None:
         await driver.stop()
 
 
+protocol_router = ProtocolRouter(
+    ProtocolRouterDependencies(
+        manager=manager,
+        driver=driver,
+        default_host_label=DEFAULT_HOST_LABEL,
+        is_desktop_host_role=_is_desktop_host_role,
+        emit_room_event=lambda *args, **kwargs: _emit_room_event(*args, **kwargs),
+        ensure_driver_running=lambda room_token: _ensure_driver_running(room_token),
+        broadcast_room_snapshot=lambda room_token: _broadcast_room_snapshot(room_token),
+        send_initial_snapshot=lambda websocket, room_token, role: _send_initial_snapshot(websocket, room_token, role),
+    )
+)
+
+
 def _resolve_target_project(room_token: str, data: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
-    requested_project_id = str((data or {}).get("project_id") or "").strip() or None
-    return manager.get_active_host_project(room_token, preferred_project_id=requested_project_id)
+    return protocol_router.resolve_target_project(room_token, data)
 
 
 async def _sync_bridge_metadata(data: Dict[str, Any], room_token: str, websocket: WebSocket) -> None:
-    runtime_catalog = data.get("runtime_catalog")
-    active_runtime = data.get("active_runtime")
-    bridge_payload = (
-        data.get("host")
-        if isinstance(data.get("host"), dict)
-        else data.get("bridge")
-        if isinstance(data.get("bridge"), dict)
-        else {}
-    )
-    bridge_label = bridge_payload.get("label") or data.get("bridge_label") or DEFAULT_HOST_LABEL
-    manager.update_host_session(
-        websocket,
-        bridge={
-            **bridge_payload,
-            "label": bridge_label,
-            "version": bridge_payload.get("version") or data.get("bridge_version"),
-            "session_capabilities": data.get("session_capabilities"),
-        },
-        project=data.get("project"),
-        session_capabilities=data.get("session_capabilities"),
-        runtime_catalog=runtime_catalog,
-        active_runtime=active_runtime,
-        bridge_label=bridge_label,
-    )
-    await driver.update_runtime_catalog(runtime_catalog, active_runtime=active_runtime)
-    await _broadcast_room_snapshot(room_token)
+    await protocol_router.sync_bridge_metadata(data, room_token, websocket)
 
 
-async def _route_prompt_submit(
-    data: Dict[str, Any], room_token: str, websocket: WebSocket
-) -> None:
-    prompt = str(data.get("prompt") or "").strip()
-    if not prompt:
-        return
-    target_project = _resolve_target_project(room_token, data)
-    target_runtime = data.get("target_runtime")
-
-    await emit_prompt_submit_events(
-        room_token=room_token,
-        prompt=prompt,
-        target_project=target_project,
-        target_runtime=target_runtime,
-        exclude_ws=websocket,
-        emit_room_event=_emit_room_event,
-    )
-
-    if not manager.room_has_desktop_host(room_token):
-        await _emit_room_event(
-            room_token,
-            build_bridge_offline_event(),
-            ignore_rate_limit=True,
-            buffer_message=True,
-        )
-        return
-
-    await _ensure_driver_running(room_token)
-    await driver.dispatch_command(build_prompt_submit_payload(prompt, target_project=target_project, target_runtime=target_runtime))
+async def _route_prompt_submit(data: Dict[str, Any], room_token: str, websocket: WebSocket) -> None:
+    await protocol_router.route_prompt_submit(data, room_token, websocket)
 
 
-async def _route_workspace_focus(
-    data: Dict[str, Any], room_token: str
-) -> None:
-    target_project = _resolve_target_project(room_token, data)
-    if not manager.room_has_desktop_host(room_token):
-        await _emit_room_event(
-            room_token,
-            build_bridge_offline_event(),
-            ignore_rate_limit=True,
-            buffer_message=True,
-        )
-        return
-    await _ensure_driver_running(room_token)
-    await driver.dispatch_command(build_workspace_focus_payload(data, target_project=target_project))
-    await _emit_room_event(
-        room_token,
-        build_workspace_focus_event(
-            data,
-            target_project=target_project,
-            target_runtime=target_project.get("active_runtime") if target_project else driver.get_active_runtime(),
-        ),
-        ignore_rate_limit=True,
-        buffer_message=True,
-    )
+async def _route_workspace_focus(data: Dict[str, Any], room_token: str) -> None:
+    await protocol_router.route_workspace_focus(data, room_token)
 
 
-async def _route_context_request(
-    data: Dict[str, Any], room_token: str
-) -> None:
-    target_project = _resolve_target_project(room_token, data)
-    if not manager.room_has_desktop_host(room_token):
-        await _emit_room_event(
-            room_token,
-            build_bridge_offline_event(),
-            ignore_rate_limit=True,
-            buffer_message=True,
-        )
-        return
-    await _ensure_driver_running(room_token)
-    await driver.dispatch_command(build_context_request_payload(data, target_project=target_project))
+async def _route_context_request(data: Dict[str, Any], room_token: str) -> None:
+    await protocol_router.route_context_request(data, room_token)
 
 
-async def _route_command_dispatch(
-    data: Dict[str, Any], room_token: str
-) -> None:
-    target_project = _resolve_target_project(room_token, data)
-    if not manager.room_has_desktop_host(room_token):
-        await _emit_room_event(
-            room_token,
-            build_bridge_offline_event(),
-            ignore_rate_limit=True,
-            buffer_message=True,
-        )
-        return
-
-    await _ensure_driver_running(room_token)
-    await driver.dispatch_command(build_command_dispatch_payload(data, target_project=target_project))
-    await _emit_room_event(
-        room_token,
-        build_command_dispatch_event(data, target_project=target_project),
-        ignore_rate_limit=True,
-        buffer_message=True,
-    )
+async def _route_command_dispatch(data: Dict[str, Any], room_token: str) -> None:
+    await protocol_router.route_command_dispatch(data, room_token)
 
 
-async def _route_approval_response(
-    data: Dict[str, Any], room_token: str
-) -> None:
-    target_project = _resolve_target_project(room_token, data)
-    if not manager.room_has_desktop_host(room_token):
-        await _emit_room_event(
-            room_token,
-            build_approval_offline_result(data, target_project=target_project),
-            ignore_rate_limit=True,
-            buffer_message=True,
-        )
-        return
-    approval_id_value = approval_id(data)
-    decision = normalize_decision(data.get("decision"))
-    await driver.dispatch_command(
-        build_approval_response_payload(
-            approval_id_value,
-            decision,
-            data,
-            target_project=target_project,
-        )
-    )
-    await emit_approval_completion_events(
-        room_token=room_token,
-        approval_id_value=approval_id_value,
-        decision=decision,
-        target_project=target_project,
-        emit_room_event=_emit_room_event,
-    )
+async def _route_approval_response(data: Dict[str, Any], room_token: str) -> None:
+    await protocol_router.route_approval_response(data, room_token)
 
 
 async def _route_kill_request(data: Dict[str, Any], room_token: str) -> None:
-    target_project = _resolve_target_project(room_token, data)
-    if not manager.room_has_desktop_host(room_token):
-        await _emit_room_event(
-            room_token,
-            build_kill_offline_result(data, target_project=target_project),
-            ignore_rate_limit=True,
-            buffer_message=True,
-        )
-        return
-
-    await _ensure_driver_running(room_token)
-    await driver.dispatch_command(build_kill_request_payload(data, target_project=target_project))
-    await _emit_room_event(
-        room_token,
-        build_kill_audit_event(data, target_project=target_project),
-        ignore_rate_limit=True,
-        buffer_message=True,
-    )
+    await protocol_router.route_kill_request(data, room_token)
 
 
 async def _route_project_select(data: Dict[str, Any], room_token: str) -> None:
-    project_id = project_id_from_data(data)
-    if not project_id:
-        return
-    if not manager.select_project(room_token, project_id):
-        await _emit_room_event(
-            room_token,
-            build_project_unavailable_event(project_id),
-            ignore_rate_limit=True,
-            buffer_message=True,
-        )
-        return
-    await _broadcast_room_snapshot(room_token)
-    selected_project = manager.get_active_host_project(room_token, preferred_project_id=project_id)
-    await _emit_room_event(
-        room_token,
-        build_project_changed_event(project_id, selected_project),
-        ignore_rate_limit=True,
-        buffer_message=True,
-    )
+    await protocol_router.route_project_select(data, room_token)
 
 
-async def _handle_bridge_room_event(
-    data: Dict[str, Any], room_token: str, websocket: WebSocket
-) -> None:
-    host_project = manager.host_projects.get(websocket)
-    packet = dict(data)
-    if host_project:
-        packet.setdefault("project_id", host_project.get("project_id"))
-        packet.setdefault("project_name", host_project.get("project_name"))
-        packet.setdefault("host_id", host_project.get("host_id"))
-        packet.setdefault("host_label", host_project.get("host_label"))
-        packet.setdefault("host_platform", host_project.get("host_platform"))
-        packet.setdefault("bridge_label", host_project.get("bridge_label"))
-    await _emit_room_event(
-        room_token,
-        packet,
-        exclude_ws=websocket,
-        ignore_rate_limit=True,
-        buffer_message=True,
-    )
+async def _handle_bridge_room_event(data: Dict[str, Any], room_token: str, websocket: WebSocket) -> None:
+    await protocol_router.handle_bridge_room_event(data, room_token, websocket)
 
 
-async def _skip_initial_snapshot(*_args: Any) -> None: return None
 async def _handle_protocol_message(
     data: Dict[str, Any],
     websocket: WebSocket,
     room_token: str,
     role: str,
 ) -> None:
-    msg_type = data.get("type")
-
-    if is_host_metadata_message(role, msg_type, _is_desktop_host_role):
-        await _sync_bridge_metadata(data, room_token, websocket)
-        await {"hello": _send_initial_snapshot}.get(msg_type, _skip_initial_snapshot)(websocket, room_token, role)
-        return
-
-    if is_bridge_room_event(role, msg_type, _is_desktop_host_role):
-        await _handle_bridge_room_event(data, room_token, websocket)
-        return
-
-    handler = _protocol_dispatchers(data, websocket, room_token, role).get(msg_type)
-    if handler:
-        await handler()
+    await protocol_router.handle_protocol_message(data, websocket, room_token, role)
 
 
 def _protocol_dispatchers(data: Dict[str, Any], websocket: WebSocket, room_token: str, role: str):
-    return {
-        "hello": lambda: _send_initial_snapshot(websocket, room_token, role),
-        "prompt.submit": lambda: _route_prompt_submit(data, room_token, websocket),
-        "command.dispatch": lambda: _route_command_dispatch(data, room_token),
-        "workspace.focus": lambda: _route_workspace_focus(data, room_token),
-        "context.request": lambda: _route_context_request(data, room_token),
-        "approval.response": lambda: _route_approval_response(data, room_token),
-        "project.select": lambda: _route_project_select(data, room_token),
-        "kill.request": lambda: _route_kill_request(data, room_token),
-        "ping": lambda: manager.send_packet(websocket, {"type": "pong"}, buffer_message=False),
-    }
+    return protocol_router.protocol_dispatchers(data, websocket, room_token, role)
 
 
 async def _handle_handshake(data: Dict[str, Any], websocket: WebSocket) -> bool:
