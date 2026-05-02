@@ -39,9 +39,11 @@
     "python scripts/quality_gate.py backend/main.py backend/pairing_page.py tests/test_pairing_page.py",
     "python scripts/quality_gate.py backend/main.py backend/connection_preflight.py tests/test_connection_preflight.py",
     "python scripts/quality_gate.py backend/main.py backend/host_session.py tests/test_host_session.py",
+    "python scripts/quality_gate.py backend/main.py backend/project_registry.py tests/test_project_registry.py",
     "pytest tests/test_pairing_page.py tests/test_backend_main.py -q",
     "pytest tests/test_connection_preflight.py tests/test_backend_main.py -q",
     "pytest tests/test_host_session.py tests/test_backend_main.py -q",
+    "pytest tests/test_project_registry.py tests/test_backend_main.py -q",
     "pytest tests/test_backend_main.py -q",
     "pytest tests/test_protocol.py tests/test_project_state.py -q",
     "python scripts/quality_gate.py <changed backend files>"
@@ -55,13 +57,15 @@
     "tests/test_connection_preflight.py",
     "tests/test_host_session.py",
     "tests/test_pairing_page.py",
+    "tests/test_project_registry.py",
     "tests/test_backend_main.py",
     "tests/test_protocol.py"
   ],
   "completed_slices": [
     "extract_pairing_page_builder",
     "extract_connection_preflight_builder",
-    "extract_host_session_metadata_builder"
+    "extract_host_session_metadata_builder",
+    "extract_project_host_registry_entry_builders"
   ],
   "next_steps": [
     "extract_connection_manager_state_helpers",

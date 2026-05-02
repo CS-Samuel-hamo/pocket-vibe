@@ -24,6 +24,12 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from backend.connection_preflight import build_connection_preflight
 from backend.host_session import build_host_session_payload
 from backend.pairing_page import build_pairing_page_html as _build_pairing_page_html
+from backend.project_registry import (
+    host_registry_entry,
+    project_registry_entry,
+    sort_host_registry,
+    sort_project_registry,
+)
 
 
 project_root = str(Path(__file__).parent.parent.absolute())
@@ -638,34 +644,15 @@ class ConnectionManager:
             if not metadata:
                 continue
             entries.append(
-                {
-                    "project_id": metadata["project_id"],
-                    "project_name": metadata["project_name"],
-                    "workspace_path": metadata.get("workspace_path"),
-                    "host_id": metadata.get("host_id"),
-                    "host_label": metadata.get("host_label", DEFAULT_HOST_LABEL),
-                    "host_kind": metadata.get("host_kind", "desktop-host"),
-                    "host_version": metadata.get("host_version"),
-                    "bridge_label": metadata.get("host_label", DEFAULT_HOST_LABEL),
-                    "host_platform": metadata.get("host_platform", DEFAULT_HOST_PLATFORM),
-                    "active_runtime": metadata.get("active_runtime"),
-                    "runtime_label": metadata.get("runtime_label"),
-                    "runtime_health": metadata.get("runtime_health", "offline"),
-                    "status_detail": metadata.get("status_detail"),
-                    "last_error": metadata.get("last_error"),
-                    "updated_at": metadata.get("updated_at"),
-                    "selected": metadata["project_id"] == selected_id,
-                }
+                project_registry_entry(
+                    metadata,
+                    selected_id=selected_id,
+                    default_host_label=DEFAULT_HOST_LABEL,
+                    default_platform=DEFAULT_HOST_PLATFORM,
+                )
             )
 
-        return sorted(
-            entries,
-            key=lambda item: (
-                0 if item["selected"] else 1,
-                str(item.get("project_name") or "").lower(),
-                str(item.get("bridge_label") or "").lower(),
-            ),
-        )
+        return sort_project_registry(entries)
 
     def get_project_entry(
         self,
@@ -744,41 +731,16 @@ class ConnectionManager:
                 continue
             descriptor = _host_descriptor_from_metadata(metadata)
             entries.append(
-                {
-                    "id": descriptor["id"],
-                    "label": descriptor["label"],
-                    "platform": descriptor["platform"],
-                    "kind": descriptor["kind"],
-                    "version": descriptor["version"],
-                    "capabilities": descriptor["capabilities"],
-                    "health": descriptor["health"],
-                    "last_error": descriptor["last_error"],
-                    "host_id": metadata["host_id"],
-                    "connection_id": metadata.get("connection_id"),
-                    "host_label": metadata.get("host_label", DEFAULT_HOST_LABEL),
-                    "host_platform": metadata.get("host_platform", DEFAULT_HOST_PLATFORM),
-                    "host_kind": metadata.get("host_kind", "desktop-host"),
-                    "host_version": metadata.get("host_version"),
-                    "session_capabilities": list(metadata.get("session_capabilities") or []),
-                    "active_project_id": metadata.get("active_project_id"),
-                    "active_runtime": metadata.get("active_runtime"),
-                    "runtime_label": metadata.get("runtime_label"),
-                    "runtime_health": metadata.get("runtime_health", "offline"),
-                    "status_detail": metadata.get("status_detail"),
-                    "updated_at": metadata.get("updated_at"),
-                    "selected": metadata["host_id"] == active_host_id,
-                    "online": True,
-                }
+                host_registry_entry(
+                    metadata,
+                    descriptor,
+                    active_host_id=active_host_id,
+                    default_host_label=DEFAULT_HOST_LABEL,
+                    default_platform=DEFAULT_HOST_PLATFORM,
+                )
             )
 
-        return sorted(
-            entries,
-            key=lambda item: (
-                0 if item["selected"] else 1,
-                str(item.get("host_label") or "").lower(),
-                str(item.get("host_platform") or "").lower(),
-            ),
-        )
+        return sort_host_registry(entries)
 
     def get_host_entry(self, room_token: str, host_id: Optional[str]) -> Optional[Dict[str, Any]]:
         if not host_id:
