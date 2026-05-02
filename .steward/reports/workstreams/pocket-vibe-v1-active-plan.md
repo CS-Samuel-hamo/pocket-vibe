@@ -63,6 +63,7 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 - Fifteenth backend split completed: prompt and approval route emission sequences moved to `backend/route_flows.py`, removing `_route_prompt_submit` and `_route_approval_response` from the quality debt baseline.
 - Sixteenth backend split completed: project state payload metadata normalization moved to `backend/project_state_payload.py`, removing `_project_state_payload` branch complexity from the quality debt baseline.
 - Seventeenth backend split completed: room snapshot DTO assembly moved to `backend/room_snapshot_payload.py`, removing `_room_snapshot_payload` branch complexity from the quality debt baseline.
+- Eighteenth backend split completed: room peer filtering moved to `backend/connection_peers.py`, removing `get_peers_in_room` branch complexity from the quality debt baseline.
 - Split `vscode-bridge/src/extension.ts` in small activation/client/runtime/UI slices.
 - After each slice, run the relevant targeted tests plus the v1 completion gate when behavior changes.
 

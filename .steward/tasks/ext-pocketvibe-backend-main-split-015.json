@@ -49,6 +49,7 @@
     "python scripts/quality_gate.py backend/main.py backend/route_flows.py tests/test_route_flows.py",
     "python scripts/quality_gate.py backend/main.py backend/project_state_payload.py tests/test_project_state_payload.py",
     "python scripts/quality_gate.py backend/main.py backend/room_snapshot_payload.py tests/test_room_snapshot_payload.py",
+    "python scripts/quality_gate.py backend/main.py backend/connection_peers.py tests/test_connection_peers.py",
     "pytest tests/test_pairing_page.py tests/test_backend_main.py -q",
     "pytest tests/test_connection_preflight.py tests/test_backend_main.py -q",
     "pytest tests/test_host_session.py tests/test_backend_main.py -q",
@@ -62,6 +63,7 @@
     "pytest tests/test_route_flows.py tests/test_backend_main.py -q",
     "pytest tests/test_project_state_payload.py tests/test_backend_main.py -q",
     "pytest tests/test_room_snapshot_payload.py tests/test_backend_main.py -q",
+    "pytest tests/test_connection_peers.py tests/test_backend_main.py -q",
     "pytest tests/test_backend_main.py -q",
     "pytest tests/test_protocol.py tests/test_project_state.py -q",
     "python scripts/quality_gate.py <changed backend files>"
@@ -84,6 +86,7 @@
     "tests/test_route_flows.py",
     "tests/test_project_state_payload.py",
     "tests/test_room_snapshot_payload.py",
+    "tests/test_connection_peers.py",
     "tests/test_snapshots.py",
     "tests/test_backend_main.py",
     "tests/test_protocol.py"
@@ -105,7 +108,8 @@
     "extract_driver_output_delivery_flow",
     "extract_route_flow_emission_helpers",
     "extract_project_state_payload_normalization",
-    "extract_room_snapshot_payload_builder"
+    "extract_room_snapshot_payload_builder",
+    "extract_connection_peer_filtering"
   ],
   "next_steps": [
     "extract_connection_manager_state_helpers",

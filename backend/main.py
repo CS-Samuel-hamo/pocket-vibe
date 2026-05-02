@@ -22,6 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from backend.connection_preflight import build_connection_preflight
+from backend.connection_peers import filter_room_peers
 from backend.connection_state import update_host_session_state
 from backend.driver_output import broadcast_driver_packets
 from backend.pairing_page import build_pairing_page_html as _build_pairing_page_html
@@ -567,26 +568,16 @@ class ConnectionManager:
         role_filter: Optional[str] = None,
         target_connection_id: Optional[str] = None,
     ) -> List[WebSocket]:
-        peers = list(self.rooms.get(room_token, []))
-        if exclude_ws:
-            peers = [peer for peer in peers if peer != exclude_ws]
-        if role_filter:
-            peers = [
-                peer
-                for peer in peers
-                if (
-                    _is_desktop_host_role(self.roles.get(peer))
-                    if role_filter == DESKTOP_TARGET_ROLE
-                    else self.roles.get(peer) == role_filter
-                )
-            ]
-        if target_connection_id:
-            peers = [
-                peer
-                for peer in peers
-                if self.connection_ids.get(peer) == target_connection_id
-            ]
-        return peers
+        return filter_room_peers(
+            self.rooms.get(room_token, []),
+            roles=self.roles,
+            connection_ids=self.connection_ids,
+            exclude_ws=exclude_ws,
+            role_filter=role_filter,
+            target_connection_id=target_connection_id,
+            desktop_target_role=DESKTOP_TARGET_ROLE,
+            is_desktop_host_role=_is_desktop_host_role,
+        )
 
     def room_has_role(self, room_token: str, role: str) -> bool:
         return any(self.roles.get(peer) == role for peer in self.rooms.get(room_token, []))
