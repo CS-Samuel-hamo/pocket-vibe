@@ -59,7 +59,8 @@
     "extract_workspace_actions",
     "extract_codex_exec_runtime",
     "extract_backend_connection",
-    "extract_bridge_settings_and_utilities"
+    "extract_bridge_settings_and_utilities",
+    "flatten_extension_dispatch_nesting"
   ],
   "next_steps": [
     "extract_websocket_client",

@@ -61,10 +61,8 @@ const backendConnection = createBackendConnectionState();
 
 const runCommandInProjectShell = (command: string, targetRuntime?: string) =>
     executeProjectShellCommand(command, targetRuntime, { sendToBackend });
-const workspaceActionDependencies = {
-    sendToBackend,
-    getActiveRuntimeId: () => getActiveRuntimeDescriptor()?.id,
-};
+const workspaceActionDependencies = { sendToBackend, getActiveRuntimeId: () => getActiveRuntimeDescriptor()?.id };
+const codexExecDependencies = { sendToBackend, reportCapabilities, recordRuntimeError, isCommandAvailable };
 const runtimeAdapters: RuntimeAdapter[] = createRuntimeAdapters({
     runCommandInProjectShell,
     isCommandAvailable,
@@ -237,12 +235,7 @@ async function handlePromptSubmit(message: BackendMessage) {
 
     try {
         if (runtimeContext.descriptor.id === 'codex-cli') {
-            await executeCodexExecPrompt(prompt, runtimeContext.descriptor, {
-                sendToBackend,
-                reportCapabilities,
-                recordRuntimeError,
-                isCommandAvailable,
-            });
+            await executeCodexExecPrompt(prompt, runtimeContext.descriptor, codexExecDependencies);
         } else {
             await runtimeContext.adapter.sendPrompt(prompt);
         }
@@ -319,9 +312,7 @@ async function handleCommandDispatch(message: BackendMessage) {
             const lineTarget = formatLineTarget(message.file, message.lines, message.line);
             const instruction = String(message.instruction ?? action);
             await runtimeContext.adapter.sendPrompt(`${action.toUpperCase()}: ${instruction}\nTARGET: ${lineTarget}`);
-            if (message.file) {
-                await focusWorkspace(message, workspaceActionDependencies);
-            }
+            if (message.file) await focusWorkspace(message, workspaceActionDependencies);
         } else {
             await runtimeContext.adapter.sendPrompt(JSON.stringify(message));
         }
@@ -550,6 +541,45 @@ async function handleRuntimeLaunch(message: BackendMessage) {
     await reportCapabilities();
 }
 
+async function ensureRuntimeAttachTargetReady(
+    adapter: RuntimeAdapter,
+    descriptor: RuntimeDescriptor,
+    runtimeId: RuntimeId,
+): Promise<boolean> {
+    if (!isTerminalRuntimeAdapter(adapter)) {
+        return true;
+    }
+
+    const terminal = adapter.findTerminal();
+    if (terminal) {
+        terminal.show();
+        return true;
+    }
+
+    if (!descriptor.launchable) {
+        const reason = descriptor.last_error || `${descriptor.label} is not available in this VS Code window.`;
+        sendToBackend({
+            type: 'execution.event',
+            phase: 'error',
+            message: `Attach failed for ${descriptor.label}.`,
+            target_runtime: runtimeId,
+            reason,
+        });
+        await reportCapabilities();
+        return false;
+    }
+
+    sendToBackend({
+        type: 'execution.event',
+        phase: 'runtime',
+        message: `${descriptor.label} is selected, but not attached yet. Launch it first.`,
+        target_runtime: runtimeId,
+        reason: 'runtime.attach.pending_launch',
+    });
+    await reportCapabilities();
+    return false;
+}
+
 async function handleRuntimeAttach(message: BackendMessage) {
     const runtimeId = String(message.target_runtime ?? '').trim() as RuntimeId;
     if (!runtimeId) {
@@ -577,32 +607,9 @@ async function handleRuntimeAttach(message: BackendMessage) {
 
     try {
         await setPreferredRuntime(runtimeId);
-        if (isTerminalRuntimeAdapter(adapter)) {
-            const terminal = adapter.findTerminal();
-            if (!terminal) {
-                if (!descriptor.launchable) {
-                    const reason = descriptor.last_error || `${descriptor.label} is not available in this VS Code window.`;
-                    sendToBackend({
-                        type: 'execution.event',
-                        phase: 'error',
-                        message: `Attach failed for ${descriptor.label}.`,
-                        target_runtime: runtimeId,
-                        reason,
-                    });
-                    await reportCapabilities();
-                    return;
-                }
-                sendToBackend({
-                    type: 'execution.event',
-                    phase: 'runtime',
-                    message: `${descriptor.label} is selected, but not attached yet. Launch it first.`,
-                    target_runtime: runtimeId,
-                    reason: 'runtime.attach.pending_launch',
-                });
-                await reportCapabilities();
-                return;
-            }
-            terminal.show();
+        const ready = await ensureRuntimeAttachTargetReady(adapter, descriptor, runtimeId);
+        if (!ready) {
+            return;
         }
 
         clearRuntimeError(runtimeId);

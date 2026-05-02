@@ -77,6 +77,7 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 - Fourth VS Code bridge split completed: Codex exec process launch, stdout parsing, fallback output recovery, and active process termination moved to `vscode-bridge/src/codexExecRuntime.ts`, reducing `extension.ts` to 960 lines.
 - Fifth VS Code bridge split completed: backend WebSocket connection state, reconnect handling, message parsing, and socket sending moved to `vscode-bridge/src/backendConnection.ts`, reducing `extension.ts` to 863 lines.
 - Sixth VS Code bridge split completed: connection settings, command availability detection, and line-target formatting moved to focused helpers, reducing `extension.ts` to 790 lines and removing the bridge file-length quality debt.
+- Seventh VS Code bridge cleanup completed: prompt dispatch dependencies and runtime attach terminal readiness were flattened, keeping `extension.ts` under 800 lines and removing its remaining JS nesting debt.
 - Continue splitting `vscode-bridge/src/extension.ts` in small activation/client/runtime/UI slices.
 - After each slice, run the relevant targeted tests plus the v1 completion gate when behavior changes.
 
