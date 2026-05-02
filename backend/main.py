@@ -57,6 +57,11 @@ from backend.protocol_routes import (
     project_id_from_data,
 )
 from backend.snapshots import build_snapshot_packets
+from backend.socket_messages import (
+    decrypt_if_needed,
+    routeable_socket_payload,
+    safe_json_loads,
+)
 
 
 project_root = str(Path(__file__).parent.parent.absolute())
@@ -1285,13 +1290,6 @@ def _protocol_dispatchers(data: Dict[str, Any], websocket: WebSocket, room_token
     }
 
 
-def _safe_json_loads(text: str) -> Optional[Dict[str, Any]]:
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        return None
-
-
 async def _handle_handshake(data: Dict[str, Any], websocket: WebSocket) -> bool:
     if data.get("type") != "key_exchange":
         return False
@@ -1311,34 +1309,22 @@ async def _handle_resume(data: Dict[str, Any], websocket: WebSocket) -> bool:
     return True
 
 
-async def _decrypt_if_needed(
-    data: Dict[str, Any], websocket: WebSocket
-) -> Optional[Dict[str, Any]]:
-    if data.get("type") != "encrypted":
-        return data
-    if websocket not in manager.secrets:
-        return None
-    decrypted = Crypto.decrypt(data, manager.secrets[websocket])
-    return _safe_json_loads(decrypted)
+def _decrypt_socket_payload(data: Dict[str, Any], websocket: WebSocket) -> Optional[Dict[str, Any]]:
+    return decrypt_if_needed(data, websocket, manager.secrets, Crypto.decrypt)
 
 
 async def _handle_socket_message(
     websocket: WebSocket, message_text: str, room_token: str, role: str
 ) -> None:
-    data = _safe_json_loads(message_text)
-    if not data:
-        return
-    if await _handle_handshake(data, websocket):
-        return
-    if await _handle_resume(data, websocket):
-        return
-
-    decrypted = await _decrypt_if_needed(data, websocket)
-    if not decrypted:
-        return
-
-    normalized = normalize_protocol_message(decrypted)
-    if await _handle_resume(normalized, websocket):
+    normalized = await routeable_socket_payload(
+        message_text,
+        websocket,
+        handle_handshake=_handle_handshake,
+        handle_resume=_handle_resume,
+        decrypt_payload=_decrypt_socket_payload,
+        normalize_message=normalize_protocol_message,
+    )
+    if not normalized:
         return
     await _handle_protocol_message(normalized, websocket, room_token, role)
 
@@ -1352,7 +1338,7 @@ async def _ws_loop(websocket: WebSocket, room_token: str, role: str) -> None:
 async def broadcast_driver_output(room_token: str) -> None:
     try:
         async for packet_text in driver.start():
-            packet = normalize_protocol_message(_safe_json_loads(packet_text) or {"type": "log", "content": packet_text})
+            packet = normalize_protocol_message(safe_json_loads(packet_text) or {"type": "log", "content": packet_text})
             delivery = packet.get("delivery")
             role_filter = packet.get("target_role")
             if delivery == "desktop":
