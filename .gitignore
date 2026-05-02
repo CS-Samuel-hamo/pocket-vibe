@@ -100,6 +100,13 @@ ips.txt
 /*.webp
 
 # Steward runtime state
+.steward/approvals/
+.steward/caller/
+.steward/evals/
+.steward/learning/
+.steward/outcomes/
 .steward/logs/
 .steward/runs/
+.steward/reports/dashboard.html
+.steward/reports/tasks/
 .steward/**/*.lock

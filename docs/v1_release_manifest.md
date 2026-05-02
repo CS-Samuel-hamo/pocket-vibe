@@ -25,6 +25,7 @@ These categories must not be part of the v1 baseline:
 - generated scratch output: `qg_*`, `gate_report*`, `curl_*.json`, `test_output*`, `files.txt`, `ips.txt`;
 - local databases and caches: `openvibe.db`, `*.sqlite*`, `__pycache__/`, `.pytest_cache/`;
 - tool state: `.aider*`, `.qoder/`, `.trae/`, `.pv-vscode-extensions/`, `.pv-vscode-userdata/`, `.pv-vscode-userdata-projects/`;
+- generated Steward runtime state: `.steward/approvals/`, `.steward/caller/`, `.steward/evals/`, `.steward/learning/`, `.steward/outcomes/`, `.steward/reports/dashboard.html`, `.steward/reports/tasks/`;
 - dependency folders and build products: `node_modules/`, `dist/`, `build/`, `*.vsix`;
 - root-level screenshots and media captures used during debugging.
 
