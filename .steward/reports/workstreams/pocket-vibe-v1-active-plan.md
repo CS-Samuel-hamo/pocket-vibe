@@ -55,6 +55,7 @@ The v1 release gate is defined in [v1_done_definition.md](/D:/AI_projects/Pocket
 - Seventh backend split completed: prompt route payload builders moved to `backend/protocol_routes.py`, with direct route payload tests.
 - Eighth backend split completed: workspace, context, and command route payload builders moved into tested protocol route helpers.
 - Ninth backend split completed: approval and Kill route payload/audit builders moved into tested protocol route helpers.
+- Tenth backend split completed: project selection events moved into tested protocol route helpers.
 - Split `vscode-bridge/src/extension.ts` in small activation/client/runtime/UI slices.
 - After each slice, run the relevant targeted tests plus the v1 completion gate when behavior changes.
 

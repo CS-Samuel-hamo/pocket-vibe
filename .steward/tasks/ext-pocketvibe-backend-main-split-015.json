@@ -76,7 +76,8 @@
     "extract_host_session_state_update",
     "extract_prompt_route_payload_builders",
     "extract_workspace_context_command_payload_builders",
-    "extract_approval_and_kill_route_payload_builders"
+    "extract_approval_and_kill_route_payload_builders",
+    "extract_project_select_event_builders"
   ],
   "next_steps": [
     "extract_connection_manager_state_helpers",

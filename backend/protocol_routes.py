@@ -255,3 +255,37 @@ def build_kill_audit_event(
         target_runtime=data.get("target_runtime"),
         reason="desktop_dispatch",
     )
+
+
+def project_id_from_data(data: Dict[str, Any]) -> str:
+    return str(data.get("project_id") or "").strip()
+
+
+def build_project_unavailable_event(project_id: str) -> Dict[str, Any]:
+    return build_execution_event(
+        "error",
+        "Selected project is no longer available.",
+        reason="project_unavailable",
+        project_id=project_id,
+    )
+
+
+def build_project_changed_event(
+    project_id: str,
+    selected_project: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    return build_audit_event(
+        "project",
+        "Active project changed",
+        project_id=project_id,
+        project_name=_project_name(selected_project),
+        bridge_label=_bridge_label(selected_project),
+    )
+
+
+def _project_name(selected_project: Optional[Dict[str, Any]]) -> Optional[str]:
+    return selected_project.get("project_name") if selected_project else None
+
+
+def _bridge_label(selected_project: Optional[Dict[str, Any]]) -> Optional[str]:
+    return selected_project.get("bridge_label") if selected_project else None

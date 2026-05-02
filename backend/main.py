@@ -47,10 +47,13 @@ from backend.protocol_routes import (
     build_kill_request_payload,
     build_prompt_dispatch_event,
     build_prompt_submit_payload,
+    build_project_changed_event,
+    build_project_unavailable_event,
     build_user_prompt_event,
     build_workspace_focus_event,
     build_workspace_focus_payload,
     normalize_decision,
+    project_id_from_data,
 )
 
 
@@ -1233,18 +1236,13 @@ async def _route_kill_request(data: Dict[str, Any], room_token: str) -> None:
 
 
 async def _route_project_select(data: Dict[str, Any], room_token: str) -> None:
-    project_id = str(data.get("project_id") or "").strip()
+    project_id = project_id_from_data(data)
     if not project_id:
         return
     if not manager.select_project(room_token, project_id):
         await _emit_room_event(
             room_token,
-            build_execution_event(
-                "error",
-                "Selected project is no longer available.",
-                reason="project_unavailable",
-                project_id=project_id,
-            ),
+            build_project_unavailable_event(project_id),
             ignore_rate_limit=True,
             buffer_message=True,
         )
@@ -1253,13 +1251,7 @@ async def _route_project_select(data: Dict[str, Any], room_token: str) -> None:
     selected_project = manager.get_active_host_project(room_token, preferred_project_id=project_id)
     await _emit_room_event(
         room_token,
-        build_audit_event(
-            "project",
-            "Active project changed",
-            project_id=project_id,
-            project_name=selected_project.get("project_name") if selected_project else None,
-            bridge_label=selected_project.get("bridge_label") if selected_project else None,
-        ),
+        build_project_changed_event(project_id, selected_project),
         ignore_rate_limit=True,
         buffer_message=True,
     )

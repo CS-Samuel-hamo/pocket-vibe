@@ -15,10 +15,13 @@ from backend.protocol_routes import (
     build_kill_request_payload,
     build_prompt_dispatch_event,
     build_prompt_submit_payload,
+    build_project_changed_event,
+    build_project_unavailable_event,
     build_user_prompt_event,
     build_workspace_focus_event,
     build_workspace_focus_payload,
     normalize_decision,
+    project_id_from_data,
 )
 
 
@@ -155,3 +158,13 @@ def test_kill_payloads_preserve_reason_and_target_context():
     assert payload["reason"] == "manual-test"
     assert offline["reason"] == "bridge_offline"
     assert audit["category"] == "kill"
+
+
+def test_project_select_events_use_standard_contracts():
+    unavailable = build_project_unavailable_event("p1")
+    changed = build_project_changed_event("p1", {"project_name": "Pocket", "bridge_label": "VS Code"})
+
+    assert project_id_from_data({"project_id": " p1 "}) == "p1"
+    assert unavailable["reason"] == "project_unavailable"
+    assert changed["category"] == "project"
+    assert changed["project_name"] == "Pocket"
