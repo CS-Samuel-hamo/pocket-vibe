@@ -55,6 +55,7 @@ from backend.protocol_routes import (
     project_id_from_data,
 )
 from backend.route_flows import emit_approval_completion_events, emit_prompt_submit_events
+from backend.room_snapshot_payload import build_room_snapshot_payload
 from backend.snapshots import build_snapshot_packets
 from backend.socket_messages import (
     decrypt_if_needed,
@@ -893,31 +894,18 @@ def _selected_project_state(room_token: str) -> Dict[str, Any]:
 
 
 def _room_snapshot_payload(room_token: str) -> Dict[str, Any]:
-    active_project = manager.get_active_host_project(room_token)
-    active_host = manager.get_active_host(room_token)
-    project_registry = manager.list_room_projects(room_token)
-    session_capabilities = (
-        active_host.get("session_capabilities")
-        if active_host
-        else driver.get_session_capabilities()
+    return build_room_snapshot_payload(
+        active_project=manager.get_active_host_project(room_token),
+        active_host=manager.get_active_host(room_token),
+        project_registry=manager.list_room_projects(room_token),
+        host_registry=manager.list_room_hosts(room_token),
+        project_state=_selected_project_state(room_token),
+        driver_active_runtime=driver.get_active_runtime(),
+        driver_runtime_catalog=driver.get_runtime_catalog(),
+        driver_session_capabilities=driver.get_session_capabilities(),
+        default_host_label=DEFAULT_HOST_LABEL,
+        host_descriptor_from_metadata=_host_descriptor_from_metadata,
     )
-    host_descriptor = _host_descriptor_from_metadata(
-        active_host,
-        capabilities=session_capabilities,
-        health=active_host.get("runtime_health") if active_host else "offline",
-    )
-    return {
-        "project_registry": project_registry,
-        "active_project_id": active_project.get("project_id") if active_project else None,
-        "host_registry": manager.list_room_hosts(room_token),
-        "active_host_id": active_host.get("host_id") if active_host else None,
-        "project_state": _selected_project_state(room_token),
-        "active_runtime": active_project.get("active_runtime") if active_project else driver.get_active_runtime(),
-        "runtime_catalog": active_project.get("runtime_catalog") if active_project else driver.get_runtime_catalog(),
-        "host": host_descriptor,
-        "bridge_label": active_host.get("host_label") if active_host else DEFAULT_HOST_LABEL,
-        "session_capabilities": session_capabilities,
-    }
 
 
 async def _broadcast_room_snapshot(room_token: str) -> None:

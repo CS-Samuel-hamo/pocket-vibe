@@ -5,53 +5,48 @@
   "violations": [
     {
       "key": "backend/main.py|file-lines",
-      "value": 1464,
-      "message": "backend/main.py: File too long (1464 lines > 800)"
+      "value": 1452,
+      "message": "backend/main.py: File too long (1452 lines > 800)"
     },
     {
       "key": "backend/main.py|function-has too deep nesting|disconnect",
       "value": 4,
-      "message": "backend/main.py:536: Function 'disconnect' has too deep nesting (4 > 3)"
-    },
-    {
-      "key": "backend/main.py|function-has too many branches|_room_snapshot_payload",
-      "value": 7,
-      "message": "backend/main.py:895: Function '_room_snapshot_payload' has too many branches (7 > 3)"
+      "message": "backend/main.py:537: Function 'disconnect' has too deep nesting (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|disconnect",
       "value": 6,
-      "message": "backend/main.py:536: Function 'disconnect' has too many branches (6 > 3)"
+      "message": "backend/main.py:537: Function 'disconnect' has too many branches (6 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|get_host_entry",
       "value": 4,
-      "message": "backend/main.py:742: Function 'get_host_entry' has too many branches (4 > 3)"
+      "message": "backend/main.py:743: Function 'get_host_entry' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|get_peers_in_room",
       "value": 4,
-      "message": "backend/main.py:561: Function 'get_peers_in_room' has too many branches (4 > 3)"
+      "message": "backend/main.py:562: Function 'get_peers_in_room' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|get_project_entry",
       "value": 4,
-      "message": "backend/main.py:664: Function 'get_project_entry' has too many branches (4 > 3)"
+      "message": "backend/main.py:665: Function 'get_project_entry' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|list_room_hosts",
       "value": 4,
-      "message": "backend/main.py:718: Function 'list_room_hosts' has too many branches (4 > 3)"
+      "message": "backend/main.py:719: Function 'list_room_hosts' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-has too many branches|websocket_endpoint",
       "value": 4,
-      "message": "backend/main.py:1413: Function 'websocket_endpoint' has too many branches (4 > 3)"
+      "message": "backend/main.py:1401: Function 'websocket_endpoint' has too many branches (4 > 3)"
     },
     {
       "key": "backend/main.py|function-too long|websocket_endpoint",
       "value": 45,
-      "message": "backend/main.py:1413: Function 'websocket_endpoint' too long (45 > 30)"
+      "message": "backend/main.py:1401: Function 'websocket_endpoint' too long (45 > 30)"
     },
     {
       "key": "backend/telemetry.py|function-too long|monitor",
