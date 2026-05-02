@@ -21,6 +21,37 @@ def _normalize_root(project_payload: Dict[str, Any]) -> Optional[str]:
     return str(Path(root_path).resolve())
 
 
+def _has_project_identity(project_payload: Dict[str, Any]) -> bool:
+    return any(project_payload.get(key) for key in ("id", "project_id", "name", "project_name", "root_path"))
+
+
+def _same_project_payload(left: Dict[str, Any], right: Dict[str, Any]) -> bool:
+    left_id = _first_present(left.get("id"), left.get("project_id"))
+    right_id = _first_present(right.get("id"), right.get("project_id"))
+    if left_id and right_id:
+        return left_id == right_id
+    left_root = _normalize_root(left)
+    right_root = _normalize_root(right)
+    return bool(left_root and right_root and left_root.lower() == right_root.lower())
+
+
+def _project_payloads(project_payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+    primary_payload = {key: value for key, value in project_payload.items() if key != "projects"}
+    extra_payloads = [
+        dict(candidate)
+        for candidate in project_payload.get("projects") or []
+        if isinstance(candidate, dict) and _has_project_identity(candidate)
+    ]
+    if not _has_project_identity(primary_payload) and extra_payloads:
+        primary_payload = dict(extra_payloads[0])
+
+    payloads = [primary_payload]
+    for candidate in extra_payloads:
+        if not any(_same_project_payload(candidate, existing) for existing in payloads):
+            payloads.append(candidate)
+    return payloads
+
+
 def _runtime_descriptor(
     runtime_entries: List[Dict[str, Any]],
     active_runtime: Optional[str],
@@ -137,6 +168,52 @@ def _session_metadata(
     }
 
 
+def _project_metadata_list(
+    identity: Dict[str, Any],
+    project_payloads: List[Dict[str, Any]],
+    runtime_entries: List[Dict[str, Any]],
+    runtime_state: Dict[str, Any],
+    *,
+    connection_id: str,
+    active_runtime: Optional[str],
+    updated_at: float,
+) -> List[Dict[str, Any]]:
+    return [
+        _project_metadata(
+            identity,
+            candidate,
+            runtime_entries,
+            runtime_state,
+            connection_id=connection_id,
+            active_runtime=active_runtime,
+            normalized_root=_normalize_root(candidate),
+            updated_at=updated_at,
+        )
+        for candidate in project_payloads
+    ]
+
+
+def _build_session_project_metadata(
+    bridge_payload: Dict[str, Any],
+    project_payload: Dict[str, Any],
+    runtime_entries: List[Dict[str, Any]],
+    *,
+    active_runtime: Optional[str],
+    connection_id: str,
+    bridge_label: str,
+    default_platform: str,
+) -> Dict[str, Any]:
+    project_payloads = _project_payloads(project_payload)
+    primary_project_payload = project_payloads[0] if project_payloads else {}
+    identity = _host_identity(bridge_payload, project_payload, connection_id=connection_id, bridge_label=bridge_label, default_platform=default_platform)
+    active_descriptor = _runtime_descriptor(runtime_entries, active_runtime)
+    runtime_state = _runtime_state(active_descriptor, bridge_payload, active_runtime)
+    updated_at = time.time()
+    metadata = _project_metadata(identity, primary_project_payload, runtime_entries, runtime_state, connection_id=connection_id, active_runtime=active_runtime, normalized_root=_normalize_root(primary_project_payload), updated_at=updated_at)
+    metadata["projects"] = _project_metadata_list(identity, project_payloads, runtime_entries, runtime_state, connection_id=connection_id, active_runtime=active_runtime, updated_at=updated_at)
+    return metadata
+
+
 def build_host_session_payload(
     *,
     bridge: Optional[Dict[str, Any]],
@@ -151,11 +228,16 @@ def build_host_session_payload(
     bridge_payload = dict(bridge or {})
     project_payload = dict(project or {})
     runtime_entries = list(runtime_catalog or [])
-    normalized_root = _normalize_root(project_payload)
-    identity = _host_identity(bridge_payload, project_payload, connection_id=connection_id, bridge_label=bridge_label, default_platform=default_platform)
-    active_descriptor = _runtime_descriptor(runtime_entries, active_runtime)
-    runtime_state = _runtime_state(active_descriptor, bridge_payload, active_runtime)
-    metadata = _project_metadata(identity, project_payload, runtime_entries, runtime_state, connection_id=connection_id, active_runtime=active_runtime, normalized_root=normalized_root, updated_at=time.time())
+    metadata = _build_session_project_metadata(
+        bridge_payload,
+        project_payload,
+        runtime_entries,
+        active_runtime=active_runtime,
+        connection_id=connection_id,
+        bridge_label=bridge_label,
+        default_platform=default_platform,
+    )
+    identity = {key: metadata[key] for key in ("host_id", "host_label", "host_platform", "host_kind", "host_version")}
     return {
         "project": metadata,
         "session": _session_metadata(identity, metadata, _session_capabilities(session_capabilities, bridge_payload)),

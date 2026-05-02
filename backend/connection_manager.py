@@ -157,17 +157,15 @@ class ConnectionManager:
         entries: List[Dict[str, Any]] = []
         selected_id = self.room_project_selection.get(room_token)
         for peer in self.rooms.get(room_token, []):
-            metadata = self._host_project_for_peer(peer)
-            if not metadata:
-                continue
-            entries.append(
-                project_registry_entry(
-                    metadata,
-                    selected_id=selected_id,
-                    default_host_label=self.deps.default_host_label,
-                    default_platform=self.deps.default_host_platform,
+            for metadata in self._host_project_entries_for_peer(peer):
+                entries.append(
+                    project_registry_entry(
+                        metadata,
+                        selected_id=selected_id,
+                        default_host_label=self.deps.default_host_label,
+                        default_platform=self.deps.default_host_platform,
+                    )
                 )
-            )
         return sort_project_registry(entries)
 
     def _host_project_for_peer(self, peer: Any) -> Optional[Dict[str, Any]]:
@@ -175,16 +173,38 @@ class ConnectionManager:
             return None
         return self.host_projects.get(peer)
 
+    @staticmethod
+    def _dedup_project_entries(candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        entries: List[Dict[str, Any]] = []
+        seen: set[str] = set()
+        for candidate in candidates:
+            project_id = candidate.get("project_id") if isinstance(candidate, dict) else None
+            if project_id and project_id not in seen:
+                seen.add(project_id)
+                entries.append(candidate)
+        return entries
+
+    def _host_project_entries_for_peer(self, peer: Any) -> List[Dict[str, Any]]:
+        primary = self._host_project_for_peer(peer)
+        if not primary:
+            return []
+        return self._dedup_project_entries([primary, *(primary.get("projects") or [])])
+
+    def _room_project_entries(self, room_token: str) -> List[Dict[str, Any]]:
+        return [
+            project
+            for peer in self._desktop_host_peers(room_token)
+            for project in self._host_project_entries_for_peer(peer)
+        ]
+
     def get_project_entry(
         self,
         room_token: str,
         project_id: Optional[str],
     ) -> Optional[Dict[str, Any]]:
-        return find_metadata_by_id(
-            self._desktop_host_peers(room_token),
-            self.host_projects,
-            id_key="project_id",
-            id_value=project_id,
+        return next(
+            (dict(metadata) for metadata in self._room_project_entries(room_token) if metadata.get("project_id") == project_id),
+            None,
         )
 
     def _desktop_host_peers(self, room_token: str) -> List[Any]:
@@ -199,11 +219,7 @@ class ConnectionManager:
         room_token: str,
         preferred_project_id: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
-        projects = [
-            dict(self.host_projects[peer])
-            for peer in self._desktop_host_peers(room_token)
-            if peer in self.host_projects
-        ]
+        projects = [dict(project) for project in self._room_project_entries(room_token)]
         if not projects:
             return None
         return self._selected_or_fallback_project(room_token, preferred_project_id, projects)
@@ -235,9 +251,10 @@ class ConnectionManager:
         return True
 
     def find_project(self, project_id: str) -> Optional[Dict[str, Any]]:
-        for metadata in self.host_projects.values():
-            if metadata.get("project_id") == project_id:
-                return dict(metadata)
+        for peer in self.host_projects:
+            for metadata in self._host_project_entries_for_peer(peer):
+                if metadata.get("project_id") == project_id:
+                    return dict(metadata)
         return None
 
     def list_room_hosts(self, room_token: str) -> List[Dict[str, Any]]:

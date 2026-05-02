@@ -222,7 +222,13 @@ class ProtocolRouter:
         )
 
     def _with_host_project_context(self, packet: Packet, websocket: Any) -> Packet:
-        host_project = self.deps.manager.host_projects.get(websocket)
+        packet_project_id = str(packet.get("project_id") or "").strip()
+        room_token = getattr(self.deps.manager, "ws_to_room", {}).get(websocket)
+        host_project = (
+            self.deps.manager.get_project_entry(room_token, packet_project_id)
+            if packet_project_id and room_token
+            else self.deps.manager.host_projects.get(websocket)
+        )
         if not host_project:
             return packet
         for key in ("project_id", "project_name", "host_id", "host_label", "host_platform", "bridge_label"):

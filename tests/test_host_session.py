@@ -63,3 +63,30 @@ def test_host_session_uses_bridge_capabilities_when_explicit_missing():
     assert payload["project"]["runtime_health"] == "degraded"
     assert payload["project"]["last_error"] == "probe only"
     assert payload["session"]["session_capabilities"] == ["prompt", "kill"]
+
+
+def test_host_session_normalizes_multiple_workspace_projects():
+    payload = build_host_session_payload(
+        bridge={"id": "vscode-host-1", "label": "VS Code Host"},
+        project={
+            "name": "Pocket_Vibe",
+            "root_path": "D:/AI_projects/Pocket_Vibe",
+            "projects": [
+                {"name": "Pocket_Vibe", "root_path": "D:/AI_projects/Pocket_Vibe"},
+                {"name": "GeoDigest", "root_path": "D:/AI_projects/GeoDigest"},
+            ],
+        },
+        session_capabilities=["prompt"],
+        runtime_catalog=[{"id": "codex-cli", "label": "Codex CLI", "health": "ready"}],
+        active_runtime="codex-cli",
+        connection_id="host-abcdef1234",
+        bridge_label="VS Code Host",
+        default_platform="desktop",
+    )
+
+    project = payload["project"]
+
+    assert project["project_name"] == "Pocket_Vibe"
+    assert [item["project_name"] for item in project["projects"]] == ["Pocket_Vibe", "GeoDigest"]
+    assert project["projects"][1]["connection_id"] == project["connection_id"]
+    assert project["projects"][1]["runtime_label"] == "Codex CLI"

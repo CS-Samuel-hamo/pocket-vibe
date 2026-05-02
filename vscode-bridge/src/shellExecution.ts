@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import path from 'path';
 
 const PROJECT_SHELL_TERMINAL_NAME = 'Pocket Vibe Shell';
 const SHELL_INTEGRATION_TIMEOUT_MS = 2500;
@@ -18,19 +19,25 @@ interface ShellRunnerDependencies {
     sendToBackend(data: BackendMessage): void;
 }
 
-function getWorkspaceFolderPath(): string | undefined {
-    return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+function getWorkspaceFolderPath(workspaceRoot?: string): string | undefined {
+    return workspaceRoot || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 }
 
-function getOrCreateProjectShellTerminal(): vscode.Terminal {
-    const existing = vscode.window.terminals.find((terminal) => terminal.name === PROJECT_SHELL_TERMINAL_NAME);
+function getProjectShellTerminalName(workspaceRoot?: string): string {
+    const folderName = workspaceRoot ? path.basename(workspaceRoot) : '';
+    return folderName ? `${PROJECT_SHELL_TERMINAL_NAME} - ${folderName}` : PROJECT_SHELL_TERMINAL_NAME;
+}
+
+function getOrCreateProjectShellTerminal(workspaceRoot?: string): vscode.Terminal {
+    const terminalName = getProjectShellTerminalName(workspaceRoot);
+    const existing = vscode.window.terminals.find((terminal) => terminal.name === terminalName);
     if (existing) {
         return existing;
     }
 
     return vscode.window.createTerminal({
-        name: PROJECT_SHELL_TERMINAL_NAME,
-        cwd: getWorkspaceFolderPath(),
+        name: terminalName,
+        cwd: getWorkspaceFolderPath(workspaceRoot),
     });
 }
 
@@ -171,13 +178,14 @@ export async function runCommandInProjectShell(
     command: string,
     targetRuntime: string | undefined,
     dependencies: ShellRunnerDependencies,
+    workspaceRoot?: string,
 ): Promise<void> {
     const normalizedCommand = String(command ?? '').trim();
     if (!normalizedCommand) {
         throw new Error('No script command was provided.');
     }
 
-    const terminal = getOrCreateProjectShellTerminal();
+    const terminal = getOrCreateProjectShellTerminal(workspaceRoot);
     terminal.show();
 
     const shellIntegration = await waitForShellIntegration(terminal);

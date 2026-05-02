@@ -17,7 +17,7 @@ export interface RuntimeAdapter {
     definition: RuntimeDefinition;
     detect(): RuntimeDetection;
     sendPrompt(prompt: string): Promise<void>;
-    runScript(command: string): Promise<void>;
+    runScript(command: string, workspaceRoot?: string): Promise<void>;
     approve(decision: string): Promise<void>;
     kill(): Promise<void>;
 }
@@ -29,7 +29,7 @@ export interface TerminalRuntimeAdapter extends RuntimeAdapter {
 }
 
 export interface RuntimeAdapterDependencies {
-    runCommandInProjectShell(command: string, targetRuntime?: string): Promise<void>;
+    runCommandInProjectShell(command: string, targetRuntime?: string, workspaceRoot?: string): Promise<void>;
     isCommandAvailable(command: string): boolean;
     getRuntimeError(runtimeId: RuntimeId): string | undefined;
 }
@@ -173,7 +173,7 @@ function createTerminalRuntimeAdapter(
             terminal.show();
             terminal.sendText(prompt, true);
         },
-        runScript: (command) => dependencies.runCommandInProjectShell(command, definition.id),
+        runScript: (command, workspaceRoot) => dependencies.runCommandInProjectShell(command, definition.id, workspaceRoot),
         approve: async (decision) => {
             const terminal = await getOrStartTerminal(definition, patterns, dependencies);
             terminal.show();

@@ -411,6 +411,68 @@ async def test_project_select_changes_target_bridge_for_prompt(monkeypatch):
     assert captured["payload"]["target_connection_id"] != alpha["connection_id"]
 
 
+def _register_multiroot_bridge(room_token):
+    bridge = _FakeWebSocket()
+
+    async def register():
+        await backend_main.manager.connect(bridge, room_token, "vscode-bridge")
+        return backend_main.manager.update_bridge_project(
+            bridge,
+            project={
+                "name": "Pocket_Vibe",
+                "root_path": "D:/AI_projects/Pocket_Vibe",
+                "projects": [
+                    {"name": "Pocket_Vibe", "root_path": "D:/AI_projects/Pocket_Vibe"},
+                    {"name": "GeoDigest", "root_path": "D:/AI_projects/GeoDigest"},
+                ],
+            },
+            runtime_catalog=[{"id": "codex-cli", "label": "Codex CLI", "health": "ready"}],
+            active_runtime="codex-cli",
+        )
+
+    return bridge, register
+
+
+def _capture_prompt_dispatch(monkeypatch):
+    captured = {}
+
+    async def fake_dispatch(payload):
+        captured["payload"] = payload
+
+    async def fake_ensure(room_token_arg):
+        captured["room_token"] = room_token_arg
+
+    monkeypatch.setattr(backend_main.driver, "dispatch_command", fake_dispatch)
+    monkeypatch.setattr(backend_main, "_ensure_driver_running", fake_ensure)
+    return captured
+
+
+@pytest.mark.asyncio
+async def test_project_select_can_target_multiple_workspace_folders_on_one_bridge(monkeypatch):
+    room_token = "room-multiroot"
+    mobile = _FakeWebSocket()
+    _bridge, register_bridge = _register_multiroot_bridge(room_token)
+    primary = await register_bridge()
+    await backend_main.manager.connect(mobile, room_token, "mobile")
+    projects = backend_main.manager.list_room_projects(room_token)
+    geo_project = next(project for project in projects if project["project_name"] == "GeoDigest")
+    captured = _capture_prompt_dispatch(monkeypatch)
+
+    assert backend_main.manager.select_project(room_token, geo_project["project_id"]) is True
+
+    await backend_main._route_prompt_submit(
+        {"type": "prompt.submit", "prompt": "brief"},
+        room_token,
+        mobile,
+    )
+
+    assert len(projects) == 2
+    assert captured["payload"]["project_id"] == geo_project["project_id"]
+    assert captured["payload"]["target_connection_id"] == primary["connection_id"]
+    assert captured["payload"]["target_project_root"].endswith("GeoDigest")
+    assert captured["room_token"] == room_token
+
+
 @pytest.mark.asyncio
 async def test_bridge_assistant_message_is_forwarded_to_room(monkeypatch):
     emitted = []

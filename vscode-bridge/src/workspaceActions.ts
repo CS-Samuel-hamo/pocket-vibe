@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 
+import { projectContextFromMessage, resolveWorkspaceRootPath } from './workspaceProjects';
+
 interface BackendMessage {
     type: string;
     [key: string]: any;
@@ -16,12 +18,16 @@ const artilleryFlashDecoration = vscode.window.createTextEditorDecorationType({
     isWholeLine: true,
 });
 
-function getWorkspaceRoot(): vscode.Uri {
+function getWorkspaceRoot(message: BackendMessage): vscode.Uri {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
         throw new Error('No workspace is open in VS Code.');
     }
-    return workspaceFolders[0].uri;
+    const workspaceRoot = resolveWorkspaceRootPath(message);
+    if (!workspaceRoot) {
+        return workspaceFolders[0].uri;
+    }
+    return vscode.Uri.file(workspaceRoot);
 }
 
 function revealFocusedLine(editor: vscode.TextEditor, line: number, flash?: boolean) {
@@ -42,7 +48,7 @@ export async function handleWorkspaceFocus(
     }
 
     try {
-        const uri = vscode.Uri.joinPath(getWorkspaceRoot(), file);
+        const uri = vscode.Uri.joinPath(getWorkspaceRoot(message), file);
         const doc = await vscode.workspace.openTextDocument(uri);
         const line = typeof message.line === 'number' ? message.line : undefined;
         const editor = await vscode.window.showTextDocument(doc, {
@@ -55,6 +61,7 @@ export async function handleWorkspaceFocus(
         }
 
         dependencies.sendToBackend({
+            ...projectContextFromMessage(message),
             type: 'execution.event',
             phase: 'focused',
             message: `Focused ${file}${line ? `:${line}` : ''}.`,
@@ -66,6 +73,7 @@ export async function handleWorkspaceFocus(
     } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
         dependencies.sendToBackend({
+            ...projectContextFromMessage(message),
             type: 'execution.event',
             phase: 'error',
             message: `Focus failed for ${file}.`,
@@ -95,12 +103,13 @@ export async function handleContextRequest(
     }
 
     try {
-        const uri = vscode.Uri.joinPath(getWorkspaceRoot(), file);
+        const uri = vscode.Uri.joinPath(getWorkspaceRoot(message), file);
         const doc = await vscode.workspace.openTextDocument(uri);
         const start = Math.max(1, Number(message.line_start ?? 1));
         const end = Math.max(start, Number(message.line_end ?? start));
 
         dependencies.sendToBackend({
+            ...projectContextFromMessage(message),
             type: 'context.result',
             file,
             lines: readContextLines(doc, start, end),
@@ -111,6 +120,7 @@ export async function handleContextRequest(
     } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
         dependencies.sendToBackend({
+            ...projectContextFromMessage(message),
             type: 'execution.event',
             phase: 'error',
             message: `Context request failed for ${file}.`,

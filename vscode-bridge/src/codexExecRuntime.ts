@@ -30,8 +30,8 @@ interface CodexExecState {
 const activeRuntimeProcesses = new Map<RuntimeId, ChildProcessWithoutNullStreams>();
 const intentionallyStoppedProcesses = new Set<RuntimeId>();
 
-function getWorkspaceFolderPath(): string | undefined {
-    return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+function getWorkspaceFolderPath(workspaceRoot?: string): string | undefined {
+    return workspaceRoot || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 }
 
 function newCodexExecState(runtimeId: RuntimeId): CodexExecState {
@@ -187,9 +187,10 @@ export async function startCodexExecPrompt(
     prompt: string,
     runtime: RuntimeDescriptor,
     dependencies: CodexExecDependencies,
+    workspaceRoot?: string,
 ): Promise<void> {
     const launchSpec = resolveRuntimeLaunchSpec(runtime.id);
-    const workspaceFolder = getWorkspaceFolderPath();
+    const workspaceFolder = getWorkspaceFolderPath(workspaceRoot);
     if (!launchSpec || !dependencies.isCommandAvailable(launchSpec.command) || !workspaceFolder) {
         throw new Error(`${runtime.label} exec bridge is unavailable.`);
     }

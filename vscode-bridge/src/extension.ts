@@ -10,10 +10,7 @@ import {
     type RuntimeId,
 } from './runtimeRegistry';
 import { looksLikeExecutablePath, resolveRuntimeLaunchSpec } from './runtimeLaunch';
-import {
-    startCodexExecPrompt as executeCodexExecPrompt,
-    terminateActiveRuntimeProcess,
-} from './codexExecRuntime';
+import { terminateActiveRuntimeProcess } from './codexExecRuntime';
 import {
     connectToBackend as openBackendConnection,
     createBackendConnectionState,
@@ -42,6 +39,12 @@ import {
     handleContextRequest as requestWorkspaceContext,
     handleWorkspaceFocus as focusWorkspace,
 } from './workspaceActions';
+import {
+    buildWorkspaceProjectMetadata,
+    resolveWorkspaceRootPath,
+    withProjectContext,
+} from './workspaceProjects';
+import { dispatchPromptToRuntime } from './promptDispatch';
 
 interface BackendMessage {
     type: string;
@@ -59,10 +62,9 @@ const runtimeErrorState = new Map<RuntimeId, string>();
 let cachedHostInstanceId: string | null = null;
 const backendConnection = createBackendConnectionState();
 
-const runCommandInProjectShell = (command: string, targetRuntime?: string) =>
-    executeProjectShellCommand(command, targetRuntime, { sendToBackend });
+const runCommandInProjectShell = (command: string, targetRuntime?: string, workspaceRoot?: string) =>
+    executeProjectShellCommand(command, targetRuntime, { sendToBackend }, workspaceRoot);
 const workspaceActionDependencies = { sendToBackend, getActiveRuntimeId: () => getActiveRuntimeDescriptor()?.id };
-const codexExecDependencies = { sendToBackend, reportCapabilities, recordRuntimeError, isCommandAvailable };
 const runtimeAdapters: RuntimeAdapter[] = createRuntimeAdapters({
     runCommandInProjectShell,
     isCommandAvailable,
@@ -70,16 +72,8 @@ const runtimeAdapters: RuntimeAdapter[] = createRuntimeAdapters({
 });
 
 function buildProjectMetadata() {
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     const host = buildHostMetadata();
-    return {
-        name: workspaceFolder?.name || 'No Workspace',
-        root_path: workspaceFolder?.uri.fsPath || null,
-        host_id: host.id,
-        host_label: host.label,
-        platform: 'vscode',
-        bridge_label: BRIDGE_LABEL,
-    };
+    return buildWorkspaceProjectMetadata(host, BRIDGE_LABEL);
 }
 
 function getOrCreateHostInstanceId(): string {
@@ -223,40 +217,41 @@ async function handlePromptSubmit(message: BackendMessage) {
 
     const runtimeContext = resolveRuntimeContext(message.target_runtime);
     if (!runtimeContext || !capabilityIsSupported(runtimeContext.descriptor, 'prompt')) {
-        sendToBackend({
+        sendToBackend(withProjectContext({
             type: 'execution.event',
             phase: 'error',
             message: 'No runtime is available to receive the prompt.',
             target_runtime: message.target_runtime,
             reason: runtimeContext?.descriptor.last_error || 'No ready runtime supports prompt dispatch.',
-        });
+        }, message));
         return;
     }
 
     try {
-        if (runtimeContext.descriptor.id === 'codex-cli') {
-            await executeCodexExecPrompt(prompt, runtimeContext.descriptor, codexExecDependencies);
-        } else {
-            await runtimeContext.adapter.sendPrompt(prompt);
-        }
+        await dispatchPromptToRuntime(
+            prompt,
+            runtimeContext,
+            message,
+            { sendToBackend, reportCapabilities, recordRuntimeError },
+        );
         clearRuntimeError(runtimeContext.descriptor.id);
-        sendToBackend({
+        sendToBackend(withProjectContext({
             type: 'execution.event',
             phase: 'dispatched',
             message: `Prompt sent to ${runtimeContext.descriptor.label}.`,
             target_runtime: runtimeContext.descriptor.id,
             reason: runtimeContext.descriptor.dispatch_mode,
-        });
+        }, message));
     } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
         recordRuntimeError(runtimeContext.descriptor.id, reason);
-        sendToBackend({
+        sendToBackend(withProjectContext({
             type: 'execution.event',
             phase: 'error',
             message: `Prompt dispatch failed for ${runtimeContext.descriptor.label}.`,
             target_runtime: runtimeContext.descriptor.id,
             reason,
-        });
+        }, message));
     }
 
     await reportCapabilities();
@@ -280,34 +275,35 @@ async function handleCommandDispatch(message: BackendMessage) {
     const runtimeContext = resolveRuntimeContext(message.target_runtime);
     const targetRuntime = runtimeContext?.descriptor.id || message.target_runtime;
     if (!runtimeContext) {
-        sendToBackend({
+        sendToBackend(withProjectContext({
             type: 'execution.event',
             phase: 'error',
             message: 'No runtime is available to receive the command.',
             action,
             target_runtime: targetRuntime,
             reason: 'No ready or degraded runtime is available.',
-        });
+        }, message));
         return;
     }
 
     const needsRunScript = action === 'run_script';
     const requiredCapability: Capability = needsRunScript ? 'run_script' : 'prompt';
     if (!capabilityIsSupported(runtimeContext.descriptor, requiredCapability)) {
-        sendToBackend({
+        sendToBackend(withProjectContext({
             type: 'execution.event',
             phase: 'error',
             message: `Command ${action} is not supported by ${runtimeContext.descriptor.label}.`,
             action,
             target_runtime: runtimeContext.descriptor.id,
             reason: runtimeContext.descriptor.last_error || `${requiredCapability} is unsupported.`,
-        });
+        }, message));
         return;
     }
 
     try {
+        const workspaceRoot = resolveWorkspaceRootPath(message);
         if (needsRunScript) {
-            await runtimeContext.adapter.runScript(String(message.command ?? ''));
+            await runtimeContext.adapter.runScript(String(message.command ?? ''), workspaceRoot);
         } else if (action === 'rewrite' || action === 'explain') {
             const lineTarget = formatLineTarget(message.file, message.lines, message.line);
             const instruction = String(message.instruction ?? action);
@@ -318,7 +314,7 @@ async function handleCommandDispatch(message: BackendMessage) {
         }
 
         clearRuntimeError(runtimeContext.descriptor.id);
-        sendToBackend({
+        sendToBackend(withProjectContext({
             type: 'execution.event',
             phase: 'dispatched',
             message: needsRunScript
@@ -327,18 +323,18 @@ async function handleCommandDispatch(message: BackendMessage) {
             action,
             target_runtime: runtimeContext.descriptor.id,
             reason: needsRunScript ? 'workspace_shell' : runtimeContext.descriptor.dispatch_mode,
-        });
+        }, message));
     } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
         recordRuntimeError(runtimeContext.descriptor.id, reason);
-        sendToBackend({
+        sendToBackend(withProjectContext({
             type: 'execution.event',
             phase: 'error',
             message: `Command ${action} failed for ${runtimeContext.descriptor.label}.`,
             action,
             target_runtime: runtimeContext.descriptor.id,
             reason,
-        });
+        }, message));
     }
 
     await reportCapabilities();
@@ -764,34 +760,28 @@ async function setPreferredRuntime(runtimeId: RuntimeId) {
     await config.update('preferredRuntime', runtimeId, target);
 }
 
+const getPreferredRuntimeId = (): RuntimeId | undefined =>
+    vscode.workspace.getConfiguration('pocketVibe').get<string>('preferredRuntime')?.trim() as RuntimeId | undefined;
+
 async function manuallyLaunchPreferredRuntime() {
-    const runtimeId = vscode.workspace
-        .getConfiguration('pocketVibe')
-        .get<string>('preferredRuntime')
-        ?.trim() as RuntimeId | undefined;
     await handleRuntimeLaunch({
         type: 'command.dispatch',
         action: 'runtime.launch',
-        target_runtime: runtimeId,
+        target_runtime: getPreferredRuntimeId(),
     });
 }
 
 async function manuallyAttachPreferredRuntime() {
-    const runtimeId = vscode.workspace
-        .getConfiguration('pocketVibe')
-        .get<string>('preferredRuntime')
-        ?.trim() as RuntimeId | undefined;
     await handleRuntimeAttach({
         type: 'command.dispatch',
         action: 'runtime.attach',
-        target_runtime: runtimeId,
+        target_runtime: getPreferredRuntimeId(),
     });
 }
 
 function sendToBackend(data: BackendMessage) {
     sendBackendMessage(backendConnection, data);
 }
-
 export function deactivate() {
     disconnect();
 }

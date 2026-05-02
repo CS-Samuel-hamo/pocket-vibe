@@ -13,10 +13,19 @@ def _connection_id(target_project: Optional[Dict[str, Any]]) -> Optional[str]:
     return target_project.get("connection_id") if target_project else None
 
 
+def _workspace_path(target_project: Optional[Dict[str, Any]]) -> Optional[str]:
+    return target_project.get("workspace_path") if target_project else None
+
+
 def _target_context(target_project: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     return {
-        "project_id": _project_id(target_project),
-        "target_connection_id": _connection_id(target_project),
+        key: value
+        for key, value in {
+            "project_id": _project_id(target_project),
+            "target_connection_id": _connection_id(target_project),
+            "target_project_root": _workspace_path(target_project),
+        }.items()
+        if value is not None
     }
 
 
