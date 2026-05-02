@@ -32,6 +32,12 @@ from backend.project_registry import (
     sort_host_registry,
     sort_project_registry,
 )
+from backend.protocol_routes import (
+    build_bridge_offline_event,
+    build_prompt_dispatch_event,
+    build_prompt_submit_payload,
+    build_user_prompt_event,
+)
 
 
 project_root = str(Path(__file__).parent.parent.absolute())
@@ -1076,27 +1082,18 @@ async def _route_prompt_submit(
     if not prompt:
         return
     target_project = _resolve_target_project(room_token, data)
+    target_runtime = data.get("target_runtime")
 
     await _emit_room_event(
         room_token,
-        {
-            "type": "user",
-            "content": prompt,
-            "project_id": target_project.get("project_id") if target_project else None,
-            "target_runtime": data.get("target_runtime"),
-        },
+        build_user_prompt_event(prompt, target_project=target_project, target_runtime=target_runtime),
         exclude_ws=websocket,
         ignore_rate_limit=True,
         buffer_message=True,
     )
     await _emit_room_event(
         room_token,
-        build_execution_event(
-            "dispatch",
-            "Prompt dispatched to desktop host",
-            project_id=target_project.get("project_id") if target_project else None,
-            target_runtime=data.get("target_runtime"),
-        ),
+        build_prompt_dispatch_event(target_project=target_project, target_runtime=target_runtime),
         ignore_rate_limit=True,
         buffer_message=True,
     )
@@ -1104,22 +1101,14 @@ async def _route_prompt_submit(
     if not manager.room_has_desktop_host(room_token):
         await _emit_room_event(
             room_token,
-            build_execution_event("error", "No desktop host is connected", reason="bridge_offline"),
+            build_bridge_offline_event(),
             ignore_rate_limit=True,
             buffer_message=True,
         )
         return
 
     await _ensure_driver_running(room_token)
-    await driver.dispatch_command(
-        {
-            "type": "prompt.submit",
-            "prompt": prompt,
-            "project_id": target_project.get("project_id") if target_project else None,
-            "target_connection_id": target_project.get("connection_id") if target_project else None,
-            "target_runtime": data.get("target_runtime"),
-        }
-    )
+    await driver.dispatch_command(build_prompt_submit_payload(prompt, target_project=target_project, target_runtime=target_runtime))
 
 
 async def _route_workspace_focus(
@@ -1129,7 +1118,7 @@ async def _route_workspace_focus(
     if not manager.room_has_desktop_host(room_token):
         await _emit_room_event(
             room_token,
-            build_execution_event("error", "No desktop host is connected", reason="bridge_offline"),
+            build_bridge_offline_event(),
             ignore_rate_limit=True,
             buffer_message=True,
         )
@@ -1168,7 +1157,7 @@ async def _route_context_request(
     if not manager.room_has_desktop_host(room_token):
         await _emit_room_event(
             room_token,
-            build_execution_event("error", "No desktop host is connected", reason="bridge_offline"),
+            build_bridge_offline_event(),
             ignore_rate_limit=True,
             buffer_message=True,
         )
@@ -1194,7 +1183,7 @@ async def _route_command_dispatch(
     if not manager.room_has_desktop_host(room_token):
         await _emit_room_event(
             room_token,
-            build_execution_event("error", "No desktop host is connected", reason="bridge_offline"),
+            build_bridge_offline_event(),
             ignore_rate_limit=True,
             buffer_message=True,
         )
