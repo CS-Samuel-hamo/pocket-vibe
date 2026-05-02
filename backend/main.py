@@ -17,7 +17,7 @@ from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 from uuid import uuid4
 
 import psutil
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
@@ -67,6 +67,11 @@ from backend.socket_messages import (
     routeable_socket_payload,
     safe_json_loads,
 )
+from backend.websocket_lifecycle import (
+    WebSocketLifecycleDependencies,
+    run_websocket_lifecycle,
+    websocket_session,
+)
 
 
 project_root = str(Path(__file__).parent.parent.absolute())
@@ -77,7 +82,6 @@ from src.core.config import settings
 from src.core.crypto import Crypto
 from src.core.message_buffer import MessageBuffer, TokenBucket
 from src.domain.models.protocol import (
-    build_audit_event,
     build_execution_event,
     build_host_descriptor,
     build_session_state,
@@ -1392,44 +1396,19 @@ async def websocket_endpoint(
     if not await _authenticate(websocket, token):
         return
 
-    room_token = token or "default_room"
-    current_role = role or "desktop"
-    await manager.connect(websocket, room_token, current_role)
-    await _ensure_driver_running(room_token)
-    await _send_initial_snapshot(websocket, room_token, current_role)
-    await _emit_room_event(
-        room_token,
-        build_audit_event(
-            "session",
-            "Client joined room",
-            role=current_role,
+    await run_websocket_lifecycle(
+        websocket,
+        websocket_session(token, role),
+        WebSocketLifecycleDependencies(
+            manager=manager,
+            ensure_driver_running=_ensure_driver_running,
+            send_initial_snapshot=_send_initial_snapshot,
+            emit_room_event=_emit_room_event,
+            shutdown_room_tasks=_shutdown_room_tasks,
+            ws_loop=_ws_loop,
+            logger=logger,
         ),
-        exclude_ws=websocket,
-        ignore_rate_limit=True,
-        buffer_message=True,
     )
-
-    try:
-        await _ws_loop(websocket, room_token, current_role)
-    except WebSocketDisconnect:
-        pass
-    except Exception as exc:
-        logger.error("WebSocket error: %s", exc)
-    finally:
-        disconnected_room = manager.disconnect(websocket)
-        if disconnected_room:
-            await _emit_room_event(
-                disconnected_room,
-                build_audit_event(
-                    "session",
-                    "Client left room",
-                    role=current_role,
-                ),
-                ignore_rate_limit=True,
-                buffer_message=True,
-            )
-            if disconnected_room not in manager.rooms:
-                await _shutdown_room_tasks(disconnected_room)
 
 
 if __name__ == "__main__":
