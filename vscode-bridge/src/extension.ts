@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { randomUUID } from 'crypto';
-import WebSocket from 'ws';
 import { spawnSync } from 'child_process';
 
 import {
@@ -16,6 +15,16 @@ import {
     startCodexExecPrompt as executeCodexExecPrompt,
     terminateActiveRuntimeProcess,
 } from './codexExecRuntime';
+import {
+    connectToBackend as openBackendConnection,
+    createBackendConnectionState,
+    disconnectFromBackend,
+    isBackendConnected,
+    sendBackendMessage,
+    type BackendConnectionDependencies,
+    type ConnectionOptions,
+    type ConnectionStatus,
+} from './backendConnection';
 import {
     createRuntimeAdapters,
     isTerminalRuntimeAdapter,
@@ -33,28 +42,16 @@ interface BackendMessage {
     [key: string]: any;
 }
 
-interface ConnectionOptions {
-    backendUrl?: string | null;
-    authToken?: string | null;
-    promptForToken?: boolean;
-    showConnectionErrors?: boolean;
-    isReconnect?: boolean;
-}
-
 const SESSION_CAPABILITIES: Capability[] = ['prompt', 'focus', 'read_context', 'approve', 'kill', 'run_script'];
 const BRIDGE_ROLE = 'vscode-bridge';
 const BRIDGE_LABEL = 'VS Code Host';
 const HOST_INSTANCE_ID_KEY = 'pocketVibe.hostInstanceId';
 
-let socket: WebSocket | null = null;
 let statusBarItem: vscode.StatusBarItem;
 let extensionContext: vscode.ExtensionContext;
 const runtimeErrorState = new Map<RuntimeId, string>();
-let reconnectTimer: NodeJS.Timeout | null = null;
-let reconnectAttempt = 0;
-let manualDisconnect = false;
-let lastConnectionConfig: { backendUrl: string; authToken: string } | null = null;
 let cachedHostInstanceId: string | null = null;
+const backendConnection = createBackendConnectionState();
 
 const runCommandInProjectShell = (command: string, targetRuntime?: string) =>
     executeProjectShellCommand(command, targetRuntime, { sendToBackend });
@@ -140,120 +137,28 @@ async function initializeConnection() {
     updateStatusBar('configure');
 }
 
+function getConnectionDependencies(): BackendConnectionDependencies {
+    return {
+        bridgeRole: BRIDGE_ROLE,
+        resolveBackendUrl,
+        resolveAuthToken,
+        persistConnectionSettings,
+        updateStatusBar,
+        handleMessage,
+        ensurePreferredRuntimeReady,
+        reportCapabilities,
+    };
+}
+
 async function connectToBackend(options: ConnectionOptions = {}) {
-    const backendUrl = options.backendUrl?.trim() || (await resolveBackendUrl());
-    const authToken =
-        options.authToken?.trim() ||
-        (await resolveAuthToken(options.promptForToken ?? true));
-    if (!backendUrl || !authToken) {
-        updateStatusBar('configure');
-        return;
-    }
-
-    lastConnectionConfig = { backendUrl, authToken };
-    persistConnectionSettings(backendUrl, authToken);
-    manualDisconnect = false;
-    reconnectAttempt = options.isReconnect ? reconnectAttempt : 0;
-    clearReconnectTimer();
-    closeSocket(false);
-
-    const url = `${backendUrl}?role=${BRIDGE_ROLE}&token=${encodeURIComponent(authToken)}`;
-    updateStatusBar('connecting');
-
-    const ws = new WebSocket(url);
-    socket = ws;
-
-    ws.on('open', () => {
-        if (socket !== ws) {
-            return;
-        }
-        reconnectAttempt = 0;
-        clearReconnectTimer();
-        updateStatusBar('connected');
-        void ensurePreferredRuntimeReady().then(() => reportCapabilities(true));
-    });
-
-    ws.on('message', (data: any) => {
-        try {
-            const message = JSON.parse(String(data)) as BackendMessage;
-            void handleMessage(message);
-        } catch (error) {
-            console.error('Pocket Vibe: failed to parse message', error);
-        }
-    });
-
-    ws.on('close', () => {
-        if (socket === ws) {
-            socket = null;
-        }
-        updateStatusBar('disconnected');
-        if (!manualDisconnect) {
-            scheduleReconnect();
-        }
-    });
-
-    ws.on('error', (error: Error) => {
-        console.error('Pocket Vibe bridge error:', error);
-        if (socket === ws) {
-            updateStatusBar('error');
-        }
-        if (options.showConnectionErrors ?? !options.isReconnect) {
-            void vscode.window.showWarningMessage(`Pocket Vibe bridge error: ${error.message}`);
-        }
-    });
+    await openBackendConnection(backendConnection, getConnectionDependencies(), options);
 }
 
 function disconnect() {
-    manualDisconnect = true;
-    reconnectAttempt = 0;
-    clearReconnectTimer();
-    closeSocket(true);
+    disconnectFromBackend(backendConnection, getConnectionDependencies());
 }
 
-function closeSocket(updateStatus = false) {
-    if (socket) {
-        const current = socket;
-        socket = null;
-        current.removeAllListeners();
-        current.close();
-    }
-    if (!updateStatus) {
-        return;
-    }
-    void resolveAuthToken(false).then((token) => {
-        updateStatusBar(token ? 'disconnected' : 'configure');
-    });
-}
-
-function clearReconnectTimer() {
-    if (!reconnectTimer) {
-        return;
-    }
-    clearTimeout(reconnectTimer);
-    reconnectTimer = null;
-}
-
-function scheduleReconnect() {
-    if (manualDisconnect || reconnectTimer || !lastConnectionConfig) {
-        return;
-    }
-
-    const delay = Math.min(30000, 1000 * 2 ** reconnectAttempt);
-    reconnectAttempt += 1;
-    updateStatusBar('connecting');
-    reconnectTimer = setTimeout(() => {
-        reconnectTimer = null;
-        void connectToBackend({
-            backendUrl: lastConnectionConfig?.backendUrl ?? null,
-            authToken: lastConnectionConfig?.authToken ?? null,
-            promptForToken: false,
-            showConnectionErrors: false,
-            isReconnect: true,
-        });
-    }, delay);
-}
-
-function updateStatusBar(state: 'configure' | 'connecting' | 'connected' | 'disconnected' | 'error') {
+function updateStatusBar(state: ConnectionStatus) {
     const activeRuntime = getActiveRuntimeDescriptor();
     if (state === 'connected') {
         const healthSuffix = activeRuntime ? ` (${activeRuntime.health})` : '';
@@ -773,7 +678,7 @@ function clearRuntimeError(runtimeId: RuntimeId) {
 }
 
 async function reportCapabilities(includeHello = false) {
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
+    if (!isBackendConnected(backendConnection)) {
         return;
     }
 
@@ -803,7 +708,7 @@ async function reportCapabilities(includeHello = false) {
         active_runtime: activeRuntime?.id,
     });
 
-    updateStatusBar(socket.readyState === WebSocket.OPEN ? 'connected' : 'disconnected');
+    updateStatusBar('connected');
 }
 
 async function ensurePreferredRuntimeReady() {
@@ -871,9 +776,7 @@ async function manuallyAttachPreferredRuntime() {
 }
 
 function sendToBackend(data: BackendMessage) {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify(data));
-    }
+    sendBackendMessage(backendConnection, data);
 }
 
 async function resolveBackendUrl(promptIfMissing = true): Promise<string | null> {
