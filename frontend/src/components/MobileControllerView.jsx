@@ -519,9 +519,9 @@ export default function MobileControllerView({
                             <div className="runtime-deck tools-runtime-deck">
                                 <section className="project-picker-action">
                                     <div>
-                                        <div className="project-picker-title">Need another project?</div>
+                                        <div className="project-picker-title">Add a project folder</div>
                                         <div className="project-picker-copy">
-                                            Add a folder to the active VS Code workspace, then switch from this list.
+                                            Opens a VS Code folder picker on desktop. If nothing opens, reload VS Code.
                                         </div>
                                     </div>
                                     <Button
@@ -530,7 +530,7 @@ export default function MobileControllerView({
                                         disabled={!hostConnected}
                                         onClick={handleProjectAddFolder}
                                     >
-                                        Add Folder
+                                        Open Picker
                                     </Button>
                                 </section>
                                 {projectRegistry.length > 0 ? (

@@ -86,7 +86,7 @@ const VoicePromptInput = ({ value: externalValue, onChange, onSend, disabled = f
 
                 <input
                     className="apple-native-input"
-                    placeholder={disabled ? (disabledReason || 'Prompt unavailable') : 'Ask OpenVibe...'}
+                    placeholder={disabled ? (disabledReason || 'Prompt unavailable') : 'Ask Pocket Vibe...'}
                     value={localValue}
                     disabled={disabled}
                     onChange={(e) => {
