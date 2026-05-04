@@ -9,16 +9,18 @@ This file tracks the gap between the current demoable prototype and a stable v1 
 - Mobile default view is now chat-first; project switching, runtime switching, scripts, and debug tools are secondary actions.
 - `MobileControllerView.jsx` was split into `MobileHomeSummary.jsx` and `MobileToolsSheet.jsx`.
 - Core mobile control labels are localized into Chinese.
+- Vibe skills, runtime action feedback, file search, script panel, desktop QR panel, and connection preflight states are localized or explained in Chinese.
+- Runtime pending-state CSS classes remain stable while the visible labels are localized.
 - VS Code workspace-folder based project switching is implemented through `Tools -> Projects -> Open Picker`.
 - Frontend capability tests and production build pass after the latest UI changes.
-- The v1 desktop gate passed on 2026-05-04 before the final localization commit.
+- The v1 desktop gate passed on 2026-05-04 after the latest localization and recovery UX commits.
 
 ## Must Finish Before v1 Tag
 
 - Run the real-phone five-minute demo from `docs/v1_acceptance_script.md`.
 - Record phone evidence in the runtime validation notes.
 - Decide what to do with the untracked local backlog files before release.
-- Re-run `scripts/v1_desktop_gate.ps1` after any further source changes.
+- Re-run `scripts/v1_desktop_gate.ps1` after any further source changes and record the result here.
 - Tag the baseline only after the real-phone demo and cleanup decision are complete.
 
 ## Needs User Decision
@@ -38,4 +40,4 @@ This file tracks the gap between the current demoable prototype and a stable v1 
 
 - `vscode-bridge/src/extension.ts` and `backend/main.py` remain large and should be split after the v1 baseline.
 - `MobileToolsSheet.jsx` is a new consolidation point and may need further extraction if it grows.
-- Environment issues such as `rg.exe` access denied and Conda GBK shell noise should be documented in troubleshooting if they recur on the release machine.
+- The release machine still shows post-command Conda GBK shell-hook noise after a passing gate; this is an environment issue, not a project test failure.
