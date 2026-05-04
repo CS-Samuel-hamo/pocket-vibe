@@ -1,118 +1,114 @@
-# Pocket Vibe v1 Acceptance Script
+# Pocket Vibe v1 验收脚本
 
-Updated: 2026-05-02
+Updated: 2026-05-04
 
-This is the single v1 acceptance path. It validates the reference route:
+这是 v1 唯一验收路径，只验证参考链路：
 
-`phone PWA -> FastAPI backend -> VS Code bridge -> codex-cli`
+`手机 PWA -> FastAPI 后端 -> VS Code bridge -> codex-cli`
 
-Do not use this script to validate extra runtimes, native desktop apps, dashboards, or new host families.
+不要用这份脚本验收额外 runtime、原生桌面 App、dashboard 或新的宿主类型。如果这条参考链路失败，先修参考链路，不要继续扩平台。
 
-## 1. Desktop Automated Gate
+## 1. 桌面自动化 Gate
 
-Run from the repo root:
+在仓库根目录运行：
 
 ```powershell
 .\scripts\v1_desktop_gate.ps1
 ```
 
-The script must pass:
+必须全部通过：
 
-- Backend tests: `python -m pytest tests -q`
-- Frontend capability tests: `npm run test:capabilities`
-- Frontend production build: `npm run build`
-- VS Code bridge runtime tests: `npm run test:runtime`
-- Repository quality gate: `python scripts\quality_gate.py <tracked code files>`
+- 后端测试：`python -m pytest tests -q`
+- 前端能力测试：`npm run test:capabilities`
+- 前端生产构建：`npm run build`
+- VS Code bridge runtime 测试：`npm run test:runtime`
+- 仓库质量门禁：`python scripts\quality_gate.py <tracked code files>`
 
-If a dependency is already known to be unavailable on the current machine, use the skip flags only for local triage, not for release acceptance:
+当前最近一次自动化结果：2026-05-04 已通过。命令结束后的 Conda/GBK shell-hook 噪声属于本机环境问题，不算项目 gate 失败。
 
-```powershell
-.\scripts\v1_desktop_gate.ps1 -SkipFrontendBuild
-```
+## 2. 启动参考链路
 
-## 2. Start The Reference Stack
-
-From the repo root:
+在仓库根目录运行：
 
 ```powershell
 .\start.ps1
 ```
 
-Expected desktop evidence:
+桌面端应看到：
 
-- Frontend starts on `0.0.0.0:5173`.
-- Backend starts on port `8000`.
-- Backend prints the token, mobile URL, and pairing page URL.
-- The desktop pairing page opens or can be opened manually.
+- 前端监听 `0.0.0.0:5173`。
+- 后端监听 `8000`。
+- 后端打印 token、手机 URL、配对页 URL。
+- 浏览器配对页可以打开，并显示可扫描二维码或直连地址。
 
-Do not scan terminal ASCII QR output. Use the browser pairing page QR or the direct mobile URL.
+不要扫终端里的 ASCII QR。只使用浏览器配对页二维码，或直接在手机浏览器输入 mobile URL。
 
-## 3. Connect The VS Code Bridge
+## 3. 连接 VS Code Bridge
 
-In VS Code:
+在 VS Code 中确认：
 
-1. Open this workspace.
-2. Start the Pocket Vibe bridge extension.
-3. Set `pocketVibe.backendWsUrl` to `ws://127.0.0.1:8000/ws`.
-4. Set `pocketVibe.authToken` to the token printed by the backend.
-5. Ensure `pocketVibe.preferredRuntime` is `codex-cli`.
-6. Open or attach a `codex-cli` runtime.
+1. 打开本仓库工作区。
+2. Pocket Vibe bridge 扩展已启动。
+3. `pocketVibe.backendWsUrl` 是 `ws://127.0.0.1:8000/ws`。
+4. `pocketVibe.authToken` 等于后端打印的 token。
+5. `pocketVibe.preferredRuntime` 是 `codex-cli`。
+6. 已启动或 attached 到 `codex-cli` runtime。
 
-Expected evidence:
+手机端应看到：
 
-- Phone home screen shows `Host ready`.
-- Active project is `Pocket_Vibe`.
-- Active runtime is `Codex CLI`.
-- If runtime is degraded, the UI shows a reason. Silent failure is not acceptable.
+- `Host ready` 或对应中文就绪状态。
+- 当前项目是 `Pocket_Vibe`。
+- 当前运行时是 `Codex CLI`。
+- 如果运行时降级或不可用，UI 必须显示原因，不能静默失败。
 
-## 4. Phone Demo Steps
+## 4. 手机端五分钟验收
 
-Run these steps on a real phone:
+在真实手机上执行：
 
-1. Open the mobile URL or scan the browser QR.
-2. Send this prompt from the phone:
+1. 打开 mobile URL，或扫描浏览器配对页二维码。
+2. 在底部输入框发送：
 
 ```text
 reply with exactly: POCKET_VIBE_V1_OK
 ```
 
-3. Confirm the phone console shows an AI reply containing `POCKET_VIBE_V1_OK`.
-4. Open `Search Files`.
-5. Search for `README.md`.
-6. Open the file reader and confirm the file content appears on the phone.
-7. Open `Vibe Skills`.
-8. Send `Project Brief`.
-9. Confirm the phone shows either a useful Codex reply or a clear runtime failure reason.
-10. Open the tools/actions sheet.
-11. If `Kill` is available, press it and confirm a `kill.result` or visible interruption result.
-12. If `Kill` is unavailable, confirm the button is disabled and shows a reason.
+3. 确认手机 Console 出现包含 `POCKET_VIBE_V1_OK` 的 AI 回复。
+4. 打开 `+` 工具入口，再打开 `搜索文件`。
+5. 搜索 `README.md`。
+6. 打开文件预览，确认手机上能看到文件内容。
+7. 打开 `Vibe 技能`。
+8. 发送 `项目简报`。
+9. 确认手机显示有用的 Codex 回复，或明确的 runtime 失败原因。
+10. 返回首页，确认 Kill 按钮状态和运行时能力一致。
+11. 如果 `Kill` 可用，点击后应看到 `kill.result` 或明显的中断结果。
+12. 如果 `Kill` 不可用，按钮必须禁用或给出不可用原因。
 
-## 5. Pass Criteria
+## 5. 通过标准
 
-The v1 acceptance passes only when all conditions are true:
+只有同时满足以下条件，v1 验收才算通过：
 
-- Desktop automated gate passes without skip flags.
-- Phone prompt round trip succeeds with the exact token phrase.
-- File search and file reader work from the phone.
-- Vibe Skill dispatch returns either a useful response or explicit failure.
-- Kill state is capability-correct: available actions execute, unavailable actions are disabled with a reason.
-- No action silently fails.
-- Git staged release scope does not include logs, local databases, screenshots, temporary files, or VS Code user data.
+- 桌面自动化 gate 不带 skip 参数通过。
+- 手机 prompt 往返成功，并返回指定短语。
+- 手机文件搜索和文件预览可用。
+- `项目简报` 能返回有用回复，或返回明确失败原因。
+- Kill 状态符合 capability：可用时能执行，不可用时禁用或显示原因。
+- 没有任何关键动作静默失败。
+- 准备 release 时，Git 范围不包含日志、本地数据库、截图、临时文件、VS Code 用户数据。
 
-## 6. Evidence To Record
+## 6. 记录验收证据
 
-Record the result in `docs/runtime_联调结果.md` or the current runtime evidence file:
+把结果记录到 `docs/runtime_联调结果.md` 或当前 runtime 验收文件，至少包含：
 
-- Date and machine.
-- Phone network path: LAN, VPN, Tailscale, Cloudflare tunnel, or other.
-- Backend URL and frontend URL shape, without secrets.
-- Active runtime shown on phone.
-- Prompt result.
-- File reader result.
-- Vibe Skill result.
-- Kill result or disabled reason.
-- Any failure reason copied from the UI.
+- 日期和机器。
+- 手机网络路径：LAN、VPN、Tailscale、Cloudflare Tunnel 或其他。
+- 前端 URL 和后端 URL 形态，不记录 secret。
+- 手机上显示的当前 runtime。
+- prompt 往返结果。
+- 文件预览结果。
+- Vibe 技能结果。
+- Kill 结果或不可用原因。
+- UI 中显示的任何失败原因。
 
-## 7. Stop Rule
+## 7. 停止规则
 
-If this reference path fails, do not add more platforms or UI panels. Fix the blocker in the reference path first.
+如果这条参考链路失败，不要新增平台、面板或技能。先修失败点，再继续扩展。
