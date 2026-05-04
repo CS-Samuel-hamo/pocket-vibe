@@ -8,6 +8,7 @@ The authoritative v1 developer docs are the repo-root files:
 - `QUICKSTART.md`
 - `docs/v1_done_definition.md`
 - `docs/v1_release_manifest.md`
+- `docs/v1_remaining_work.md`
 - `docs/git_baseline_plan.md`
 
 Historical phase documents remain for reference, but the current implementation target is:
