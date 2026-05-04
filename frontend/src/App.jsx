@@ -308,7 +308,7 @@ function App() {
 
         Toast.show({
             icon: normalizedDecision === 'approved' ? 'success' : 'fail',
-            content: normalizedDecision === 'approved' ? 'Approved' : 'Rejected',
+            content: normalizedDecision === 'approved' ? '已批准' : '已拒绝',
         });
     };
 
@@ -336,7 +336,7 @@ function App() {
             target_runtime: capabilityInfo.active_runtime || sessionInfo.active_runtime,
             reason: 'mobile-kill-switch',
         });
-        Toast.show({ icon: 'success', content: 'Kill request sent' });
+        Toast.show({ icon: 'success', content: '已发送 Kill 请求' });
     };
 
     const handleRuntimeLaunch = (runtimeId) => {
@@ -351,7 +351,7 @@ function App() {
             project_id: activeProject?.project_id,
             target_runtime: runtimeId,
         });
-        Toast.show({ icon: 'success', content: `Launching ${runtime.label || runtimeId}` });
+        Toast.show({ icon: 'success', content: `正在启动 ${runtime.label || runtimeId}` });
     };
 
     const handleRuntimeAttach = (runtimeId) => {
@@ -366,7 +366,7 @@ function App() {
             project_id: activeProject?.project_id,
             target_runtime: runtimeId,
         });
-        Toast.show({ icon: 'success', content: `Switching to ${runtime.label || runtimeId}` });
+        Toast.show({ icon: 'success', content: `正在切换到 ${runtime.label || runtimeId}` });
     };
 
     const handleProjectSelect = (projectId) => {
@@ -374,7 +374,7 @@ function App() {
             return;
         }
         void send({ type: 'project.select', project_id: projectId });
-        Toast.show({ icon: 'success', content: 'Switching project' });
+        Toast.show({ icon: 'success', content: '正在切换项目' });
     };
 
     const handleOpenConnectionSetup = () => {

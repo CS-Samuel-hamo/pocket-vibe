@@ -173,7 +173,7 @@ function RuntimeDeck({ runtimeCatalog, activeRuntimeId, runtimeActionState, onLa
                 const lifecycle = getRuntimeLifecycleState(runtime, activeRuntimeId);
                 const runtimeAction = getRuntimeActionForRuntime(runtimeActionState, runtime.id);
                 const displayState = runtimeAction?.isPending ? runtimeAction.stateLabel : lifecycle.state;
-                const displayLabel = runtimeAction?.isPending ? runtimeAction.stateLabel : lifecycle.label;
+                const displayLabel = runtimeAction?.isPending ? runtimeAction.statusLabel : lifecycle.label;
                 const detail = runtimeAction?.detail || lifecycle.reason;
 
                 return (

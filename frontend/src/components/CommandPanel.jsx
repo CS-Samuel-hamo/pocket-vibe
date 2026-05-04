@@ -11,17 +11,16 @@ const CommandPanel = ({
 }) => {
     const activeRuntimeDescriptor =
         runtimeCatalog.find((runtime) => runtime.id === activeRuntime) || null;
-    const activeRuntimeLabel = activeRuntimeDescriptor?.label || 'Desktop Host';
+    const activeRuntimeLabel = activeRuntimeDescriptor?.label || '桌面宿主';
 
     return (
         <div className="command-panel" style={{ padding: '12px' }}>
             <div style={{ marginBottom: '12px', color: '#666', fontSize: '14px', fontWeight: 'bold' }}>
-                Project Scripts
+                项目脚本
             </div>
             <div style={{ marginBottom: '12px', color: '#8b94a7', fontSize: '12px', lineHeight: 1.5 }}>
-                Discovered from supported <code>package.json</code> or <code>Makefile</code> files and executed in a
-                dedicated desktop shell. Output streams back to the mobile console when shell integration is available.
-                The current host runtime is {activeRuntimeLabel}.
+                自动发现受支持的 <code>package.json</code> 或 <code>Makefile</code> 脚本，并在桌面端独立 shell 中执行。
+                如果 shell 集成可用，输出会回传到手机 Console。当前运行时：{activeRuntimeLabel}。
             </div>
             {runScriptState && runScriptState.state !== 'available' && (
                 <div style={{ marginBottom: '12px', color: runScriptState.state === 'degraded' ? '#ffb347' : '#ff8080', fontSize: '12px' }}>
@@ -50,7 +49,7 @@ const CommandPanel = ({
                     ))
                 ) : (
                     <div style={{ gridColumn: 'span 2', padding: '20px', textAlign: 'center', color: '#999' }}>
-                        No runnable scripts were found in the repo root or supported workspace folders.
+                        仓库根目录或已支持的工作区文件夹里没有发现可运行脚本。
                     </div>
                 )}
             </Grid>

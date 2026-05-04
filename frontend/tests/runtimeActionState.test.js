@@ -21,7 +21,7 @@ test('createRuntimeActionState marks launch request as pending', () => {
     assert.equal(state.action, 'launch');
     assert.equal(state.runtimeId, 'codex-cli');
     assert.equal(state.status, 'pending');
-    assert.match(state.headline, /Launching Codex CLI/i);
+    assert.match(state.headline, /正在启动 Codex CLI/);
 });
 
 test('reduceRuntimeActionWithEvent marks runtime launch success', () => {
@@ -57,7 +57,8 @@ test('reduceRuntimeActionWithEvent marks attach pending launch as blocked', () =
     );
 
     assert.equal(next.status, 'blocked');
-    assert.match(next.headline, /not running yet/i);
+    assert.match(next.headline, /Claude Code/);
+    assert.match(next.headline, /还没有运行/);
 });
 
 test('reconcileRuntimeActionWithCapabilities promotes pending attach to success', () => {
@@ -77,6 +78,7 @@ test('getRuntimeActionForRuntime returns visual state for matching runtime', () 
     const visual = getRuntimeActionForRuntime(pending, 'codex-cli');
 
     assert.equal(visual.stateLabel, 'switching');
-    assert.equal(visual.attachLabel, 'Switching...');
-    assert.equal(visual.launchLabel, 'Launch');
+    assert.equal(visual.statusLabel, '切换中');
+    assert.equal(visual.attachLabel, '切换中...');
+    assert.equal(visual.launchLabel, '启动');
 });
