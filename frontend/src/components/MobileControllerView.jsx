@@ -21,7 +21,7 @@ import ConsolePanel from './ConsolePanel';
 import OmniSearchDrawer from './OmniSearchDrawer';
 import VoicePromptInput from './VoicePromptInput';
 import { getRecentControlEvents } from '../utils/controlHome';
-import { buildProjectInboxEntries, getProjectSwitchState } from '../utils/projectRegistry';
+import { getProjectSwitchState } from '../utils/projectRegistry';
 import { buildPromptSkillCards } from '../utils/promptSkills';
 import { getRuntimeLifecycleState } from '../utils/runtimeCapabilities';
 import { getRuntimeActionForRuntime } from '../utils/runtimeActionState';
@@ -71,16 +71,6 @@ export default function MobileControllerView({
         : null;
     const recentEvents = useMemo(() => getRecentControlEvents(messages, history, 6), [messages, history]);
     const visibleRecoveryHints = (recoveryHints || []).slice(0, 2);
-    const projectInboxEntries = useMemo(
-        () => buildProjectInboxEntries({
-            sessionInfo,
-            messages,
-            history,
-            pendingApproval,
-            limit: 4,
-        }),
-        [sessionInfo, messages, history, pendingApproval],
-    );
     const promptSkills = useMemo(
         () => buildPromptSkillCards({ activeProject, activeRuntime, sessionInfo }),
         [activeProject, activeRuntime, sessionInfo],
@@ -100,7 +90,6 @@ export default function MobileControllerView({
         ? `${projectRegistry.length} projects`
         : '1 project';
     const activeRuntimeState = activeRuntime?.health || 'offline';
-    const activeProjectPreview = projectInboxEntries.find((entry) => entry.isActive) || projectInboxEntries[0];
 
     const runtimeBanner = runtimeSummaryState
         ? {
@@ -275,49 +264,6 @@ export default function MobileControllerView({
                             </Button>
                         </div>
                     </section>
-
-                    {projectInboxEntries.length > 1 && (
-                        <section className="project-inbox-strip">
-                            <div className="project-inbox-header">
-                                <div>
-                                    <div className="project-inbox-title">Projects</div>
-                                    <div className="project-inbox-copy">
-                                        Current: {activeProjectPreview?.project_name || projectLabel}
-                                    </div>
-                                </div>
-                                <Button size="mini" fill="outline" onClick={() => openToolsView('projects')}>
-                                    All
-                                </Button>
-                            </div>
-
-                            <div className="project-inbox-list">
-                                {projectInboxEntries.map((entry) => (
-                                    <button
-                                        key={entry.project_id}
-                                        type="button"
-                                        className={`project-inbox-card ${entry.tone} ${entry.isActive ? 'active' : ''}`}
-                                        onClick={() => handleProjectSelectClick(entry.project_id)}
-                                    >
-                                        <div className="project-inbox-card-row">
-                                            <span className="project-inbox-card-title">{entry.project_name}</span>
-                                            <span className={`project-inbox-card-chip ${entry.isActive ? 'active' : entry.tone}`}>
-                                                {entry.actionLabel}
-                                            </span>
-                                        </div>
-                                        <div className="project-inbox-card-meta">
-                                            {entry.hostLabel} - {entry.runtimeLabel} - {entry.health}
-                                        </div>
-                                        {entry.isActive ? (
-                                            <>
-                                                <div className="project-inbox-card-preview-label">{entry.previewLabel}</div>
-                                                <div className="project-inbox-card-preview">{entry.previewText}</div>
-                                            </>
-                                        ) : null}
-                                    </button>
-                                ))}
-                            </div>
-                        </section>
-                    )}
 
                     {connectionBanner && (
                         <section className={`remote-banner ${connectionBanner.tone}`}>
