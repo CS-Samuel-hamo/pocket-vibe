@@ -8,6 +8,20 @@ import {
 } from '../utils/connectionConfig';
 import { runConnectionPreflight } from '../utils/connectionPreflight';
 
+const PREFLIGHT_REASON_LABELS = {
+    ok: '连接正常',
+    fetch_unavailable: '浏览器不支持检测',
+    invalid_config: '连接配置无效',
+    auth_failed: 'Token 不匹配',
+    bridge_offline: '桌面 Bridge 离线',
+    api_unreachable: 'API 无法访问',
+    request_failed: '请求失败',
+};
+
+function formatPreflightReason(reason) {
+    return PREFLIGHT_REASON_LABELS[reason] || reason || '未知状态';
+}
+
 export default function ConnectionSetupView({
     initialProfile,
     mode = 'setup',
@@ -144,7 +158,7 @@ export default function ConnectionSetupView({
                     <div className={`connection-preflight ${preflightResult.ok ? 'ok' : 'fail'}`}>
                         <div className="connection-preflight-row">
                             <span>{preflightResult.ok ? '可访问' : '需要处理'}</span>
-                            <strong>{preflightResult.reason}</strong>
+                            <strong>{formatPreflightReason(preflightResult.reason)}</strong>
                         </div>
                         <p>{preflightResult.message}</p>
                         {preflightResult.detail && <p>{preflightResult.detail}</p>}
