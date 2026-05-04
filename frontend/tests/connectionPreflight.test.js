@@ -65,7 +65,7 @@ test('runConnectionPreflight surfaces token mismatch separately from network fai
     assert.equal(result.ok, false);
     assert.equal(result.stage, 'auth');
     assert.equal(result.reason, 'token_mismatch');
-    assert.match(result.detail, /current token/i);
+    assert.match(result.detail, /当前 Token/);
 });
 
 test('runConnectionPreflight reports unreachable API base URL', async () => {
@@ -94,5 +94,5 @@ test('buildConnectionPreflightHint explains valid API with offline bridge', () =
         },
     });
 
-    assert.match(hint, /desktop bridge/i);
+    assert.match(hint, /桌面 bridge/);
 });

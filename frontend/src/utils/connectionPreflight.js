@@ -4,7 +4,7 @@ function errorMessage(error) {
     if (error instanceof Error && error.message) {
         return error.message;
     }
-    return String(error || 'Unknown error');
+    return String(error || '未知错误');
 }
 
 function buildResult({
@@ -31,10 +31,10 @@ export function buildConnectionPreflightUrl({ token, apiBaseUrl }) {
     const normalizedApiBaseUrl = normalizeApiBaseUrl(apiBaseUrl || '');
 
     if (!normalizedToken) {
-        throw new Error('Session token is required.');
+        throw new Error('需要填写会话 Token。');
     }
     if (!normalizedApiBaseUrl) {
-        throw new Error('API Base URL is required.');
+        throw new Error('需要填写 API Base URL。');
     }
 
     const target = new URL(`${normalizedApiBaseUrl}/api/connection/preflight`);
@@ -53,7 +53,7 @@ export async function runConnectionPreflight(
             ok: false,
             stage: 'browser',
             reason: 'fetch_unavailable',
-            message: 'This browser cannot run the connection test.',
+            message: '当前浏览器无法执行连接测试。',
         });
     }
 
@@ -75,7 +75,7 @@ export async function runConnectionPreflight(
         const reason = payload?.reason || (response.ok ? 'ok' : `http_${response.status}`);
         const message =
             payload?.message ||
-            (response.ok ? 'API and token are reachable.' : `Backend returned HTTP ${response.status}.`);
+            (response.ok ? 'API 和 Token 可以访问。' : `后端返回 HTTP ${response.status}。`);
 
         return buildResult({
             ok: Boolean(response.ok && payload?.ok),
@@ -90,7 +90,7 @@ export async function runConnectionPreflight(
             ok: false,
             stage: 'network',
             reason: 'api_unreachable',
-            message: 'API Base URL is not reachable from this phone.',
+            message: '手机无法访问 API Base URL。',
             detail: errorMessage(error),
         });
     }
@@ -100,25 +100,25 @@ export function buildConnectionPreflightHint({ response = null, payload = null, 
     const normalizedReason = reason || payload?.reason || '';
 
     if (normalizedReason === 'token_missing') {
-        return 'Paste the token from the desktop pairing page.';
+        return '请粘贴桌面配对页上的 Token。';
     }
     if (normalizedReason === 'token_mismatch') {
-        return 'Refresh the desktop pairing page and copy the current token into this phone.';
+        return '请刷新桌面配对页，并把当前 Token 填到手机端。';
     }
     if (normalizedReason === 'token_expired') {
-        return 'Restart the desktop backend, then reopen the new pairing link.';
+        return '请重启桌面后端，然后打开新的配对链接。';
     }
     if (normalizedReason === 'api_unreachable') {
-        return 'Use a reachable LAN, Tailscale, or HTTPS tunnel address for API Base URL.';
+        return '请使用手机可访问的局域网、Tailscale 或 HTTPS 隧道地址作为 API Base URL。';
     }
     if (response && !response.ok) {
-        return 'API is reachable, but authentication or routing failed.';
+        return 'API 可以访问，但鉴权或路由失败。';
     }
     if (payload?.ok && payload?.host_connected === false) {
-        return 'API/token are valid, but the VS Code desktop bridge is not connected yet.';
+        return 'API 和 Token 有效，但 VS Code 桌面 bridge 还没有连接。';
     }
     if (payload?.ok) {
-        return 'API/token are valid. If the app still fails, the WebSocket URL or proxy may be blocked.';
+        return 'API 和 Token 有效。如果仍无法连接，可能是 WebSocket URL 或代理被拦截。';
     }
 
     return '';

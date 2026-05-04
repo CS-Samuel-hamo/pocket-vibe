@@ -17,7 +17,7 @@ const readyRuntime = {
 };
 
 test('maskToken redacts long tokens', () => {
-    assert.equal(maskToken('vibe-safe-token'), 'vibe…oken');
+    assert.equal(maskToken('vibe-safe-token'), 'vibe...oken');
 });
 
 test('buildRecoveryHints surfaces connection and bridge issues', () => {
@@ -31,8 +31,8 @@ test('buildRecoveryHints surfaces connection and bridge issues', () => {
     });
 
     assert.match(hints[0], /wss:\/\/relay\.example\.com\/ws/);
-    assert.ok(hints.some((hint) => /Desktop bridge is offline/i.test(hint)));
-    assert.ok(hints.some((hint) => /No active runtime/i.test(hint)));
+    assert.ok(hints.some((hint) => /bridge 离线/i.test(hint)));
+    assert.ok(hints.some((hint) => /还没有可用运行时/i.test(hint)));
 });
 
 test('buildSupportDebugBundle includes core runtime and connection fields', () => {
@@ -57,8 +57,8 @@ test('buildSupportDebugBundle includes core runtime and connection fields', () =
     });
 
     assert.match(bundle, /Timestamp: 2026-04-19T10:00:00.000Z/);
-    assert.match(bundle, /Client status: connected/);
-    assert.match(bundle, /Session token: vibe…safe/);
+    assert.match(bundle, /Client status: 已连接/);
+    assert.match(bundle, /Session token: vibe...safe/);
     assert.match(bundle, /Backend WS: ws:\/\/100\.88\.12\.34:8000\/ws/);
     assert.match(bundle, /Runtime catalog: codex-cli:ready:attached:prompt,kill/);
 });

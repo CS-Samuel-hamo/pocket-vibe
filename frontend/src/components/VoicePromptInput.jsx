@@ -64,7 +64,7 @@ const VoicePromptInput = ({ value: externalValue, onChange, onSend, disabled = f
 
     const handleSendClick = () => {
         if (disabled) {
-            Toast.show({ content: disabledReason || 'Prompt is unavailable.', icon: 'fail' });
+            Toast.show({ content: disabledReason || '当前无法发送指令。', icon: 'fail' });
             return;
         }
         if (localValue.trim()) {

@@ -30,7 +30,7 @@ export default function ConnectionSetupView({
             });
 
             if (!normalized.token) {
-                Toast.show({ icon: 'fail', content: 'Session token is required.' });
+                Toast.show({ icon: 'fail', content: '需要填写会话 Token。' });
                 return;
             }
 
@@ -45,7 +45,7 @@ export default function ConnectionSetupView({
         } catch (error) {
             Toast.show({
                 icon: 'fail',
-                content: error instanceof Error ? error.message : 'Invalid connection settings.',
+                content: error instanceof Error ? error.message : '连接配置无效。',
             });
         }
     };
@@ -61,7 +61,7 @@ export default function ConnectionSetupView({
 
         Toast.show({
             icon: result.ok ? 'success' : 'fail',
-            content: result.ok ? 'Connection test passed' : result.message,
+            content: result.ok ? '连接测试通过' : result.message,
         });
     };
 
@@ -80,16 +80,15 @@ export default function ConnectionSetupView({
         <div className="connection-setup-screen">
             <div className="connection-setup-card">
                 <div className="connection-setup-badge">
-                    {mode === 'reconnect' ? 'Reconnect' : 'Remote Setup'}
+                    {mode === 'reconnect' ? '重新连接' : '远程连接'}
                 </div>
-                <h1 className="connection-setup-title">Connect Pocket Vibe Manually</h1>
+                <h1 className="connection-setup-title">手动连接 Pocket Vibe</h1>
                 <p className="connection-setup-copy">
-                    Use this page when the phone and desktop are not on the same LAN, or when VPN/tunnel
-                    addresses need to be entered explicitly.
+                    当手机和电脑不在同一局域网，或需要使用 VPN/隧道地址时，在这里手动填写连接信息。
                 </p>
 
                 <label className="connection-field">
-                    <span className="connection-field-label">Session Token</span>
+                    <span className="connection-field-label">会话 Token</span>
                     <input
                         className="connection-field-input"
                         value={token}
@@ -101,7 +100,7 @@ export default function ConnectionSetupView({
                 </label>
 
                 <label className="connection-field">
-                    <span className="connection-field-label">Backend WebSocket URL</span>
+                    <span className="connection-field-label">后端 WebSocket 地址</span>
                     <input
                         className="connection-field-input"
                         value={backendWsUrl}
@@ -113,7 +112,7 @@ export default function ConnectionSetupView({
                 </label>
 
                 <label className="connection-field">
-                    <span className="connection-field-label">API Base URL</span>
+                    <span className="connection-field-label">API 基础地址</span>
                     <input
                         className="connection-field-input"
                         value={apiBaseUrl}
@@ -144,19 +143,19 @@ export default function ConnectionSetupView({
                 {preflightResult && (
                     <div className={`connection-preflight ${preflightResult.ok ? 'ok' : 'fail'}`}>
                         <div className="connection-preflight-row">
-                            <span>{preflightResult.ok ? 'Reachable' : 'Needs attention'}</span>
+                            <span>{preflightResult.ok ? '可访问' : '需要处理'}</span>
                             <strong>{preflightResult.reason}</strong>
                         </div>
                         <p>{preflightResult.message}</p>
                         {preflightResult.detail && <p>{preflightResult.detail}</p>}
                         {preflightResult.payload?.ok && (
                             <div className="connection-preflight-grid">
-                                <span>Host</span>
-                                <strong>{preflightResult.payload.host_connected ? 'online' : 'offline'}</strong>
-                                <span>Projects</span>
+                                <span>桌面</span>
+                                <strong>{preflightResult.payload.host_connected ? '在线' : '离线'}</strong>
+                                <span>项目</span>
                                 <strong>{preflightResult.payload.project_count || 0}</strong>
-                                <span>Runtime</span>
-                                <strong>{preflightResult.payload.active_runtime || 'none'}</strong>
+                                <span>运行时</span>
+                                <strong>{preflightResult.payload.active_runtime || '无'}</strong>
                             </div>
                         )}
                     </div>
@@ -164,13 +163,13 @@ export default function ConnectionSetupView({
 
                 <div className="connection-actions">
                     <Button fill="outline" loading={preflightRunning} onClick={handlePreflight}>
-                        Test Connection
+                        测试连接
                     </Button>
                     <Button color="primary" fill="solid" onClick={handleSubmit}>
-                        Save And Connect
+                        保存并连接
                     </Button>
                     <Button fill="outline" onClick={onClearSaved}>
-                        Clear Saved Profile
+                        清除保存配置
                     </Button>
                 </div>
             </div>

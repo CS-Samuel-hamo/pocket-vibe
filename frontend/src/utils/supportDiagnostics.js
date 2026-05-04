@@ -1,5 +1,13 @@
 function normalizeStatusLabel(status = '') {
-    return String(status || 'unknown').replace(/_/g, ' ');
+    const normalized = String(status || 'unknown').replace(/_/g, ' ');
+    const labels = {
+        connected: '已连接',
+        connecting: '连接中',
+        disconnected: '已断开',
+        error: '异常',
+        unknown: '未知',
+    };
+    return labels[normalized] || normalized;
 }
 
 export function maskToken(token = '') {
@@ -9,10 +17,10 @@ export function maskToken(token = '') {
     }
 
     if (normalized.length <= 8) {
-        return `${normalized.slice(0, 2)}…${normalized.slice(-2)}`;
+        return `${normalized.slice(0, 2)}...${normalized.slice(-2)}`;
     }
 
-    return `${normalized.slice(0, 4)}…${normalized.slice(-4)}`;
+    return `${normalized.slice(0, 4)}...${normalized.slice(-4)}`;
 }
 
 export function buildRecoveryHints({
@@ -26,30 +34,30 @@ export function buildRecoveryHints({
     const hints = [];
     const runtimeCatalog = capabilityInfo.runtime_catalog || [];
     const hasAttachedRuntime = runtimeCatalog.some((runtime) => runtime.attached);
-    const backendWsBaseUrl = connectionProfile.backendWsBaseUrl || 'the backend websocket';
+    const backendWsBaseUrl = connectionProfile.backendWsBaseUrl || '后端 WebSocket';
 
     if (status !== 'connected') {
-        hints.push(`Connection is ${normalizeStatusLabel(status)}. Check reachability to ${backendWsBaseUrl} and use Reconnect.`);
+        hints.push(`连接状态：${normalizeStatusLabel(status)}。请检查手机是否能访问 ${backendWsBaseUrl}，然后点击重连。`);
     }
 
     if (!sessionInfo.bridge_connected) {
-        hints.push('Desktop bridge is offline. Reload the VS Code window or run Pocket Vibe: Connect to Backend.');
+        hints.push('桌面 bridge 离线。请重载 VS Code 窗口，或运行 Pocket Vibe: Connect to Backend。');
     }
 
     if (!activeRuntime) {
-        hints.push('No active runtime is selected yet. Use Manage to launch or attach one.');
+        hints.push('还没有可用运行时。请在运行时管理里启动或附加一个运行时。');
     } else if (activeRuntime.health === 'degraded') {
         hints.push(activeRuntime.status_detail || activeRuntime.last_error || `${activeRuntime.label} is degraded.`);
     } else if (activeRuntime.health === 'offline') {
-        hints.push(activeRuntime.last_error || `${activeRuntime.label} is offline on the desktop host.`);
+        hints.push(activeRuntime.last_error || `${activeRuntime.label} 在桌面端离线。`);
     }
 
     if (runtimeCatalog.length > 0 && !hasAttachedRuntime) {
-        hints.push('No runtime terminal is attached yet. Launch one from Manage before sending prompts.');
+        hints.push('还没有附加运行时终端。发送指令前，请先从运行时管理里启动一个。');
     }
 
     if (diagnostics.lastFailureReason && diagnostics.lastFailureReason !== 'No recent failures.') {
-        hints.push(`Last failure: ${diagnostics.lastFailureReason}`);
+        hints.push(`最近失败：${diagnostics.lastFailureReason}`);
     }
 
     return [...new Set(hints)].slice(0, 4);
