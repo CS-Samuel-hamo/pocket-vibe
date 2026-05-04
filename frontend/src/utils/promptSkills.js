@@ -1,60 +1,60 @@
 export const PROMPT_SKILLS = [
     {
         id: 'project-brief',
-        label: 'Project Brief',
-        category: 'Observe',
-        summary: 'Ask the active runtime for a concise status brief.',
+        label: '项目简报',
+        category: '观察',
+        summary: '让当前运行时给出简短项目状态。',
         prompt: ({ projectName, runtimeLabel }) => [
-            `Pocket Vibe project brief for ${projectName}.`,
-            `Runtime: ${runtimeLabel}.`,
-            'Give me a concise status brief with: current goal, what you can safely inspect next, likely blockers, and the single best next action.',
-            'Keep it under 8 bullets and call out uncertainty explicitly.',
+            `请为 ${projectName} 生成 Pocket Vibe 项目简报。`,
+            `当前运行时：${runtimeLabel}。`,
+            '请用不超过 8 条要点说明：当前目标、下一步可以安全检查什么、可能阻塞点、以及唯一最值得做的下一步。',
+            '如果信息不确定，请明确标出不确定性，不要猜测。',
         ].join(' '),
     },
     {
         id: 'risk-review',
-        label: 'Risk Review',
-        category: 'Review',
-        summary: 'Find the top product and engineering risks before continuing.',
+        label: '风险审查',
+        category: '审查',
+        summary: '继续前先找出主要产品和工程风险。',
         prompt: ({ projectName }) => [
-            `Review ${projectName} for release readiness.`,
-            'Identify the top 3 product or engineering risks.',
-            'For each risk, include: why it matters, evidence to check, and one concrete next action that can be approved from the phone.',
-            'Do not make code changes unless I explicitly approve them later.',
+            `请审查 ${projectName} 是否接近可发布状态。`,
+            '找出最重要的 3 个产品或工程风险。',
+            '每个风险请说明：为什么重要、需要检查什么证据、以及一个可以从手机端批准的具体下一步。',
+            '除非我后续明确批准，否则不要修改代码。',
         ].join(' '),
     },
     {
         id: 'acceptance-plan',
-        label: 'Acceptance Plan',
-        category: 'Validate',
-        summary: 'Generate phone-side acceptance steps for the current build.',
+        label: '验收步骤',
+        category: '验证',
+        summary: '生成当前版本的手机端验收步骤。',
         prompt: ({ projectName }) => [
-            `Create a minimal acceptance test plan for ${projectName}.`,
-            'Focus on phone-to-desktop control.',
-            'Include 5 concrete phone-side steps, expected desktop behavior, visible success signals, and failure signals.',
-            'Keep it practical and executable now.',
+            `请为 ${projectName} 生成最小验收测试计划。`,
+            '重点验证手机到桌面端的控制链路。',
+            '请包含 5 个具体手机端步骤、预期桌面行为、可见成功信号和失败信号。',
+            '保持实际、现在就能执行。',
         ].join(' '),
     },
     {
         id: 'failure-triage',
-        label: 'Failure Triage',
-        category: 'Recover',
-        summary: 'Separate phone, backend, bridge, runtime, and network failures.',
+        label: '故障排查',
+        category: '恢复',
+        summary: '区分手机、后端、bridge、运行时和网络问题。',
         prompt: () => [
-            'Triage the latest visible failure or slowdown in this Pocket Vibe session.',
-            'Separate the likely layer: phone UI, backend API, WebSocket, VS Code bridge, runtime CLI, model/network, or project code.',
-            'Give the next 3 diagnostics in priority order and explain what each result would mean.',
+            '请排查当前 Pocket Vibe 会话中最新可见的失败或变慢问题。',
+            '请区分可能层级：手机 UI、后端 API、WebSocket、VS Code bridge、运行时 CLI、模型/网络、或项目代码。',
+            '按优先级给出接下来 3 个诊断动作，并说明每个结果分别意味着什么。',
         ].join(' '),
     },
     {
         id: 'diff-summary',
-        label: 'Diff Summary',
-        category: 'Ship',
-        summary: 'Summarize current changes, risks, and verification gaps.',
+        label: '变更总结',
+        category: '交付',
+        summary: '总结当前变更、风险和验证缺口。',
         prompt: ({ projectName }) => [
-            `Summarize the current changes in ${projectName}.`,
-            'Focus on user-facing behavior, files touched, risk areas, and tests already run or still needed.',
-            'If you cannot inspect the diff directly, say exactly what context you need instead of guessing.',
+            `请总结 ${projectName} 当前变更。`,
+            '重点说明用户可见行为、涉及文件、风险区域、已经跑过的测试和仍需补充的验证。',
+            '如果你无法直接检查 diff，请明确说明需要什么上下文，不要猜测。',
         ].join(' '),
     },
 ];
@@ -68,12 +68,12 @@ export function getPromptSkillContext({
         projectName:
             activeProject?.project_name ||
             sessionInfo.project_state?.project_name ||
-            'the active project',
+            '当前项目',
         runtimeLabel:
             activeRuntime?.label ||
             activeRuntime?.id ||
             sessionInfo.active_runtime ||
-            'the active runtime',
+            '当前运行时',
     };
 }
 
