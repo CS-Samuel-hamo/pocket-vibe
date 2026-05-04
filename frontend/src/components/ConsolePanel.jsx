@@ -101,7 +101,7 @@ const ConsolePanel = ({ messages, messagesEndRef, thinking }) => {
                     {thinking && (
                         <div className="thinking-indicator">
                             <BrainCircuit size={12} className="thinking-dot" />
-                            <span>AGENT THINKING...</span>
+                            <span>AI 思考中...</span>
                         </div>
                     )}
                     <Volume2
@@ -121,7 +121,7 @@ const ConsolePanel = ({ messages, messagesEndRef, thinking }) => {
                                 <div className="line-header">
                                     <span className="line-label">{item.label}</span>
                                     <span className="line-badge">{item.badge}</span>
-                                    <span className="line-meta">{item.meta || 'Script output'}</span>
+                                    <span className="line-meta">{item.meta || '脚本输出'}</span>
                                 </div>
                                 <div className="line-group-preview">
                                     {visibleLines.map((line, index) => (

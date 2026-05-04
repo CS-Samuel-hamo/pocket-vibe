@@ -120,13 +120,13 @@ export default function MobileControllerView({
 
     const handleProjectSelectClick = (projectId) => {
         const project = projectRegistry.find((entry) => entry.project_id === projectId);
-        const projectName = project?.project_name || 'project';
+        const projectName = project?.project_name || '项目';
 
         if (projectId && projectId !== sessionInfo.active_project_id) {
             handleProjectSelect(projectId);
-            Toast.show({ content: `Switching to ${projectName}` });
+            Toast.show({ content: `正在切换到 ${projectName}` });
         } else {
-            Toast.show({ content: `Opened ${projectName}` });
+            Toast.show({ content: `已打开 ${projectName}` });
         }
 
         closeTools();
@@ -145,7 +145,7 @@ export default function MobileControllerView({
     const handlePromptSkillDraft = (skill) => {
         setInputVal(skill.prompt);
         closeTools();
-        Toast.show({ content: `${skill.label} drafted` });
+        Toast.show({ content: `已填入${skill.label}` });
     };
 
     const handlePromptSkillSend = (skill) => {
@@ -159,14 +159,14 @@ export default function MobileControllerView({
 
         handleSend(skill.prompt);
         closeTools();
-        Toast.show({ icon: 'success', content: `${skill.label} sent` });
+        Toast.show({ icon: 'success', content: `已发送${skill.label}` });
     };
 
     const handleCopyDebugBundle = async () => {
         try {
             if (navigator.clipboard?.writeText) {
                 await navigator.clipboard.writeText(debugBundle);
-                Toast.show({ icon: 'success', content: 'Debug bundle copied' });
+                Toast.show({ icon: 'success', content: '已复制调试信息' });
                 return;
             }
 

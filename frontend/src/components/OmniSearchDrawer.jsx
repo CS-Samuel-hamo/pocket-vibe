@@ -62,7 +62,7 @@ export default function OmniSearchDrawer({
             }
             setFileContent(data.content);
         } catch (error) {
-            Toast.show({ icon: 'fail', content: 'Failed to load file preview' });
+            Toast.show({ icon: 'fail', content: '无法加载文件预览' });
         } finally {
             setIsLoading(false);
         }
@@ -73,7 +73,7 @@ export default function OmniSearchDrawer({
             return;
         }
         onAddContext?.(selectedFile);
-        Toast.show({ icon: 'success', content: 'Added to the prompt input' });
+        Toast.show({ icon: 'success', content: '已加入输入框' });
         onClose();
     };
 
@@ -82,7 +82,7 @@ export default function OmniSearchDrawer({
             return;
         }
         void send({ type: 'workspace.focus', file: selectedFile, flash: true, project_id: projectId });
-        Toast.show({ icon: 'success', content: 'Opened on the desktop host' });
+        Toast.show({ icon: 'success', content: '已在桌面宿主打开' });
         onClose();
     };
 
@@ -94,21 +94,21 @@ export default function OmniSearchDrawer({
                     backArrow={false}
                     style={{ '--background-color': 'transparent', color: 'var(--text-primary)' }}
                 >
-                    {selectedFile ? 'File Context' : 'Search Files'}
+                    {selectedFile ? '文件上下文' : '搜索文件'}
                 </NavBar>
 
                 {!selectedFile ? (
                     <div className="omni-search-view" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100% - 45px)' }}>
                         <div style={{ padding: '0 12px 12px' }}>
                             <SearchBar
-                                placeholder="Find a file to reference"
+                                placeholder="搜索要引用的文件"
                                 onChange={(value) => setQuery(value)}
                                 autoFocus
                                 style={{ '--background': 'var(--bg-elevated)', '--color': 'var(--text-primary)' }}
                             />
                         </div>
                         <div className="omni-search-copy">
-                            Choose a file, then add it to the prompt or open it on the desktop host.
+                            选择一个文件后，可以加入输入框，或在桌面宿主中打开。
                         </div>
                         <div className="omni-list" style={{ flex: 1, overflowY: 'auto' }}>
                             {filteredFiles.map((file, index) => (
@@ -121,34 +121,34 @@ export default function OmniSearchDrawer({
                                 </div>
                             ))}
                             {filteredFiles.length === 0 && (
-                                <div className="loading-state">No files matched your search.</div>
+                                <div className="loading-state">没有匹配的文件。</div>
                             )}
                         </div>
                     </div>
                 ) : (
                     <div className="omni-reader-view" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100% - 45px)' }}>
                         <div className="omni-reader-header" onClick={() => setSelectedFile(null)}>
-                            Back to Search
+                            返回搜索
                         </div>
                         <div className="omni-file-summary">
                             <div className="omni-file-name">{getBaseName(selectedFile)}</div>
                             <div className="omni-file-path">{selectedFile}</div>
                             <div className="omni-file-actions">
                                 <Button size="small" color="primary" fill="solid" onClick={handleAddContext}>
-                                    <Plus size={15} /> Add Context
+                                    <Plus size={15} /> 加入上下文
                                 </Button>
                                 <Button size="small" fill="outline" onClick={handleOpenOnDesktop}>
-                                    <Link2 size={15} /> Open on Desktop
+                                    <Link2 size={15} /> 在桌面打开
                                 </Button>
                             </div>
                             <div className="omni-file-meta">
-                                Previewing the first {Math.min(preview.lineCount, 80)} lines
-                                {preview.truncated ? ` of ${preview.lineCount}` : ''}.
+                                正在预览前 {Math.min(preview.lineCount, 80)} 行
+                                {preview.truncated ? `，共 ${preview.lineCount} 行` : ''}。
                             </div>
                         </div>
                         <div className="omni-reader-content">
                             {isLoading ? (
-                                <div className="loading-state">Loading file preview...</div>
+                                <div className="loading-state">正在加载文件预览...</div>
                             ) : (
                                 <pre className="code-block">{preview.preview}</pre>
                             )}
