@@ -56,7 +56,10 @@ export function buildRecoveryHints({
         hints.push('还没有附加运行时终端。发送指令前，请先从运行时管理里启动一个。');
     }
 
-    if (diagnostics.lastFailureReason && diagnostics.lastFailureReason !== 'No recent failures.') {
+    if (
+        diagnostics.lastFailureReason &&
+        !['No recent failures.', '最近没有失败。'].includes(diagnostics.lastFailureReason)
+    ) {
         hints.push(`最近失败：${diagnostics.lastFailureReason}`);
     }
 

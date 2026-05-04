@@ -30,10 +30,10 @@ export function getRuntimeLifecycleState(runtime, activeRuntimeId) {
     if (!runtime) {
         return {
             state: 'offline',
-            label: 'offline',
+            label: '离线',
             canLaunch: false,
             canAttach: false,
-            reason: 'No runtime is available.',
+            reason: '没有可用运行时。',
             isActive: false,
         };
     }
@@ -42,10 +42,10 @@ export function getRuntimeLifecycleState(runtime, activeRuntimeId) {
     if (runtime.attached) {
         return {
             state: isActive ? 'active' : 'attached',
-            label: isActive ? 'active' : 'attached',
+            label: isActive ? '当前' : '已附加',
             canLaunch: false,
             canAttach: !isActive,
-            reason: runtime.status_detail || `${runtime.label} is attached.`,
+            reason: runtime.status_detail || `${runtime.label} 已附加。`,
             isActive,
         };
     }
@@ -53,20 +53,20 @@ export function getRuntimeLifecycleState(runtime, activeRuntimeId) {
     if (runtime.launchable) {
         return {
             state: 'launchable',
-            label: 'ready to launch',
+            label: '可启动',
             canLaunch: true,
             canAttach: false,
-            reason: runtime.status_detail || `${runtime.label} can be launched.`,
+            reason: runtime.status_detail || `${runtime.label} 可以启动。`,
             isActive,
         };
     }
 
     return {
         state: 'offline',
-        label: 'offline',
+        label: '离线',
         canLaunch: false,
         canAttach: false,
-        reason: runtime.last_error || runtime.status_detail || `${runtime.label} is offline.`,
+        reason: runtime.last_error || runtime.status_detail || `${runtime.label} 离线。`,
         isActive,
     };
 }
@@ -81,33 +81,33 @@ export function getCapabilityState(runtime, capability, options = {}) {
                 return {
                     state: 'unavailable',
                     enabled: false,
-                    reason: host.last_error || `${hostLabel} is offline.`,
+                    reason: host.last_error || `${hostLabel} 离线。`,
                 };
             }
             if (!hostCapabilities.includes(capability)) {
                 return {
                     state: 'unavailable',
                     enabled: false,
-                    reason: `${capability} is unsupported for ${hostLabel}.`,
+                    reason: `${hostLabel} 不支持 ${capability}。`,
                 };
             }
             if (host.health === 'degraded') {
                 return {
                     state: 'degraded',
                     enabled: true,
-                    reason: host.status_detail || host.last_error || `${hostLabel} is degraded.`,
+                    reason: host.status_detail || host.last_error || `${hostLabel} 处于降级模式。`,
                 };
             }
             return {
                 state: 'available',
                 enabled: true,
-                reason: `${hostLabel} is ready.`,
+                reason: `${hostLabel} 已就绪。`,
             };
         }
         return {
             state: 'unavailable',
             enabled: false,
-            reason: 'No active runtime is available.',
+            reason: '没有可用运行时。',
         };
     }
 
@@ -115,21 +115,21 @@ export function getCapabilityState(runtime, capability, options = {}) {
         return {
             state: 'unavailable',
             enabled: false,
-            reason: runtime.last_error || `${runtime.label} is offline.`,
+            reason: runtime.last_error || `${runtime.label} 离线。`,
         };
     }
 
     const supports = getDescriptorCapabilities(runtime);
     if (!supports.includes(capability)) {
         const reasonByCapability = {
-            approve: runtime.approval_mode === 'unsupported' ? 'Approval is unsupported for this runtime.' : 'Approval is unavailable.',
-            kill: runtime.interrupt_mode === 'unsupported' ? 'Interrupt is unsupported for this runtime.' : 'Interrupt is unavailable.',
-            run_script: 'Script execution is unsupported for this runtime.',
+            approve: runtime.approval_mode === 'unsupported' ? '当前运行时不支持审批。' : '当前无法审批。',
+            kill: runtime.interrupt_mode === 'unsupported' ? '当前运行时不支持中断。' : '当前无法中断。',
+            run_script: '当前运行时不支持脚本执行。',
         };
         return {
             state: 'unavailable',
             enabled: false,
-            reason: reasonByCapability[capability] || `${capability} is unsupported for this runtime.`,
+            reason: reasonByCapability[capability] || `当前运行时不支持 ${capability}。`,
         };
     }
 
@@ -138,7 +138,7 @@ export function getCapabilityState(runtime, capability, options = {}) {
             return {
                 state: 'unavailable',
                 enabled: false,
-                reason: runtime.status_detail || `Launch ${runtime.label} before using ${capability}.`,
+                reason: runtime.status_detail || `请先启动 ${runtime.label}，再使用 ${capability}。`,
             };
         }
 
@@ -146,14 +146,14 @@ export function getCapabilityState(runtime, capability, options = {}) {
             return {
                 state: 'unavailable',
                 enabled: false,
-                reason: runtime.status_detail || `Launch ${runtime.label} or start a run before interrupting it.`,
+                reason: runtime.status_detail || `请先启动 ${runtime.label} 或开始一次运行，再执行中断。`,
             };
         }
 
         return {
             state: 'degraded',
             enabled: true,
-            reason: runtime.status_detail || `${runtime.label} is available but not attached yet.`,
+            reason: runtime.status_detail || `${runtime.label} 可用，但尚未附加。`,
         };
     }
 
@@ -165,15 +165,15 @@ export function getCapabilityState(runtime, capability, options = {}) {
                 runtime.status_detail ||
                 runtime.last_error ||
                 (runtime.dispatch_mode === 'clipboard_fallback'
-                    ? 'This runtime is using clipboard fallback.'
-                    : `${runtime.label} is degraded.`),
+                    ? '当前运行时正在使用剪贴板降级模式。'
+                    : `${runtime.label} 处于降级模式。`),
         };
     }
 
     return {
         state: 'available',
         enabled: true,
-        reason: `${runtime.label} is ready.`,
+        reason: `${runtime.label} 已就绪。`,
     };
 }
 
@@ -196,9 +196,9 @@ export function buildRuntimeDiagnostics(messages = [], sessionInfo = {}, capabil
     return {
         bridgeConnected: Boolean(sessionInfo.bridge_connected),
         activeRuntime,
-        lastDispatchMessage: lastDispatch?.message || 'No dispatch yet.',
+        lastDispatchMessage: lastDispatch?.message || '还没有派发记录。',
         lastDispatchTarget: lastDispatch?.target_runtime || activeRuntime?.id || null,
-        lastFailureReason: lastFailure?.reason || lastFailure?.message || activeRuntime?.last_error || 'No recent failures.',
-        runtimeStatusDetail: activeRuntime?.status_detail || activeRuntime?.last_error || 'No runtime guidance yet.',
+        lastFailureReason: lastFailure?.reason || lastFailure?.message || activeRuntime?.last_error || '最近没有失败。',
+        runtimeStatusDetail: activeRuntime?.status_detail || activeRuntime?.last_error || '暂无运行时提示。',
     };
 }

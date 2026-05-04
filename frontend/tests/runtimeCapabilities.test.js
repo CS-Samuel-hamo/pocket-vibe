@@ -84,14 +84,14 @@ test('getCapabilityState marks unsupported approval as unavailable', () => {
     const state = getCapabilityState(degradedRuntime, 'approve');
     assert.equal(state.state, 'unavailable');
     assert.equal(state.enabled, false);
-    assert.match(state.reason, /approval/i);
+    assert.match(state.reason, /审批/);
 });
 
 test('getCapabilityState disables prompt when no runtime is active', () => {
     const state = getCapabilityState(null, 'prompt');
     assert.equal(state.state, 'unavailable');
     assert.equal(state.enabled, false);
-    assert.match(state.reason, /no active runtime/i);
+    assert.match(state.reason, /没有可用运行时/);
 });
 
 test('getCapabilityState can use host-level capabilities without a runtime', () => {
@@ -122,7 +122,7 @@ test('getCapabilityState blocks host-level unsupported capabilities', () => {
 
     assert.equal(state.state, 'unavailable');
     assert.equal(state.enabled, false);
-    assert.match(state.reason, /unsupported/i);
+    assert.match(state.reason, /不支持/);
 });
 
 test('getRuntimeLifecycleState marks launchable runtimes explicitly', () => {
