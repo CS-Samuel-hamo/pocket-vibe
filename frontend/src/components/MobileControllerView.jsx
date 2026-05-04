@@ -62,17 +62,17 @@ export default function MobileControllerView({
 
     const connectionTone = status === 'connected' && hostConnected ? 'healthy' : 'danger';
     const statusLabel = thinking
-        ? 'EXECUTION ACTIVE'
+        ? '执行中'
         : hostConnected
-            ? 'HOST READY'
-            : 'HOST OFFLINE';
+            ? '桌面就绪'
+            : '桌面离线';
     const projectLabel =
         activeProject?.project_name ||
         sessionInfo.project_state?.project_name ||
         'Project unavailable';
     const projectCountLabel = projectRegistry.length > 1
-        ? `${projectRegistry.length} projects`
-        : '1 project';
+        ? `${projectRegistry.length} 个项目`
+        : '1 个项目';
     const activeRuntimeState = activeRuntime?.health || 'offline';
 
     const runtimeBanner = runtimeSummaryState
@@ -88,17 +88,17 @@ export default function MobileControllerView({
         : null;
     const connectionBanner = status !== 'connected' || !hostConnected
         ? {
-            title: status === 'connected' ? 'Desktop host needs attention.' : 'Connection needs recovery.',
+            title: status === 'connected' ? '桌面宿主需要处理' : '连接需要恢复',
             detail: visibleRecoveryHints[0] || diagnostics?.lastFailureReason,
             tone: 'danger',
         }
         : null;
     const approvalBanner = pendingApproval
         ? {
-            title: `${pendingApproval.tool_name || 'Approval'} is waiting.`,
+            title: `${pendingApproval.tool_name || '审批'} 正在等待处理`,
             detail: (pendingApproval.files || []).length > 0
                 ? (pendingApproval.files || []).slice(0, 2).join(', ')
-                : 'Review and decide from the phone.',
+                : '请在手机上查看并决定。',
             risk: String(pendingApproval.risk || 'med').toUpperCase(),
         }
         : null;
@@ -134,12 +134,12 @@ export default function MobileControllerView({
 
     const handleProjectAddFolder = () => {
         if (!hostConnected) {
-            Toast.show({ icon: 'fail', content: 'Desktop host is offline.' });
+            Toast.show({ icon: 'fail', content: '桌面宿主离线。' });
             return;
         }
 
         send({ type: 'command.dispatch', action: 'project.addFolder' });
-        Toast.show({ content: 'Open the VS Code folder picker on desktop.' });
+        Toast.show({ content: '请在桌面端选择 VS Code 文件夹。' });
     };
 
     const handlePromptSkillDraft = (skill) => {
@@ -152,7 +152,7 @@ export default function MobileControllerView({
         if (!capabilityStates?.prompt?.enabled) {
             Toast.show({
                 icon: 'fail',
-                content: capabilityStates?.prompt?.reason || 'Prompt is unavailable.',
+                content: capabilityStates?.prompt?.reason || '当前无法发送指令。',
             });
             return;
         }
@@ -170,11 +170,11 @@ export default function MobileControllerView({
                 return;
             }
 
-            Toast.show({ icon: 'fail', content: 'Clipboard is unavailable in this browser.' });
+            Toast.show({ icon: 'fail', content: '当前浏览器无法访问剪贴板。' });
         } catch (error) {
             Toast.show({
                 icon: 'fail',
-                content: error instanceof Error ? error.message : 'Could not copy debug bundle.',
+                content: error instanceof Error ? error.message : '无法复制调试信息。',
             });
         }
     };
@@ -213,7 +213,7 @@ export default function MobileControllerView({
                     </div>
                     <div className="header-actions compact-actions">
                         <Button size="mini" fill="outline" onClick={() => setToolsVisible(true)}>
-                            Tools
+                            工具
                         </Button>
                         <Button
                             size="mini"
@@ -222,7 +222,7 @@ export default function MobileControllerView({
                             disabled={capabilityStates?.kill ? !capabilityStates.kill.enabled : false}
                             onClick={handleKill}
                         >
-                            Kill
+                            中断
                         </Button>
                         <div className={`status-dot ${status === 'connected' ? 'online' : 'offline'}`} />
                     </div>
@@ -250,10 +250,10 @@ export default function MobileControllerView({
                             </div>
                             <div className="remote-banner-actions">
                                 <Button size="small" fill="solid" color="primary" onClick={onReconnect}>
-                                    Reconnect
+                                    重连
                                 </Button>
                                 <Button size="small" fill="outline" onClick={onOpenConnectionSetup}>
-                                    Link
+                                    连接
                                 </Button>
                             </div>
                         </section>
@@ -274,7 +274,7 @@ export default function MobileControllerView({
                                     disabled={capabilityStates?.approve ? !capabilityStates.approve.enabled : false}
                                     onClick={onReject}
                                 >
-                                    Reject
+                                    拒绝
                                 </Button>
                                 <Button
                                     size="small"
@@ -283,7 +283,7 @@ export default function MobileControllerView({
                                     disabled={capabilityStates?.approve ? !capabilityStates.approve.enabled : false}
                                     onClick={onApprove}
                                 >
-                                    Approve
+                                    同意
                                 </Button>
                             </div>
                         </section>

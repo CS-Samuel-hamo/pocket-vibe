@@ -22,44 +22,44 @@ import { getRuntimeLifecycleState } from '../utils/runtimeCapabilities';
 import { getRuntimeActionForRuntime } from '../utils/runtimeActionState';
 
 function toolsTitle(view) {
-    if (view === 'menu') return 'Tools';
-    if (view === 'skills') return 'Vibe skills';
-    if (view === 'scripts') return 'Project scripts';
-    if (view === 'projects') return 'Project switcher';
-    if (view === 'runtime') return 'Runtime manager';
-    return 'Support';
+    if (view === 'menu') return '工具';
+    if (view === 'skills') return 'Vibe 技能';
+    if (view === 'scripts') return '项目脚本';
+    if (view === 'projects') return '项目切换';
+    if (view === 'runtime') return '运行时管理';
+    return '连接与调试';
 }
 
 function ToolsMenu({ openToolsView }) {
     return (
         <div className="tools-menu-layout">
             <div className="tools-menu-section">
-                <div className="tools-menu-section-title">Main Actions</div>
-                <div className="tools-menu-copy">The actions you should need most from the phone.</div>
+                <div className="tools-menu-section-title">常用操作</div>
+                <div className="tools-menu-copy">手机端最常用的控制入口。</div>
                 <div className="tools-primary-actions">
                     <Button block fill="solid" color="primary" onClick={() => openToolsView('skills')}>
-                        <Sparkles size={16} /> Vibe Skills
+                        <Sparkles size={16} /> Vibe 技能
                     </Button>
                     <Button block fill="outline" onClick={() => openToolsView('files')}>
-                        <FolderSearch size={16} /> Search Files
+                        <FolderSearch size={16} /> 搜索文件
                     </Button>
                     <Button block fill="outline" onClick={() => openToolsView('projects')}>
-                        <FolderTree size={16} /> Projects
+                        <FolderTree size={16} /> 项目
                     </Button>
                 </div>
             </div>
 
             <div className="tools-menu-section subdued">
-                <div className="tools-menu-section-title">Advanced</div>
+                <div className="tools-menu-section-title">高级</div>
                 <div className="tools-secondary-actions">
                     <Button block fill="outline" onClick={() => openToolsView('scripts')}>
-                        <Terminal size={16} /> Run Script
+                        <Terminal size={16} /> 执行脚本
                     </Button>
                     <Button block fill="outline" onClick={() => openToolsView('runtime')}>
-                        <Layers size={16} /> Switch Runtime
+                        <Layers size={16} /> 切换运行时
                     </Button>
                     <Button block fill="outline" onClick={() => openToolsView('support')}>
-                        <Bug size={16} /> Connection & Debug
+                        <Bug size={16} /> 连接与调试
                     </Button>
                 </div>
             </div>
@@ -71,7 +71,7 @@ function SkillsDeck({ promptSkills, capabilityStates, onDraft, onSend }) {
     return (
         <div className="skill-deck">
             <div className="tools-menu-copy skill-deck-copy">
-                Reusable prompt skills inspired by MCP prompts, Cline approvals, Aider diffs, and coding-agent task briefs.
+                可复用的任务提示词，用于快速发起项目简报、验收、排障和变更总结。
             </div>
             {promptSkills.map((skill) => (
                 <section key={skill.id} className="skill-card">
@@ -84,7 +84,7 @@ function SkillsDeck({ promptSkills, capabilityStates, onDraft, onSend }) {
                     </div>
                     <div className="skill-card-actions">
                         <Button size="mini" fill="outline" onClick={() => onDraft(skill)}>
-                            <PencilLine size={14} /> Draft
+                            <PencilLine size={14} /> 填入
                         </Button>
                         <Button
                             size="mini"
@@ -93,7 +93,7 @@ function SkillsDeck({ promptSkills, capabilityStates, onDraft, onSend }) {
                             disabled={!capabilityStates?.prompt?.enabled}
                             onClick={() => onSend(skill)}
                         >
-                            Send
+                            发送
                         </Button>
                     </div>
                 </section>
@@ -113,13 +113,13 @@ function ProjectDeck({
         <div className="runtime-deck tools-runtime-deck">
             <section className="project-picker-action">
                 <div>
-                    <div className="project-picker-title">Add a project folder</div>
+                    <div className="project-picker-title">添加项目文件夹</div>
                     <div className="project-picker-copy">
-                        Opens a VS Code folder picker on desktop. If nothing opens, reload VS Code.
+                        会在桌面端打开 VS Code 文件夹选择器；如果没有弹窗，请重载 VS Code。
                     </div>
                 </div>
                 <Button size="mini" fill="outline" disabled={!hostConnected} onClick={onProjectAddFolder}>
-                    Open Picker
+                    打开选择器
                 </Button>
             </section>
             {projectRegistry.length > 0 ? (
@@ -153,14 +153,14 @@ function ProjectDeck({
                                     color={switchState.isActive ? 'primary' : 'default'}
                                     onClick={() => onProjectSelect(project.project_id)}
                                 >
-                                    {switchState.actionLabel}
+                                    {switchState.isActive ? '当前' : '打开'}
                                 </Button>
                             </div>
                         </div>
                     );
                 })
             ) : (
-                <div className="tools-empty">No connected desktop projects are available yet.</div>
+                <div className="tools-empty">还没有可用的桌面项目。</div>
             )}
         </div>
     );
@@ -188,7 +188,7 @@ function RuntimeDeck({ runtimeCatalog, activeRuntimeId, runtimeActionState, onLa
                             </div>
                             <div className="runtime-card-meta">
                                 {runtime.dispatch_mode}
-                                {runtime.source === 'extension' ? ' fallback' : ''}
+                                {runtime.source === 'extension' ? ' 降级模式' : ''}
                             </div>
                             <div className="runtime-card-detail">{detail}</div>
                         </div>
@@ -199,7 +199,7 @@ function RuntimeDeck({ runtimeCatalog, activeRuntimeId, runtimeActionState, onLa
                                 disabled={runtimeAction?.isPending || !lifecycle.canAttach}
                                 onClick={() => onAttach(runtime.id)}
                             >
-                                {runtimeAction?.attachLabel || 'Use'}
+                                {runtimeAction?.attachLabel || '使用'}
                             </Button>
                             <Button
                                 size="mini"
@@ -208,7 +208,7 @@ function RuntimeDeck({ runtimeCatalog, activeRuntimeId, runtimeActionState, onLa
                                 disabled={runtimeAction?.isPending || !lifecycle.canLaunch}
                                 onClick={() => onLaunch(runtime.id)}
                             >
-                                {runtimeAction?.launchLabel || 'Launch'}
+                                {runtimeAction?.launchLabel || '启动'}
                             </Button>
                         </div>
                     </div>
@@ -229,26 +229,26 @@ function SupportDeck({
     return (
         <div className="tools-support-stack">
             <section className="tools-support-card">
-                <div className="tools-support-title">Recovery</div>
+                <div className="tools-support-title">恢复连接</div>
                 <div className="tools-support-actions">
                     <Button fill="outline" onClick={onReconnect}>
-                        <RefreshCw size={15} /> Reconnect
+                        <RefreshCw size={15} /> 重连
                     </Button>
                     <Button fill="outline" onClick={onOpenConnectionSetup}>
-                        <Link2 size={15} /> Link
+                        <Link2 size={15} /> 连接
                     </Button>
                     <Button fill="outline" onClick={onResetConnection}>
-                        <Rocket size={15} /> Reset
+                        <Rocket size={15} /> 重置
                     </Button>
                     <Button fill="outline" onClick={onCopyDebugBundle}>
-                        <Cable size={15} /> Copy Debug
+                        <Cable size={15} /> 复制调试信息
                     </Button>
                 </div>
             </section>
 
             {visibleRecoveryHints.length > 0 && (
                 <section className="tools-support-card">
-                    <div className="tools-support-title">Hints</div>
+                    <div className="tools-support-title">提示</div>
                     <div className="tools-support-list">
                         {visibleRecoveryHints.map((hint) => (
                             <div key={hint} className="tools-support-line">
@@ -261,7 +261,7 @@ function SupportDeck({
             )}
 
             <section className="tools-support-card">
-                <div className="tools-support-title">Recent events</div>
+                <div className="tools-support-title">最近关键事件</div>
                 {recentEvents.length > 0 ? (
                     <div className="tools-support-list">
                         {recentEvents.map((event) => (
@@ -272,7 +272,7 @@ function SupportDeck({
                         ))}
                     </div>
                 ) : (
-                    <div className="tools-empty">No recent critical events.</div>
+                    <div className="tools-empty">暂无关键事件。</div>
                 )}
             </section>
         </div>
@@ -322,13 +322,13 @@ export default function MobileToolsSheet({
             <div className="tools-sheet">
                 <div className="tools-sheet-header">
                     <div className="tools-sheet-heading">
-                        <div className="tools-sheet-kicker">Actions</div>
+                        <div className="tools-sheet-kicker">操作</div>
                         <div className="tools-sheet-title">{toolsTitle(toolsView)}</div>
                     </div>
                     <div className="tools-sheet-header-actions">
                         {toolsView !== 'menu' && (
                             <Button size="mini" fill="outline" onClick={() => setToolsView('menu')}>
-                                Back
+                                返回
                             </Button>
                         )}
                         <Button size="mini" fill="outline" onClick={closeTools}>
