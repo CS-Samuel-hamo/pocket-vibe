@@ -8,6 +8,7 @@ import OmniSearchDrawer from './OmniSearchDrawer';
 import VoicePromptInput from './VoicePromptInput';
 import { getRecentControlEvents } from '../utils/controlHome';
 import { buildPromptSkillCards } from '../utils/promptSkills';
+import { buildProjectInboxEntries } from '../utils/projectRegistry';
 import { getRuntimeActionForRuntime } from '../utils/runtimeActionState';
 
 export default function MobileControllerView({
@@ -55,6 +56,16 @@ export default function MobileControllerView({
         : null;
     const recentEvents = useMemo(() => getRecentControlEvents(messages, history, 6), [messages, history]);
     const visibleRecoveryHints = (recoveryHints || []).slice(0, 2);
+    const projectInboxEntries = useMemo(
+        () => buildProjectInboxEntries({
+            sessionInfo,
+            messages,
+            history,
+            pendingApproval,
+            limit: 3,
+        }),
+        [history, messages, pendingApproval, sessionInfo],
+    );
     const promptSkills = useMemo(
         () => buildPromptSkillCards({ activeProject, activeRuntime, sessionInfo }),
         [activeProject, activeRuntime, sessionInfo],
@@ -240,6 +251,8 @@ export default function MobileControllerView({
                         onOpenSkills={() => openToolsView('skills')}
                         onOpenFiles={() => openToolsView('files')}
                         onOpenProjects={() => openToolsView('projects')}
+                        projectInboxEntries={projectInboxEntries}
+                        onProjectSelect={handleProjectSelectClick}
                     />
 
                     {connectionBanner && (

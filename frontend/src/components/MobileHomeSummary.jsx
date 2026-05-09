@@ -19,6 +19,8 @@ export default function MobileHomeSummary({
     onOpenSkills,
     onOpenFiles,
     onOpenProjects,
+    projectInboxEntries = [],
+    onProjectSelect,
 }) {
     return (
         <section className={`remote-home-card ${connectionTone}`}>
@@ -44,6 +46,34 @@ export default function MobileHomeSummary({
                     {projectCountLabel}
                 </Button>
             </div>
+            {projectInboxEntries.length > 0 && (
+                <div className="remote-project-inbox">
+                    <div className="remote-project-inbox-header">
+                        <span>Project Inbox</span>
+                        <Button size="mini" fill="none" onClick={onOpenProjects}>All</Button>
+                    </div>
+                    <div className="remote-project-inbox-list">
+                        {projectInboxEntries.map((entry) => (
+                            <Button
+                                key={entry.project_id}
+                                fill="none"
+                                className={`remote-project-inbox-card ${entry.tone} ${entry.isActive ? 'active' : ''}`}
+                                onClick={() => onProjectSelect?.(entry.project_id)}
+                            >
+                                <div className="remote-project-inbox-title-row">
+                                    <strong>{entry.project_name}</strong>
+                                    <span>{entry.isActive ? 'Current' : entry.actionLabel}</span>
+                                </div>
+                                <div className="remote-project-inbox-meta">
+                                    {entry.hostLabel} · {entry.runtimeLabel} · {entry.health}
+                                </div>
+                                <div className="remote-project-inbox-preview-label">{entry.previewLabel}</div>
+                                <div className="remote-project-inbox-preview">{entry.previewText}</div>
+                            </Button>
+                        ))}
+                    </div>
+                </div>
+            )}
         </section>
     );
 }

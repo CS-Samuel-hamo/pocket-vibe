@@ -1,0 +1,28 @@
+{
+  "id": "ext-pocketvibe-mobile-project-inbox-home-030",
+  "title": "Make Project Inbox visible on the default mobile home",
+  "module": "mobile-pwa",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "frontend/src/components/MobileControllerView.jsx",
+    "frontend/src/components/MobileHomeSummary.jsx",
+    "frontend/src/utils/projectRegistry.js",
+    "frontend/tests/projectRegistry.test.js"
+  ],
+  "outputs": [
+    "Default mobile home displays recent project inbox entries",
+    "Each entry exposes project name, runtime/host health, and last reply/issue/approval preview",
+    "Users can switch projects from the default home without opening the tools sheet"
+  ],
+  "acceptance_commands": [
+    "cd frontend && npm run test:capabilities",
+    "cd frontend && npm run build"
+  ],
+  "do_not_do": [
+    "Do not add mobile file editing",
+    "Do not change project registry protocol fields",
+    "Do not remove the existing tools-sheet project manager",
+    "Do not stage unrelated untracked files"
+  ]
+}
