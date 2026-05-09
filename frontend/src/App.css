@@ -2357,6 +2357,21 @@ kbd {
   color: var(--text-muted);
 }
 
+.omni-readonly-note {
+  margin: 0 16px 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(100, 210, 255, 0.16);
+  background: rgba(100, 210, 255, 0.06);
+  color: #cdefff;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.omni-file-summary .omni-readonly-note {
+  margin: 12px 0 0;
+}
+
 .omni-item {
   display: flex;
   align-items: flex-start;

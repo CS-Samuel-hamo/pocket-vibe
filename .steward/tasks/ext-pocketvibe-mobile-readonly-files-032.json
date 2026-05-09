@@ -1,0 +1,27 @@
+{
+  "id": "ext-pocketvibe-mobile-readonly-files-032",
+  "title": "Make mobile file browsing explicitly read-only",
+  "module": "mobile-pwa",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "frontend/src/components/OmniSearchDrawer.jsx",
+    "frontend/package.json",
+    "frontend/tests"
+  ],
+  "outputs": [
+    "File search and preview explain that mobile file access is read-only",
+    "Preview helper is covered by tests for truncation and line counts",
+    "The existing file actions remain limited to add context and open on desktop"
+  ],
+  "acceptance_commands": [
+    "cd frontend && npm run test:capabilities",
+    "cd frontend && npm run build"
+  ],
+  "do_not_do": [
+    "Do not add mobile file editing",
+    "Do not add write APIs",
+    "Do not change backend file-read boundaries",
+    "Do not stage unrelated untracked files"
+  ]
+}

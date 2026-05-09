@@ -7,7 +7,7 @@
         "dev": "vite",
         "build": "vite build",
         "preview": "vite preview",
-        "test:capabilities": "node --test tests/runtimeCapabilities.test.js tests/connectionConfig.test.js tests/connectionPreflight.test.js tests/messageFeed.test.js tests/consoleEntries.test.js tests/runtimeActionState.test.js tests/supportDiagnostics.test.js tests/controlHome.test.js tests/projectRegistry.test.js tests/promptSkills.test.js"
+        "test:capabilities": "node --test tests/runtimeCapabilities.test.js tests/connectionConfig.test.js tests/connectionPreflight.test.js tests/messageFeed.test.js tests/consoleEntries.test.js tests/runtimeActionState.test.js tests/supportDiagnostics.test.js tests/controlHome.test.js tests/projectRegistry.test.js tests/promptSkills.test.js tests/omniSearch.test.js"
     },
     "dependencies": {
         "@ant-design/icons": "^6.1.0",

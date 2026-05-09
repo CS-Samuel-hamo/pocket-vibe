@@ -1,19 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button, NavBar, Popup, SearchBar, Toast } from 'antd-mobile';
 import { FileCode, Link2, Plus, X } from 'lucide-react';
+import { buildPreview } from '../utils/filePreview';
 
 function getBaseName(filePath) {
     const segments = String(filePath || '').split(/[\\/]/);
     return segments[segments.length - 1] || filePath;
-}
-
-function buildPreview(content) {
-    const lines = String(content || '').split('\n');
-    return {
-        lineCount: lines.length,
-        preview: lines.slice(0, 80).join('\n'),
-        truncated: lines.length > 80,
-    };
 }
 
 export default function OmniSearchDrawer({
@@ -110,6 +102,9 @@ export default function OmniSearchDrawer({
                         <div className="omni-search-copy">
                             选择一个文件后，可以加入输入框，或在桌面宿主中打开。
                         </div>
+                        <div className="omni-readonly-note">
+                            Read-only: phone can preview, cite, or open files on desktop. Editing stays on the desktop host.
+                        </div>
                         <div className="omni-list" style={{ flex: 1, overflowY: 'auto' }}>
                             {filteredFiles.map((file, index) => (
                                 <div key={index} className="omni-item" onClick={() => handleFileClick(file)}>
@@ -140,6 +135,9 @@ export default function OmniSearchDrawer({
                                 <Button size="small" fill="outline" onClick={handleOpenOnDesktop}>
                                     <Link2 size={15} /> 在桌面打开
                                 </Button>
+                            </div>
+                            <div className="omni-readonly-note">
+                                Read-only preview. Use Add Context to cite this file in a prompt, or Open on Desktop to edit there.
                             </div>
                             <div className="omni-file-meta">
                                 正在预览前 {Math.min(preview.lineCount, 80)} 行
