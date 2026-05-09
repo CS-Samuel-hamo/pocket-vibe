@@ -1350,6 +1350,32 @@
   line-height: 1.45;
 }
 
+.connection-error-code {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.connection-error-code span {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.connection-error-code code {
+  font-family: var(--font-mono);
+  color: #ffd2d2;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .connection-preflight-grid {
   display: grid;
   grid-template-columns: 1fr auto;

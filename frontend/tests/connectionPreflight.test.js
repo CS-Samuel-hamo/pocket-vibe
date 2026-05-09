@@ -31,6 +31,7 @@ test('runConnectionPreflight returns backend host status on success', async () =
                     reason: 'ok',
                     message: 'API and token are reachable.',
                     host_connected: true,
+                    host_error_code: null,
                     project_count: 1,
                     active_runtime: 'codex-cli',
                 }),
@@ -40,6 +41,7 @@ test('runConnectionPreflight returns backend host status on success', async () =
 
     assert.equal(result.ok, true);
     assert.equal(result.reason, 'ok');
+    assert.equal(result.errorCode, null);
     assert.equal(result.payload.host_connected, true);
 });
 
@@ -56,6 +58,7 @@ test('runConnectionPreflight surfaces token mismatch separately from network fai
                 json: async () => ({
                     ok: false,
                     reason: 'token_mismatch',
+                    error_code: 'PV-AUTH-001',
                     message: 'Session token does not match the desktop host.',
                 }),
             }),
@@ -65,7 +68,36 @@ test('runConnectionPreflight surfaces token mismatch separately from network fai
     assert.equal(result.ok, false);
     assert.equal(result.stage, 'auth');
     assert.equal(result.reason, 'token_mismatch');
+    assert.equal(result.errorCode, 'PV-AUTH-001');
     assert.match(result.detail, /当前 Token/);
+});
+
+test('runConnectionPreflight carries host offline recovery code', async () => {
+    const result = await runConnectionPreflight(
+        {
+            token: 'vibe-safe',
+            apiBaseUrl: 'https://relay.example.com',
+        },
+        {
+            fetchImpl: async () => ({
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    ok: true,
+                    reason: 'ok',
+                    message: 'API and token are reachable.',
+                    host_connected: false,
+                    host_error_code: 'PV-CONN-003',
+                    project_count: 0,
+                    active_runtime: null,
+                }),
+            }),
+        },
+    );
+
+    assert.equal(result.ok, true);
+    assert.equal(result.errorCode, 'PV-CONN-003');
+    assert.equal(result.payload.host_connected, false);
 });
 
 test('runConnectionPreflight reports unreachable API base URL', async () => {
@@ -84,6 +116,7 @@ test('runConnectionPreflight reports unreachable API base URL', async () => {
     assert.equal(result.ok, false);
     assert.equal(result.stage, 'network');
     assert.equal(result.reason, 'api_unreachable');
+    assert.equal(result.errorCode, 'PV-CONN-001');
 });
 
 test('buildConnectionPreflightHint explains valid API with offline bridge', () => {

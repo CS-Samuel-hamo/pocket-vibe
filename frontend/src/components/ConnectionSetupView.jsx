@@ -90,6 +90,9 @@ export default function ConnectionSetupView({
         }
     }, [apiBaseUrl, backendWsUrl]);
 
+    const preflightErrorCode = preflightResult?.errorCode || '';
+    const preflightNeedsAction = Boolean(preflightResult && (!preflightResult.ok || preflightErrorCode));
+
     return (
         <div className="connection-setup-screen">
             <div className="connection-setup-card">
@@ -155,11 +158,17 @@ export default function ConnectionSetupView({
                 )}
 
                 {preflightResult && (
-                    <div className={`connection-preflight ${preflightResult.ok ? 'ok' : 'fail'}`}>
+                    <div className={`connection-preflight ${preflightNeedsAction ? 'fail' : 'ok'}`}>
                         <div className="connection-preflight-row">
-                            <span>{preflightResult.ok ? '可访问' : '需要处理'}</span>
+                            <span>{preflightNeedsAction ? '需要处理' : '可访问'}</span>
                             <strong>{formatPreflightReason(preflightResult.reason)}</strong>
                         </div>
+                        {preflightErrorCode && (
+                            <div className="connection-error-code">
+                                <span>错误码</span>
+                                <code>{preflightErrorCode}</code>
+                            </div>
+                        )}
                         <p>{preflightResult.message}</p>
                         {preflightResult.detail && <p>{preflightResult.detail}</p>}
                         {preflightResult.payload?.ok && (

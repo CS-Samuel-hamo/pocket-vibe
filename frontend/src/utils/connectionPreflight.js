@@ -7,6 +7,22 @@ function errorMessage(error) {
     return String(error || '未知错误');
 }
 
+const PREFLIGHT_REASON_ERROR_CODES = {
+    token_missing: 'PV-AUTH-001',
+    token_mismatch: 'PV-AUTH-001',
+    token_expired: 'PV-AUTH-002',
+    api_unreachable: 'PV-CONN-001',
+};
+
+function extractPreflightErrorCode({ payload = null, reason = '' } = {}) {
+    return (
+        payload?.error_code ||
+        payload?.host_error_code ||
+        PREFLIGHT_REASON_ERROR_CODES[reason] ||
+        null
+    );
+}
+
 function buildResult({
     ok,
     stage,
@@ -14,6 +30,7 @@ function buildResult({
     message,
     detail = '',
     payload = null,
+    errorCode = null,
 }) {
     return {
         ok,
@@ -22,6 +39,7 @@ function buildResult({
         message,
         detail,
         payload,
+        errorCode: errorCode || extractPreflightErrorCode({ payload, reason }),
         checkedAt: new Date().toISOString(),
     };
 }
