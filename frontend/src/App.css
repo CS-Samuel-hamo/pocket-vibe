@@ -471,6 +471,42 @@
   color: #cfd7e3;
 }
 
+.skill-card-metadata {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.skill-card-metadata div {
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.skill-card-metadata span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.skill-card-metadata strong {
+  display: block;
+  color: #e8eef7;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
+.skill-card-chip.risk-medium {
+  background: rgba(255, 184, 77, 0.14);
+  color: #ffd38b;
+}
+
 .skill-card-actions {
   display: flex;
   gap: 8px;

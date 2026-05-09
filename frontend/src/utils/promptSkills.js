@@ -59,6 +59,49 @@ export const PROMPT_SKILLS = [
     },
 ];
 
+const SKILL_PRODUCT_METADATA = {
+    'project-brief': {
+        intent: 'Observe',
+        outcome: 'A short project status brief with uncertainty called out.',
+        riskLevel: 'low',
+        primaryAction: 'Ask for brief',
+        nextStep: 'Use the answer to choose one safe inspection or implementation task.',
+        directSend: true,
+    },
+    'risk-review': {
+        intent: 'Review',
+        outcome: 'Top product and engineering risks before more code changes.',
+        riskLevel: 'medium',
+        primaryAction: 'Review risks',
+        nextStep: 'Approve only one concrete mitigation or inspection step.',
+        directSend: true,
+    },
+    'acceptance-plan': {
+        intent: 'Validate',
+        outcome: 'A phone-first acceptance checklist that can be run immediately.',
+        riskLevel: 'low',
+        primaryAction: 'Create checklist',
+        nextStep: 'Run the checklist on a real phone and record pass/fail evidence.',
+        directSend: true,
+    },
+    'failure-triage': {
+        intent: 'Recover',
+        outcome: 'Layered diagnosis across phone, backend, bridge, runtime, and network.',
+        riskLevel: 'medium',
+        primaryAction: 'Triage failure',
+        nextStep: 'Copy diagnostics if the first suggested check does not isolate the issue.',
+        directSend: true,
+    },
+    'diff-summary': {
+        intent: 'Ship',
+        outcome: 'A delivery summary covering behavior, changed areas, tests, and gaps.',
+        riskLevel: 'low',
+        primaryAction: 'Summarize changes',
+        nextStep: 'Use the summary as release notes or PR context after tests pass.',
+        directSend: true,
+    },
+};
+
 export function getPromptSkillContext({
     activeProject = null,
     activeRuntime = null,
@@ -81,6 +124,7 @@ export function buildPromptSkillCards(context = {}) {
     const normalizedContext = getPromptSkillContext(context);
     return PROMPT_SKILLS.map((skill) => ({
         ...skill,
+        ...(SKILL_PRODUCT_METADATA[skill.id] || {}),
         prompt: skill.prompt(normalizedContext),
     }));
 }

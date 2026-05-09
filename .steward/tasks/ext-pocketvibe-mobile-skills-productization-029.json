@@ -1,0 +1,27 @@
+{
+  "id": "ext-pocketvibe-mobile-skills-productization-029",
+  "title": "Productize Vibe Skills as structured mobile task templates",
+  "module": "mobile-pwa",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "frontend/src/utils/promptSkills.js",
+    "frontend/src/components/MobileToolsSheet.jsx",
+    "frontend/tests/promptSkills.test.js"
+  ],
+  "outputs": [
+    "Each Vibe Skill exposes structured intent, outcome, risk level, primary action, and next-step metadata",
+    "Mobile skills sheet displays the metadata before the user drafts or sends a prompt",
+    "Frontend tests verify that skills are product templates rather than opaque prompt shortcuts"
+  ],
+  "acceptance_commands": [
+    "cd frontend && npm run test:capabilities",
+    "cd frontend && npm run build"
+  ],
+  "do_not_do": [
+    "Do not change WebSocket protocol behavior",
+    "Do not add new runtime-specific assumptions",
+    "Do not dispatch skills when prompt capability is unavailable",
+    "Do not stage unrelated untracked files"
+  ]
+}

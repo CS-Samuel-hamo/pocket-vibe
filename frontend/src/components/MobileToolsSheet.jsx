@@ -68,6 +68,8 @@ function ToolsMenu({ openToolsView }) {
 }
 
 function SkillsDeck({ promptSkills, capabilityStates, onDraft, onSend }) {
+    const promptReady = capabilityStates?.prompt?.enabled;
+
     return (
         <div className="skill-deck">
             <div className="tools-menu-copy skill-deck-copy">
@@ -78,9 +80,21 @@ function SkillsDeck({ promptSkills, capabilityStates, onDraft, onSend }) {
                     <div className="skill-card-main">
                         <div className="skill-card-row">
                             <span className="skill-card-title">{skill.label}</span>
-                            <span className="skill-card-chip">{skill.category}</span>
+                            <span className={`skill-card-chip risk-${skill.riskLevel || 'low'}`}>
+                                {skill.intent || skill.category}
+                            </span>
                         </div>
                         <div className="skill-card-summary">{skill.summary}</div>
+                        <div className="skill-card-metadata">
+                            <div>
+                                <span>Outcome</span>
+                                <strong>{skill.outcome}</strong>
+                            </div>
+                            <div>
+                                <span>Next</span>
+                                <strong>{skill.nextStep}</strong>
+                            </div>
+                        </div>
                     </div>
                     <div className="skill-card-actions">
                         <Button size="mini" fill="outline" onClick={() => onDraft(skill)}>
@@ -90,7 +104,7 @@ function SkillsDeck({ promptSkills, capabilityStates, onDraft, onSend }) {
                             size="mini"
                             color="primary"
                             fill="solid"
-                            disabled={!capabilityStates?.prompt?.enabled}
+                            disabled={!promptReady || skill.directSend === false}
                             onClick={() => onSend(skill)}
                         >
                             发送
