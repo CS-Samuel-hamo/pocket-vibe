@@ -4,11 +4,19 @@ import time
 from typing import Any, Dict, Optional
 
 
+REASON_ERROR_CODES = {
+    "token_missing": "PV-AUTH-001",
+    "token_mismatch": "PV-AUTH-001",
+    "token_expired": "PV-AUTH-002",
+}
+
+
 def _base_payload(ok: bool, reason: str, message: str, auth_mode: str, expires_at: Optional[float]) -> Dict[str, Any]:
     return {
         "type": "connection.preflight",
         "ok": ok,
         "reason": reason,
+        "error_code": REASON_ERROR_CODES.get(reason),
         "message": message,
         "auth_mode": auth_mode,
         "expires_at": expires_at,
@@ -50,8 +58,10 @@ def _room_state(manager: Any, room_token: str) -> Dict[str, Any]:
     active_project = manager.get_active_host_project(room_token)
     projects = manager.list_room_projects(room_token)
     hosts = manager.list_room_hosts(room_token)
+    host_connected = manager.room_has_desktop_host(room_token)
     return {
-        "host_connected": manager.room_has_desktop_host(room_token),
+        "host_connected": host_connected,
+        "host_error_code": None if host_connected else "PV-CONN-003",
         "host_count": len(hosts),
         "project_count": len(projects),
         "active_project_name": active_project.get("project_name") if active_project else None,

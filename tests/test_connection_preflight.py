@@ -28,6 +28,7 @@ def test_connection_preflight_rejects_missing_token():
 
     assert result["ok"] is False
     assert result["reason"] == "token_missing"
+    assert result["error_code"] == "PV-AUTH-001"
     assert result["host_connected"] is False
 
 
@@ -42,6 +43,7 @@ def test_connection_preflight_rejects_expired_ephemeral_token():
 
     assert result["ok"] is False
     assert result["reason"] == "token_expired"
+    assert result["error_code"] == "PV-AUTH-002"
 
 
 def test_connection_preflight_reports_room_state():
@@ -54,6 +56,22 @@ def test_connection_preflight_reports_room_state():
     )
 
     assert result["ok"] is True
+    assert result["error_code"] is None
     assert result["host_connected"] is True
+    assert result["host_error_code"] is None
     assert result["project_count"] == 1
     assert result["active_runtime"] == "codex-cli"
+
+
+def test_connection_preflight_reports_host_offline_code():
+    result = build_connection_preflight(
+        "token-2",
+        auth_token="token-2",
+        auth_mode="configured",
+        expires_at=None,
+        manager=_FakeManager(),
+    )
+
+    assert result["ok"] is True
+    assert result["host_connected"] is False
+    assert result["host_error_code"] == "PV-CONN-003"

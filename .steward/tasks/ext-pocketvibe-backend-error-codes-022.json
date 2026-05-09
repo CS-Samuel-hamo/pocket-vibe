@@ -1,0 +1,48 @@
+{
+  "task_id": "ext-pocketvibe-backend-error-codes-022",
+  "task": "Attach stable Pocket Vibe error codes to backend connection preflight payloads so mobile and support diagnostics can identify auth and desktop-host failure categories without parsing English messages.",
+  "task_type": "reliability",
+  "risk_level": "low",
+  "task_mode": "implementation",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "backend/connection_preflight.py",
+    "docs/error_codes.md",
+    "tests/test_connection_preflight.py"
+  ],
+  "matched_modules": [
+    "backend-api",
+    "protocol-contract"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/backend-api.yaml",
+    ".steward/modules/protocol-contract.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.require_tests_for_behavior_change",
+    "protocol-contract.replay_and_audit_changes_require_targeted_tests"
+  ],
+  "constraints": [
+    "Do not change WebSocket protocol in this task.",
+    "Do not change preflight HTTP status behavior.",
+    "Keep reason strings for backward compatibility."
+  ],
+  "required_checks": [
+    "pytest tests/test_connection_preflight.py tests/test_backend_main.py -q",
+    "python scripts/quality_gate.py backend/connection_preflight.py"
+  ],
+  "suggested_write_scope": [
+    "backend/connection_preflight.py",
+    "tests/test_connection_preflight.py",
+    ".steward/tasks/ext-pocketvibe-backend-error-codes-022.json"
+  ],
+  "done_when": [
+    "Token failures include PV-AUTH codes.",
+    "A valid preflight with no desktop host includes PV-CONN-003 as a host error code.",
+    "Existing reason strings remain unchanged."
+  ],
+  "decision": "task_ready"
+}
