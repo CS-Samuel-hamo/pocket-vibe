@@ -1,0 +1,50 @@
+{
+  "task_id": "ext-pocketvibe-bridge-auto-profile-020",
+  "task": "Teach the VS Code bridge to auto-discover the backend-generated local desktop connection profile so users no longer need to manually copy the backend WebSocket URL and token for the local product path.",
+  "task_type": "productization",
+  "risk_level": "medium",
+  "task_mode": "implementation",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "backend/desktop_connection_profile.py",
+    "vscode-bridge/src/bridgeSettings.ts",
+    "vscode-bridge/package.json",
+    "QUICKSTART.md"
+  ],
+  "matched_modules": [
+    "desktop-bridge"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/desktop-bridge.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.require_tests_for_behavior_change",
+    "desktop-bridge.fallback_paths_must_emit_user-visible-status"
+  ],
+  "constraints": [
+    "Do not change backend WebSocket protocol.",
+    "Do not persist profile token into VS Code global settings automatically.",
+    "Prefer explicit VS Code settings over the local profile when both exist.",
+    "Ignore expired local profiles."
+  ],
+  "required_checks": [
+    "cd vscode-bridge && npm run compile",
+    "cd vscode-bridge && npm run test:runtime",
+    "powershell -ExecutionPolicy Bypass -File scripts/v1_desktop_gate.ps1"
+  ],
+  "suggested_write_scope": [
+    "vscode-bridge/**",
+    "docs/**",
+    ".steward/tasks/ext-pocketvibe-bridge-auto-profile-020.json"
+  ],
+  "done_when": [
+    "Bridge resolves backend URL and auth token from the ignored local profile when VS Code settings are empty.",
+    "Explicit VS Code settings and environment variables still take precedence.",
+    "Expired local profiles are ignored.",
+    "Runtime tests cover profile path resolution and expiry behavior."
+  ],
+  "decision": "task_ready"
+}

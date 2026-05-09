@@ -43,7 +43,9 @@ Other runtimes and host families can be reported as degraded or unsupported, but
 3. Run `./start.ps1` from the repo root on Windows.
    By default this builds the mobile PWA and serves it from the backend under `/app/`, so the phone link uses one desktop service instead of separate frontend and backend ports.
    For frontend development, run `./start.ps1 -Dev` to keep the Vite dev server on port `5173`.
-4. Install the VS Code bridge from `vscode-bridge/` and configure:
+4. Install or run the VS Code bridge from `vscode-bridge/`.
+   In product mode, the backend writes `.pocket-vibe/desktop-connection.json` and the bridge can read the backend URL and token automatically when VS Code settings are empty.
+   Manual settings remain available as fallback:
    - `pocketVibe.backendWsUrl`
    - `pocketVibe.authToken`
 5. Open the printed pairing page URL on the desktop, or let Pocket Vibe open it automatically, then scan that browser QR with your phone.

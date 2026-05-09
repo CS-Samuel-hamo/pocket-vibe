@@ -1,10 +1,25 @@
 import * as vscode from 'vscode';
+import {
+    profileAuthToken,
+    profileBackendUrl,
+    readLocalConnectionProfile,
+    resolveLocalConnectionProfilePath,
+} from './localConnectionProfile';
+
+function workspaceRootPaths(): string[] {
+    return (vscode.workspace.workspaceFolders || []).map((folder) => folder.uri.fsPath);
+}
+
+function readWorkspaceProfile() {
+    return readLocalConnectionProfile(resolveLocalConnectionProfilePath(workspaceRootPaths()));
+}
 
 export async function resolveBackendUrl(promptIfMissing = true): Promise<string | null> {
     const config = vscode.workspace.getConfiguration('pocketVibe');
     let backendUrl =
         config.get<string>('backendWsUrl') ||
         process.env.POCKET_VIBE_BACKEND_WS_URL ||
+        profileBackendUrl(readWorkspaceProfile()) ||
         'ws://127.0.0.1:8000/ws';
     backendUrl = backendUrl.trim();
 
@@ -25,7 +40,12 @@ export async function resolveBackendUrl(promptIfMissing = true): Promise<string 
 
 export async function resolveAuthToken(promptIfMissing = false): Promise<string | null> {
     const config = vscode.workspace.getConfiguration('pocketVibe');
-    const existingToken = (config.get<string>('authToken') || process.env.POCKET_VIBE_TOKEN || '').trim();
+    const existingToken = (
+        config.get<string>('authToken') ||
+        process.env.POCKET_VIBE_TOKEN ||
+        profileAuthToken(readWorkspaceProfile()) ||
+        ''
+    ).trim();
     if (existingToken) {
         return existingToken;
     }

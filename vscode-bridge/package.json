@@ -75,7 +75,7 @@
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
-        "test:runtime": "npm run compile && node out/test/runtimeRegistry.test.js && node out/test/runtimeLaunch.test.js && node out/test/codexExec.test.js",
+        "test:runtime": "npm run compile && node out/test/runtimeRegistry.test.js && node out/test/runtimeLaunch.test.js && node out/test/codexExec.test.js && node out/test/localConnectionProfile.test.js",
         "pretest": "npm run compile && npm run lint",
         "lint": "eslint src --ext ts",
         "test": "node ./out/test/runTest.js"

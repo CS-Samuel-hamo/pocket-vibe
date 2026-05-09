@@ -64,7 +64,11 @@ For the supported remote access paths and failure checklist, see [docs/remote_ac
 
 ## 3. Configure the VS Code bridge
 
-Open the `vscode-bridge/` project in VS Code, build or run the extension, then set:
+Open the `vscode-bridge/` project in VS Code, then build or run the extension.
+
+In product mode, the backend writes `.pocket-vibe/desktop-connection.json` in the repo root. The bridge reads that ignored local profile automatically when VS Code settings are empty.
+
+Manual settings remain available as fallback:
 
 - `pocketVibe.backendWsUrl`
   Example: `ws://127.0.0.1:8000/ws`
