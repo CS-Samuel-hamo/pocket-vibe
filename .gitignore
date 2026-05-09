@@ -74,6 +74,7 @@ build/
 .pv-vscode-extensions/
 .pv-vscode-userdata/
 .pv-vscode-userdata-projects/
+.pocket-vibe/
 *.vsix
 out/
 /.antigravity/

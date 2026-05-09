@@ -17,6 +17,10 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from backend.connection_manager import ConnectionManager, ConnectionManagerDependencies
 from backend.connection_preflight import build_connection_preflight
+from backend.desktop_connection_profile import (
+    build_desktop_connection_profile,
+    write_desktop_connection_profile,
+)
 from backend.driver_output import broadcast_driver_packets
 from backend.file_api import (
     list_files_payload,
@@ -591,10 +595,18 @@ async def _print_startup_qr() -> None:
         os.system("")
 
     pairing = await _build_pairing_context()
+    profile = build_desktop_connection_profile(
+        pairing,
+        token=AUTH_TOKEN,
+        auth_mode=AUTH_MODE,
+        expires_at=TOKEN_EXPIRES_AT,
+    )
+    profile_path = write_desktop_connection_profile(Path(project_root), profile)
     target_url = pairing["target_url"]
     print("-" * 56)
     print("Pocket Vibe Session Ready")
     print(f"Token: {AUTH_TOKEN}")
+    print(f"Desktop Profile: {profile_path}")
     print(f"Primary Link: {target_url}")
     print(f"Pairing Page: {pairing['pairing_page_url']}")
     print("Do not scan the terminal '#' preview. Open the Pairing Page in your desktop browser.")

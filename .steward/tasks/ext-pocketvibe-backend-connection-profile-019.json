@@ -1,0 +1,52 @@
+{
+  "task_id": "ext-pocketvibe-backend-connection-profile-019",
+  "task": "Make the backend write a local desktop connection profile at startup so desktop integrations can discover the current backend URL and token without requiring users to copy values manually.",
+  "task_type": "productization",
+  "risk_level": "medium",
+  "task_mode": "implementation",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "backend/main.py",
+    "backend/pairing_context.py",
+    "start.ps1",
+    "docs/v1_done_definition.md"
+  ],
+  "matched_modules": [
+    "backend-api",
+    "desktop-bridge"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/backend-api.yaml",
+    ".steward/modules/desktop-bridge.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries",
+    "global.require_tests_for_behavior_change",
+    "backend-api.no_protocol_drift"
+  ],
+  "constraints": [
+    "Do not modify the VS Code bridge in this backend task.",
+    "Do not change WebSocket authentication behavior.",
+    "Do not commit generated connection profiles or secrets.",
+    "The generated profile must live in an ignored local runtime directory."
+  ],
+  "required_checks": [
+    "pytest tests/test_desktop_connection_profile.py tests/test_backend_main.py -q",
+    "python scripts/quality_gate.py backend/desktop_connection_profile.py backend/main.py"
+  ],
+  "suggested_write_scope": [
+    "backend/**",
+    "tests/**",
+    ".gitignore",
+    ".steward/tasks/ext-pocketvibe-backend-connection-profile-019.json"
+  ],
+  "done_when": [
+    "Backend startup writes an ignored local JSON profile with backend WS URL, API URL, token, auth mode, expiry, and pairing page.",
+    "Tests cover profile payload construction and writing.",
+    "Generated profile location is ignored by Git."
+  ],
+  "decision": "task_ready"
+}
