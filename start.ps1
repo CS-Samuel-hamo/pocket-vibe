@@ -2,7 +2,8 @@ param(
     [string]$TargetDir = ".",
     [int]$BackendPort = 8000,
     [int]$FrontendPort = 5173,
-    [switch]$Dev
+    [switch]$Dev,
+    [switch]$SkipPrereqCheck
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,6 +13,17 @@ Write-Host "Target directory: $TargetDir" -ForegroundColor Gray
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $root
+
+if (-not $SkipPrereqCheck) {
+    $prereqArgs = @("-BackendPort", $BackendPort, "-Quiet")
+    if ($Dev) {
+        $prereqArgs += @("-FrontendPort", $FrontendPort)
+    } else {
+        $prereqArgs += "-SkipFrontendPort"
+    }
+
+    & (Join-Path $root "scripts\check_windows_prereqs.ps1") @prereqArgs
+}
 
 $env:PYTHONPATH = "."
 $env:TARGET_DIR = $TargetDir
