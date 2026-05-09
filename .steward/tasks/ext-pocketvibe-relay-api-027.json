@@ -1,0 +1,27 @@
+{
+  "id": "ext-pocketvibe-relay-api-027",
+  "title": "Expose the Relay MVP core through a default-off HTTP API",
+  "module": "backend-api",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "backend/relay_core.py",
+    "backend/main.py",
+    "tests/test_relay_core.py"
+  ],
+  "outputs": [
+    "Relay HTTP router supports host registration, pairing code creation, mobile pairing, presence, revocation, encrypted envelope append, and cursor replay",
+    "Relay API remains disabled unless POCKET_VIBE_RELAY_API is explicitly enabled",
+    "Backend tests cover default-off mounting and the API happy path"
+  ],
+  "acceptance_commands": [
+    "pytest tests/test_relay_api.py tests/test_backend_main.py -q",
+    "python scripts/quality_gate.py backend/relay_api.py backend/main.py"
+  ],
+  "do_not_do": [
+    "Do not add persistent account storage",
+    "Do not require cloud DNS, certificates, or payment accounts",
+    "Do not route existing LAN WebSocket traffic through relay in this task",
+    "Do not accept plaintext payload envelopes"
+  ]
+}

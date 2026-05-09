@@ -42,6 +42,7 @@ from backend.protocol_router import (
     ProtocolRouterDependencies,
 )
 from backend.project_state_payload import build_project_state_payload
+from backend.relay_api import build_relay_router
 from backend.room_snapshot_payload import build_room_snapshot_payload
 from backend.snapshots import build_snapshot_packets
 from backend.socket_messages import (
@@ -100,6 +101,9 @@ MOBILE_PWA_MOUNT = mount_mobile_pwa(
     app,
     enabled=should_serve_frontend_from_backend(),
 )
+RELAY_API_ENABLED = _env_flag("POCKET_VIBE_RELAY_API", False)
+if RELAY_API_ENABLED:
+    app.include_router(build_relay_router())
 
 crypto = Crypto()
 message_buffer = MessageBuffer(settings.MESSAGE_BUFFER_SIZE)
