@@ -41,6 +41,23 @@ def _replay(client, session_id, device_id, cursor=0):
     )
 
 
+def _assert_plaintext_rejected(response):
+    assert response.status_code == 400
+    assert response.json()["reason"] == "payload_not_encrypted"
+    assert response.json()["error_code"] == "PV-DIAG-002"
+
+
+def _append_ciphertext_message(client, session_id, device_id):
+    response = _post_message(
+        client,
+        session_id,
+        device_id,
+        {"message_type": "prompt.submit", "ciphertext": "aaa", "nonce": "n1"},
+    )
+    assert response.status_code == 200
+    assert response.json()["next_cursor"] == 1
+
+
 def test_relay_api_pairs_routes_and_replays_encrypted_messages():
     client = _client()
     host_payload, mobile_payload = _pair_mobile(client)
@@ -57,17 +74,9 @@ def test_relay_api_pairs_routes_and_replays_encrypted_messages():
         mobile_payload["device_id"],
         {"message_type": "prompt.submit", "text": "plaintext"},
     )
-    assert plaintext.status_code == 400
-    assert plaintext.json()["reason"] == "payload_not_encrypted"
+    _assert_plaintext_rejected(plaintext)
 
-    appended = _post_message(
-        client,
-        host_payload["session_id"],
-        mobile_payload["device_id"],
-        {"message_type": "prompt.submit", "ciphertext": "aaa", "nonce": "n1"},
-    )
-    assert appended.status_code == 200
-    assert appended.json()["next_cursor"] == 1
+    _append_ciphertext_message(client, host_payload["session_id"], mobile_payload["device_id"])
 
     replay = _replay(client, host_payload["session_id"], mobile_payload["device_id"])
     assert replay.status_code == 200
@@ -84,3 +93,16 @@ def test_relay_api_revokes_devices_immediately():
     assert revoked.status_code == 200
     assert replay.status_code == 400
     assert replay.json()["reason"] == "device_not_authorized"
+    assert replay.json()["error_code"] == "PV-AUTH-003"
+
+
+def test_relay_api_returns_error_code_for_expired_or_invalid_pairing():
+    client = _client()
+
+    invalid = client.post("/api/relay/pair", json={"code": "missing"})
+    orphan_code = client.post("/api/relay/hosts/missing/pairing-code", json={})
+
+    assert invalid.status_code == 400
+    assert invalid.json()["error_code"] == "PV-AUTH-003"
+    assert orphan_code.status_code == 400
+    assert orphan_code.json()["error_code"] == "PV-RELAY-004"

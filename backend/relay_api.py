@@ -10,19 +10,38 @@ from fastapi.responses import JSONResponse
 from backend.relay_core import RelayCore, RelayResult
 
 
+RELAY_REASON_ERROR_CODES = {
+    "host_not_registered": "PV-RELAY-004",
+    "session_not_found": "PV-RELAY-002",
+    "short_code_invalid": "PV-AUTH-003",
+    "short_code_consumed": "PV-AUTH-003",
+    "short_code_expired": "PV-AUTH-002",
+    "device_not_found": "PV-AUTH-003",
+    "device_not_authorized": "PV-AUTH-003",
+    "payload_not_encrypted": "PV-DIAG-002",
+}
+
+
+def _relay_non_empty_fields(fields: Dict[str, Any]) -> Dict[str, Any]:
+    return {key: value for key, value in fields.items() if value not in (None, [])}
+
+
 def relay_result_payload(result: RelayResult) -> Dict[str, Any]:
-    payload: Dict[str, Any] = {
+    return {
         "ok": result.ok,
         "status": result.status,
         "reason": result.reason,
+        **_relay_non_empty_fields(
+            {
+                "session_id": result.session_id,
+                "device_id": result.device_id,
+                "code": result.code,
+                "next_cursor": result.next_cursor,
+                "error_code": RELAY_REASON_ERROR_CODES.get(result.reason),
+                "messages": result.messages,
+            }
+        ),
     }
-    for key in ("session_id", "device_id", "code", "next_cursor"):
-        value = getattr(result, key)
-        if value is not None:
-            payload[key] = value
-    if result.messages:
-        payload["messages"] = result.messages
-    return payload
 
 
 def relay_response(result: RelayResult) -> JSONResponse:
