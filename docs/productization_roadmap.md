@@ -2,6 +2,8 @@
 
 Updated: 2026-04-23
 
+Current completion status is tracked in [product_completion_status.md](/D:/AI_projects/Pocket_Vibe/docs/product_completion_status.md).
+
 ## Current Assessment
 
 Pocket Vibe already proves the core idea:
