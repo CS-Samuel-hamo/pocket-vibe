@@ -41,6 +41,8 @@ Other runtimes and host families can be reported as degraded or unsupported, but
 1. Install Python 3.11+ and Node.js 18+.
 2. Copy `.env.example` to `.env` if you want persistent configuration.
 3. Run `./start.ps1` from the repo root on Windows.
+   By default this builds the mobile PWA and serves it from the backend under `/app/`, so the phone link uses one desktop service instead of separate frontend and backend ports.
+   For frontend development, run `./start.ps1 -Dev` to keep the Vite dev server on port `5173`.
 4. Install the VS Code bridge from `vscode-bridge/` and configure:
    - `pocketVibe.backendWsUrl`
    - `pocketVibe.authToken`
@@ -56,6 +58,7 @@ See [QUICKSTART.md](/D:/AI_projects/Pocket_Vibe/QUICKSTART.md) for the exact loc
 - Backend tests: `pytest tests -q`
 - Frontend capability tests: `cd frontend && npm run test:capabilities`
 - Frontend build: `cd frontend && npm run build`
+- Product-mode PWA build: `cd frontend && $env:VITE_PWA_BASE='/app/'; npm run build`
 - Bridge compile: `cd vscode-bridge && npm run compile`
 
 The real-phone v1 acceptance runbook is [v1_acceptance_script.md](/D:/AI_projects/Pocket_Vibe/docs/v1_acceptance_script.md).

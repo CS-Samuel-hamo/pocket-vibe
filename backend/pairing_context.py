@@ -9,6 +9,8 @@ from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import psutil
 
+from backend.static_pwa import backend_mobile_base_url, should_serve_frontend_from_backend
+
 
 def is_valid_adapter_ip(addr: Any) -> bool:
     if addr.family != socket.AF_INET:
@@ -84,15 +86,25 @@ def normalize_base_url(url: str, default_path: str = "") -> str:
     return urlunparse(normalized)
 
 
-def resolve_mobile_base_url(local_ip: str) -> str:
+def _configured_mobile_base_url(local_ip: str) -> str:
     configured = os.getenv("PUBLIC_FRONTEND_URL", "").strip() or os.getenv("VITE_FRONTEND_URL", "").strip()
     if not configured:
-        return f"http://{local_ip}:5173/"
+        return ""
     normalized = replace_loopback_host(configured, local_ip)
     parsed = urlparse(normalized)
     if not parsed.scheme:
-        return f"http://{local_ip}:5173/"
+        return ""
     return urlunparse(parsed._replace(path="/")) if not parsed.path else normalized
+
+
+def _default_mobile_base_url(local_ip: str, port: int) -> str:
+    if should_serve_frontend_from_backend():
+        return backend_mobile_base_url(local_ip, port)
+    return f"http://{local_ip}:5173/"
+
+
+def resolve_mobile_base_url(local_ip: str, port: int = 5173) -> str:
+    return _configured_mobile_base_url(local_ip) or _default_mobile_base_url(local_ip, port)
 
 
 def env_flag(name: str, default: bool) -> bool:
@@ -150,7 +162,7 @@ def build_pairing_context_payload(
     expires_at: Optional[float],
     port: int,
 ) -> Dict[str, Any]:
-    mobile_base_url = resolve_mobile_base_url(local_ip)
+    mobile_base_url = resolve_mobile_base_url(local_ip, port)
     api_base_url = resolve_api_base_url(local_ip, port)
     backend_ws_url = resolve_backend_ws_url(local_ip, port)
     target_url = build_mobile_target_url(

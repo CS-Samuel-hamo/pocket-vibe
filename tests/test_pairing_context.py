@@ -25,8 +25,17 @@ def test_replace_loopback_host_preserves_path_and_port():
 def test_resolve_mobile_base_url_rewrites_configured_loopback(monkeypatch):
     monkeypatch.setenv("VITE_FRONTEND_URL", "http://localhost:5173")
     monkeypatch.delenv("PUBLIC_FRONTEND_URL", raising=False)
+    monkeypatch.delenv("SERVE_FRONTEND_FROM_BACKEND", raising=False)
 
     assert resolve_mobile_base_url("192.168.1.55") == "http://192.168.1.55:5173/"
+
+
+def test_resolve_mobile_base_url_uses_backend_hosted_pwa(monkeypatch):
+    monkeypatch.delenv("VITE_FRONTEND_URL", raising=False)
+    monkeypatch.delenv("PUBLIC_FRONTEND_URL", raising=False)
+    monkeypatch.setenv("SERVE_FRONTEND_FROM_BACKEND", "1")
+
+    assert resolve_mobile_base_url("192.168.1.55", port=8000) == "http://192.168.1.55:8000/app/"
 
 
 def test_build_pairing_context_payload_adds_remote_query_values(monkeypatch):
@@ -47,3 +56,27 @@ def test_build_pairing_context_payload_adds_remote_query_values(monkeypatch):
     assert query["token"] == ["token-1"]
     assert query["api_base_url"] == ["https://relay.example.com"]
     assert query["backend_ws_url"] == ["wss://relay.example.com/ws"]
+
+
+def test_build_pairing_context_payload_targets_backend_pwa_in_product_mode(monkeypatch):
+    monkeypatch.delenv("VITE_FRONTEND_URL", raising=False)
+    monkeypatch.delenv("PUBLIC_FRONTEND_URL", raising=False)
+    monkeypatch.delenv("PUBLIC_API_BASE_URL", raising=False)
+    monkeypatch.delenv("PUBLIC_BACKEND_WS_URL", raising=False)
+    monkeypatch.setenv("SERVE_FRONTEND_FROM_BACKEND", "true")
+
+    result = build_pairing_context_payload(
+        "192.168.1.55",
+        auth_token="token-1",
+        auth_mode="configured",
+        expires_at=None,
+        port=8000,
+    )
+    parsed = urlparse(result["target_url"])
+    query = parse_qs(parsed.query)
+
+    assert parsed.scheme == "http"
+    assert parsed.netloc == "192.168.1.55:8000"
+    assert parsed.path == "/app/"
+    assert query["api_base_url"] == ["http://192.168.1.55:8000"]
+    assert query["backend_ws_url"] == ["ws://192.168.1.55:8000/ws"]

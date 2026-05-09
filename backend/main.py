@@ -45,6 +45,7 @@ from backend.socket_messages import (
     routeable_socket_payload,
     safe_json_loads,
 )
+from backend.static_pwa import mount_mobile_pwa, should_serve_frontend_from_backend
 from backend.websocket_lifecycle import (
     WebSocketLifecycleDependencies,
     run_websocket_lifecycle,
@@ -90,6 +91,10 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+MOBILE_PWA_MOUNT = mount_mobile_pwa(
+    app,
+    enabled=should_serve_frontend_from_backend(),
 )
 
 crypto = Crypto()
