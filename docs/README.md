@@ -10,6 +10,9 @@ The authoritative v1 developer docs are the repo-root files:
 - `docs/v1_release_manifest.md`
 - `docs/v1_remaining_work.md`
 - `docs/git_baseline_plan.md`
+- `docs/PRIVACY_POLICY.md`
+- `docs/SECURITY_AND_TRUST.md`
+- `docs/error_codes.md`
 
 Historical phase documents remain for reference, but the current implementation target is:
 

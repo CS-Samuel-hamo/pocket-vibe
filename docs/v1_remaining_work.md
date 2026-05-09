@@ -14,6 +14,7 @@ This file tracks the gap between the current demoable prototype and a stable v1 
 - VS Code workspace-folder based project switching is implemented through `Tools -> Projects -> Open Picker`.
 - Product startup can build the PWA and let the backend serve it under `/app/`, while `start.ps1 -Dev` keeps the old Vite dev path available.
 - Backend startup writes an ignored local desktop connection profile, and the VS Code bridge can auto-discover backend URL/token from it when manual settings are empty.
+- Privacy, security/trust, and error-code docs now describe Pocket Vibe's current local mode and planned metadata-first relay instead of the legacy OpenVibe/OpenCode/Aider story.
 - Frontend capability tests and production build pass after the latest UI changes.
 - The v1 desktop gate passed on 2026-05-04 after the latest localization and recovery UX commits.
 
