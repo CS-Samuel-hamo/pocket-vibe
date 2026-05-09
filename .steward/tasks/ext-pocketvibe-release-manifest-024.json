@@ -1,0 +1,27 @@
+{
+  "id": "ext-pocketvibe-release-manifest-024",
+  "title": "Refresh the v1 release manifest for the current productization branch",
+  "module": "core-runtime",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "docs/v1_release_manifest.md",
+    "git status --short",
+    "scripts/v1_desktop_gate.ps1"
+  ],
+  "outputs": [
+    "Current untracked files are classified as stage, ignore, archive, or needs-human-review",
+    "Release command sequence points to the current v1 desktop gate",
+    "Manifest no longer claims stale safe-to-stage items that are not in the current review queue"
+  ],
+  "acceptance_commands": [
+    "git status --short",
+    "python scripts/quality_gate.py docs/v1_release_manifest.md"
+  ],
+  "do_not_do": [
+    "Do not delete, move, or archive any untracked file",
+    "Do not stage historical backlog files",
+    "Do not change product runtime behavior",
+    "Do not create a release tag in this task"
+  ]
+}

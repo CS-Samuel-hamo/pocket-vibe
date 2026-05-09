@@ -1,6 +1,6 @@
 # Pocket Vibe v1 Release Manifest
 
-Updated: 2026-05-01
+Updated: 2026-05-09
 
 This manifest defines what belongs in the v1 baseline commit and what must stay local.
 
@@ -40,15 +40,30 @@ The following categories need human review before they enter the baseline:
 
 ## Current Untracked Review Queue
 
-As of 2026-05-02, the remaining untracked files should be handled as follows before a release baseline:
+As of 2026-05-09, the remaining untracked files must stay out of product commits until they are deliberately classified:
 
-- Release infrastructure, now validated against existing repo commands and safe to stage: `.github/`, `.pre-commit-config.yaml`.
-- Module docs, now updated for current v1 wording and safe to stage: `backend/README.md`, `frontend/README.md`.
-- Marketing or distribution backlog, do not stage for v1 runtime baseline by default: `docs/App_Store_Description.md`, `docs/Beta_Invites.md`, `docs/Discord_Post.md`.
-- Historical planning backlog, keep local or move to archive after review: `Phase 2 Logic & Migration.md`, `Restarting System Components.md`, `docs/implementation_plan_phase2.md`, `docs/implementation_plan_phase3.md`, `plan.md`, `task.md`.
-- Legacy agent/scaffold material, do not stage without a separate template decision: `GEMINI.md`, `agents.md`, `scaffold.py`, `scaffold_ai_project.ps1`, `init_cluster.ps1`, `init_cluster_bootstrap.ps1`, `docs/.antigravity/`.
-- Legacy startup alias, stage only if it remains a documented supported path: `start_openvibe.ps1`.
-- Infrastructure folder, review independently before staging: `infra/`.
+| Path | Classification | Decision |
+| --- | --- | --- |
+| `docs/App_Store_Description.md` | `archive` | Marketing backlog. Keep outside the v1 runtime baseline until M5 distribution work starts. |
+| `docs/Beta_Invites.md` | `archive` | Marketing backlog. Keep outside the v1 runtime baseline until beta onboarding is designed. |
+| `docs/Discord_Post.md` | `archive` | Marketing backlog. Keep outside the v1 runtime baseline until community launch is approved. |
+| `Phase 2 Logic & Migration.md` | `needs-human-review` | Historical planning note. Review before archiving or folding into roadmap docs. |
+| `Restarting System Components.md` | `needs-human-review` | Historical operations note. Review before converting into current runbook content. |
+| `docs/implementation_plan_phase2.md` | `needs-human-review` | Historical plan. Do not stage without reconciling with the current completion plan. |
+| `docs/implementation_plan_phase3.md` | `needs-human-review` | Historical plan. Do not stage without reconciling with the current completion plan. |
+| `plan.md` | `needs-human-review` | Legacy top-level planning file. Do not stage until ownership and relevance are clear. |
+| `task.md` | `needs-human-review` | Legacy top-level task file. Do not stage until ownership and relevance are clear. |
+| `GEMINI.md` | `needs-human-review` | External agent instruction file. Do not stage unless supported as a product integration. |
+| `agents.md` | `needs-human-review` | External agent instruction file. Do not stage unless supported as a product integration. |
+| `docs/.antigravity/` | `needs-human-review` | External agent config/docs. Review as a future runtime support artifact, not v1 core. |
+| `scaffold.py` | `archive` | Old scaffold helper. Keep out of product baseline unless rebuilt as a supported template tool. |
+| `scaffold_ai_project.ps1` | `archive` | Old scaffold helper. Keep out of product baseline unless rebuilt as a supported template tool. |
+| `init_cluster.ps1` | `archive` | Old cluster/bootstrap helper. Not part of PWA-first single-developer v1. |
+| `init_cluster_bootstrap.ps1` | `archive` | Old cluster/bootstrap helper. Not part of PWA-first single-developer v1. |
+| `start_openvibe.ps1` | `needs-human-review` | Legacy startup alias. Stage only if it is intentionally kept as a compatibility alias. |
+| `infra/` | `needs-human-review` | Infrastructure work must be reviewed separately before Relay MVP or deployment work. |
+
+No current untracked file is classified as `stage` for the v1 product baseline.
 
 ## Current Git Metadata Blocker
 
@@ -56,25 +71,18 @@ At the start of baseline work, `backend/` and `frontend/` were nested Git worktr
 
 ## Baseline Command Sequence
 
-Use this order when preparing the first v1 baseline commit:
+Use this order when preparing a v1 productization commit:
 
 ```powershell
 git status --short
-pytest tests -q
-cd frontend
-npm run test:capabilities
-npm run build
-cd ..\vscode-bridge
-npm run compile
-cd ..
-git add README.md QUICKSTART.md .gitignore docs/v1_done_definition.md docs/v1_release_manifest.md docs/git_baseline_plan.md docs/README.md tasks/todo.md .steward/reports/workstreams/pocket-vibe-v1-active-plan.md
+powershell -ExecutionPolicy Bypass -File scripts\v1_desktop_gate.ps1
 git status --short
 ```
 
-After the Git metadata blocker is resolved, stage the full source baseline:
+Stage only the files owned by the current task brief:
 
 ```powershell
-git add README.md QUICKSTART.md .gitignore docs/ backend/ src/ frontend/ vscode-bridge/ tests/ scripts/ start.ps1 start.bat tasks/ .steward/
+git add <task-owned-files>
 git status --short
 ```
 
