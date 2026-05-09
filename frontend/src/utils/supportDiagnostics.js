@@ -66,6 +66,46 @@ export function buildRecoveryHints({
     return [...new Set(hints)].slice(0, 4);
 }
 
+export function getPrimaryDiagnosticErrorCode({
+    status,
+    sessionInfo = {},
+    activeRuntime = null,
+    diagnostics = {},
+} = {}) {
+    if (status && status !== 'connected') {
+        return 'PV-CONN-002';
+    }
+
+    if (!sessionInfo.bridge_connected) {
+        return 'PV-CONN-003';
+    }
+
+    if (diagnostics.lastFailureReason === 'unsupported') {
+        return 'PV-RUN-003';
+    }
+
+    if (!activeRuntime) {
+        return 'PV-RUN-001';
+    }
+
+    if (activeRuntime.health === 'degraded') {
+        return 'PV-RUN-002';
+    }
+
+    if (activeRuntime.health === 'offline') {
+        return 'PV-RUN-001';
+    }
+
+    if (
+        diagnostics.lastFailureReason &&
+        !['No recent failures.', '最近没有失败。'].includes(diagnostics.lastFailureReason)
+    ) {
+        return 'PV-RUN-004';
+    }
+
+    return 'none';
+}
+
 export function buildSupportDebugBundle({
     status,
     sessionInfo = {},
@@ -82,10 +122,18 @@ export function buildSupportDebugBundle({
             return `${runtime.id}:${runtime.health}:${runtime.attached ? 'attached' : 'detached'}:${supportCount}`;
         }).join(' | ')
         : 'none';
+    const primaryErrorCode = getPrimaryDiagnosticErrorCode({
+        status,
+        sessionInfo,
+        activeRuntime,
+        diagnostics,
+    });
 
     return [
         'Pocket Vibe Debug Bundle',
         `Timestamp: ${timestamp}`,
+        `Primary error code: ${primaryErrorCode}`,
+        'Payload redaction: default (prompt/output/source omitted)',
         `Client status: ${normalizeStatusLabel(status)}`,
         `Session token: ${maskToken(connectionProfile.token || sessionInfo.room_token || '')}`,
         `Saved profile: ${connectionProfile.hasSavedConfig ? 'yes' : 'no'}`,

@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
     buildRecoveryHints,
     buildSupportDebugBundle,
+    getPrimaryDiagnosticErrorCode,
     maskToken,
 } from '../src/utils/supportDiagnostics.js';
 
@@ -35,6 +36,43 @@ test('buildRecoveryHints surfaces connection and bridge issues', () => {
     assert.ok(hints.some((hint) => /还没有可用运行时/i.test(hint)));
 });
 
+test('getPrimaryDiagnosticErrorCode classifies connection and runtime failures', () => {
+    assert.equal(
+        getPrimaryDiagnosticErrorCode({
+            status: 'disconnected',
+            sessionInfo: { bridge_connected: false },
+        }),
+        'PV-CONN-002',
+    );
+
+    assert.equal(
+        getPrimaryDiagnosticErrorCode({
+            status: 'connected',
+            sessionInfo: { bridge_connected: false },
+        }),
+        'PV-CONN-003',
+    );
+
+    assert.equal(
+        getPrimaryDiagnosticErrorCode({
+            status: 'connected',
+            sessionInfo: { bridge_connected: true },
+            diagnostics: { lastFailureReason: 'unsupported' },
+            activeRuntime: readyRuntime,
+        }),
+        'PV-RUN-003',
+    );
+
+    assert.equal(
+        getPrimaryDiagnosticErrorCode({
+            status: 'connected',
+            sessionInfo: { bridge_connected: true },
+            activeRuntime: { ...readyRuntime, health: 'degraded' },
+        }),
+        'PV-RUN-002',
+    );
+});
+
 test('buildSupportDebugBundle includes core runtime and connection fields', () => {
     const bundle = buildSupportDebugBundle({
         status: 'connected',
@@ -57,6 +95,8 @@ test('buildSupportDebugBundle includes core runtime and connection fields', () =
     });
 
     assert.match(bundle, /Timestamp: 2026-04-19T10:00:00.000Z/);
+    assert.match(bundle, /Primary error code: none/);
+    assert.match(bundle, /Payload redaction: default \(prompt\/output\/source omitted\)/);
     assert.match(bundle, /Client status: 已连接/);
     assert.match(bundle, /Session token: vibe...safe/);
     assert.match(bundle, /Backend WS: ws:\/\/100\.88\.12\.34:8000\/ws/);
