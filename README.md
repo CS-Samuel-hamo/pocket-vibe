@@ -53,9 +53,11 @@ Other runtimes and host families can be reported as degraded or unsupported, but
    You can generate the exact `.env` snippet with `.\scripts\prepare_remote_access.ps1`.
 
 See [QUICKSTART.md](/D:/AI_projects/Pocket_Vibe/QUICKSTART.md) for the exact local workflow, [remote_access_guide.md](/D:/AI_projects/Pocket_Vibe/docs/remote_access_guide.md) for supported cross-network setups, [v1_release_manifest.md](/D:/AI_projects/Pocket_Vibe/docs/v1_release_manifest.md) for what belongs in the v1 baseline commit, and [git_baseline_plan.md](/D:/AI_projects/Pocket_Vibe/docs/git_baseline_plan.md) for the current worktree cleanup decision.
+For a Windows-first product startup path, use [windows_first_startup.md](/D:/AI_projects/Pocket_Vibe/docs/windows_first_startup.md).
 
 ## Verification
 
+- Windows prereq check: `.\scripts\check_windows_prereqs.ps1 -SkipFrontendPort`
 - v1 desktop gate: `.\scripts\v1_desktop_gate.ps1`
 - Backend tests: `pytest tests -q`
 - Frontend capability tests: `cd frontend && npm run test:capabilities`

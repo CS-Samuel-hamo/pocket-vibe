@@ -5,6 +5,12 @@
 From the repo root:
 
 ```powershell
+powershell -ExecutionPolicy Bypass -File scripts\check_windows_prereqs.ps1 -SkipFrontendPort
+```
+
+If that reports a required failure, fix the printed action first. Then run:
+
+```powershell
 ./start.ps1
 ```
 
@@ -139,3 +145,5 @@ phone PWA -> FastAPI backend -> VS Code bridge -> codex-cli terminal
 The five-minute acceptance demo is defined in [docs/v1_acceptance_script.md](/D:/AI_projects/Pocket_Vibe/docs/v1_acceptance_script.md) and governed by [docs/v1_done_definition.md](/D:/AI_projects/Pocket_Vibe/docs/v1_done_definition.md).
 
 If this path is not stable, do not expand native host adapters, dashboards, or extra runtime features.
+
+For a more complete Windows-first runbook, see [docs/windows_first_startup.md](/D:/AI_projects/Pocket_Vibe/docs/windows_first_startup.md).
