@@ -95,7 +95,7 @@ const ConsolePanel = ({ messages, messagesEndRef, thinking }) => {
             <div className="terminal-label">
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                     <Terminal size={14} style={{ marginRight: 6 }} />
-                    CONSOLE
+                    CONVERSATION
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {thinking && (

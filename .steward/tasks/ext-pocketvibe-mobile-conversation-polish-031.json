@@ -1,0 +1,27 @@
+{
+  "id": "ext-pocketvibe-mobile-conversation-polish-031",
+  "title": "Rename the mobile console surface into a product conversation feed",
+  "module": "mobile-pwa",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "frontend/src/components/ConsolePanel.jsx",
+    "frontend/src/utils/consoleEntries.js",
+    "frontend/tests/consoleEntries.test.js"
+  ],
+  "outputs": [
+    "Mobile feed no longer presents itself as a raw console",
+    "Command output remains available but is labeled as desktop activity",
+    "Existing console-entry grouping and filtering behavior remains unchanged"
+  ],
+  "acceptance_commands": [
+    "cd frontend && npm run test:capabilities",
+    "cd frontend && npm run build"
+  ],
+  "do_not_do": [
+    "Do not change message filtering or replay semantics",
+    "Do not remove command output visibility",
+    "Do not redesign the whole mobile layout in this task",
+    "Do not stage unrelated untracked files"
+  ]
+}
