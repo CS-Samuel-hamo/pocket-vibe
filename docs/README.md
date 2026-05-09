@@ -13,6 +13,7 @@ The authoritative v1 developer docs are the repo-root files:
 - `docs/PRIVACY_POLICY.md`
 - `docs/SECURITY_AND_TRUST.md`
 - `docs/error_codes.md`
+- `docs/relay_mvp.md`
 
 Historical phase documents remain for reference, but the current implementation target is:
 
