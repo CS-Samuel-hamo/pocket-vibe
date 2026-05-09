@@ -85,10 +85,12 @@ class RelayCore:
         clock: Callable[[], float] = time.time,
         id_factory: Optional[Callable[[str], str]] = None,
         code_factory: Optional[Callable[[], str]] = None,
+        max_messages_per_session: Optional[int] = 200,
     ) -> None:
         self._clock = clock
         self._id_factory = id_factory or self._default_id
         self._code_factory = code_factory or self._default_code
+        self._max_messages_per_session = max_messages_per_session
         self._sessions: Dict[str, RelaySession] = {}
         self._host_sessions: Dict[str, str] = {}
         self._pairing_challenges: Dict[str, PairingChallenge] = {}
@@ -124,6 +126,7 @@ class RelayCore:
         return RelayResult(SUCCESS, "host_registered", session_id=session_id, device_id=device_id)
 
     def open_pairing_code(self, host_id: str, *, ttl_seconds: int = 120) -> RelayResult:
+        self.cleanup_pairing_challenges()
         session_id = self._host_sessions.get(str(host_id or "").strip())
         if not session_id:
             return RelayResult(FAILED, "host_not_registered")
@@ -159,6 +162,17 @@ class RelayCore:
         )
         challenge.consumed_at = now
         return RelayResult(SUCCESS, "device_paired", session_id=session.session_id, device_id=device_id)
+
+    def cleanup_pairing_challenges(self) -> int:
+        now = self._clock()
+        removable_codes = [
+            code
+            for code, challenge in self._pairing_challenges.items()
+            if challenge.consumed_at is not None or now > challenge.expires_at
+        ]
+        for code in removable_codes:
+            self._pairing_challenges.pop(code, None)
+        return len(removable_codes)
 
     def revoke_device(self, session_id: str, device_id: str) -> RelayResult:
         device = self._get_device(session_id, device_id)
@@ -229,6 +243,7 @@ class RelayCore:
         )
         session.next_seq += 1
         session.messages.append(message)
+        self._trim_messages(session)
         return RelayResult(SUCCESS, "message_appended", session_id=session_id, device_id=sender_device_id, next_cursor=message.seq)
 
     def replay_since(self, session_id: str, device_id: str, cursor: int = 0) -> RelayResult:
@@ -278,6 +293,13 @@ class RelayCore:
         if not device or not device.active:
             return None
         return device
+
+    def _trim_messages(self, session: RelaySession) -> None:
+        if self._max_messages_per_session is None:
+            return
+        overflow = len(session.messages) - max(1, self._max_messages_per_session)
+        if overflow > 0:
+            del session.messages[:overflow]
 
     @staticmethod
     def _is_encrypted_envelope(envelope: Dict[str, Any]) -> bool:

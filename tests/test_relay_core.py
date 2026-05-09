@@ -21,10 +21,18 @@ class FakeIds:
         return f"{prefix}-{self.counts[prefix]}"
 
 
-def _store(code="123456"):
+def _store(code="123456", max_messages_per_session=200):
     clock = FakeClock()
     ids = FakeIds()
-    return RelayCore(clock=clock, id_factory=ids, code_factory=lambda: code), clock
+    return (
+        RelayCore(
+            clock=clock,
+            id_factory=ids,
+            code_factory=lambda: code,
+            max_messages_per_session=max_messages_per_session,
+        ),
+        clock,
+    )
 
 
 def _paired_session():
@@ -124,3 +132,34 @@ def test_relay_core_blocks_revoked_device_replay():
 
     assert result.status == FAILED
     assert result.reason == "device_not_authorized"
+
+
+def test_relay_core_caps_retained_messages_per_session():
+    store, _clock = _store(max_messages_per_session=2)
+    host = store.register_host("host-1")
+    for index in range(3):
+        store.append_encrypted_envelope(
+            host.session_id,
+            host.device_id,
+            {"message_type": "session.state", "ciphertext": f"m{index}", "nonce": f"n{index}"},
+        )
+
+    replay = store.replay_since(host.session_id, host.device_id, cursor=0)
+
+    assert replay.status == SUCCESS
+    assert [message["seq"] for message in replay.messages] == [2, 3]
+    assert replay.messages[0]["envelope"]["ciphertext"] == "m1"
+
+
+def test_relay_core_cleans_consumed_and_expired_pairing_challenges():
+    store, clock = _store()
+    store.register_host("host-1")
+    consumed = store.open_pairing_code("host-1", ttl_seconds=60)
+    store.pair_mobile_device(consumed.code)
+    expired = store.open_pairing_code("host-1", ttl_seconds=10)
+
+    clock.advance(11)
+    removed = store.cleanup_pairing_challenges()
+
+    assert removed == 1
+    assert store.pair_mobile_device(expired.code).reason == "short_code_invalid"

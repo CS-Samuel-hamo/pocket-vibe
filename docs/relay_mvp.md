@@ -10,6 +10,8 @@ This document describes the relay work that now exists in the repository. It is 
 - Relay HTTP routes are disabled by default.
 - The relay core is in-memory and transport-light. It is suitable for automated tests and the next integration slice, not production persistence.
 - The relay accepts only encrypted envelopes for message append. It rejects plaintext prompt/output/source payloads.
+- Replay history is capped per in-memory session. This protects the MVP from unbounded memory growth, but it is not durable history.
+- Consumed and expired pairing codes can be cleaned from the in-memory relay core.
 - No cloud DNS, TLS certificate, account system, payment system, or app-store distribution path is configured by this repository.
 
 ## Enable Locally
@@ -54,7 +56,6 @@ The tested invariant is narrower but important: relay message append requires an
 
 - Add WebSocket relay routing for desktop host and mobile clients.
 - Add durable account/device/session persistence.
-- Add short-code expiry cleanup and replay retention limits.
 - Add per-device authorization tokens after pairing confirmation.
 - Add relay E2E tests for disconnected mobile, disconnected desktop, revoked device, and invalid replay cursor.
 - Add a public deployment guide only after DNS, TLS, observability, and support ownership are chosen.
