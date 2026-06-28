@@ -1,21 +1,33 @@
-# Contributing to OpenVibe
+# Contributing to Pocket Vibe
 
-Welcome to the OpenVibe community! OpenVibe is building the best open-source mobile companion for OpenCode.
+Pocket Vibe is a **reference architecture** — a teaching-grade open source project demonstrating how to build a real-time, E2EE control plane across mobile, server, and IDE boundaries.
 
-## Core Philosophy (Freemium & Open Source)
-1. **The Core is Free Forever**: Basic remote control, standard Vibe mode (sofa/walking), and local execution will always remain Open Source (MIT License).
-2. **Pro Features**: Cloud sync, unlimited vocal diff readings, and advanced enterprise SSO are offered via a paid Pro subscription tier. This ensures the sustainable development of the OpenVibe ecosystem.
+## License
 
-## How to Contribute
-We welcome all PRs relating to bug fixes, local features, new standard Vibe modes, and documentation.
+This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
 
-### Pull Request Policy
-- **Free Core Features**: PRs will be reviewed and merged within 48 hours.
-- **Pro Features**: The Pro modules are maintained directly by the core team to ensure backend SLA and security. Please do not submit PRs aiming to circumvent the Pro feature flags.
+## What kinds of contributions are welcome
 
-### Code Style (Strict)
-- **Zero-Escape**: Our frontend relies heavily on `antd-mobile`. Do not use native HTML tags like `<button>` or `<input>`.
-- **Function Size**: No function should exceed 30 lines.
-- **Nesting**: Max indentation level is 3.
+- **Bug fixes** — if something doesn't compile or a test fails
+- **Documentation improvements** — better explanations, diagrams, ADRs (Architecture Decision Records)
+- **Test coverage** — `useOpenVibeWS.js` in particular has no tests
+- **Architecture blog posts** — if you write about patterns you find here, open a PR linking it in the README
 
-*Thank you for helping us make OpenVibe the ultimate companion for developers everywhere!*
+## What this project is NOT looking for
+
+- ✗ New features that expand scope (this is a reference, not a product)
+- ✗ Pro/commercial feature flags
+- ✗ Cloud relay services or monetization infrastructure
+
+## Before submitting a PR
+
+1. Run `pytest tests -q` — Python tests should all pass
+2. Run `cd frontend && npm run test:capabilities` — frontend tests should pass
+3. Keep the architecture clean. If you add a file, give it one clear responsibility.
+
+## Code style
+
+- Python: type hints everywhere, `@dataclass` over raw dicts, functions under 50 lines
+- TypeScript: explicit interfaces, no `any`
+- JavaScript (frontend): see existing patterns in `utils/` — pure functions, tested logic
+- No new cloud dependencies. Everything must run offline.
