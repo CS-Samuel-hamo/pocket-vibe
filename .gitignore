@@ -69,6 +69,7 @@ build/
 
 # Local tool/runtime state
 .pytest_cache/
+.project-cockpit/
 .qoder/
 .trae/
 .pv-vscode-extensions/
