@@ -1,0 +1,63 @@
+name: v1-desktop-gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt pytest
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install VS Code bridge dependencies
+        working-directory: vscode-bridge
+        run: npm ci
+
+      - name: Backend tests
+        run: python -m pytest tests -q
+
+      - name: Frontend capability tests
+        working-directory: frontend
+        run: npm run test:capabilities
+
+      - name: Frontend production build
+        working-directory: frontend
+        run: npm run build
+
+      - name: VS Code bridge runtime tests
+        working-directory: vscode-bridge
+        run: npm run test:runtime
+
+      - name: Repository quality gate
+        shell: bash
+        run: |
+          mapfile -t files < <(git ls-files | grep -E '\.(py|js|jsx|ts|tsx)$')
+          python scripts/quality_gate.py "${files[@]}"

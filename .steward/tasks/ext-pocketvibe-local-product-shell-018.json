@@ -1,0 +1,60 @@
+{
+  "task_id": "ext-pocketvibe-local-product-shell-018",
+  "task": "Turn the local v1 reference stack into a product-mode desktop shell where the backend can serve the production PWA directly and the startup script no longer requires users to understand separate frontend and backend ports.",
+  "task_type": "productization",
+  "risk_level": "medium",
+  "task_mode": "implementation",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "docs/v1_done_definition.md",
+    "docs/productization_roadmap.md",
+    "docs/v1_remaining_work.md",
+    "start.ps1",
+    "backend/main.py",
+    "backend/pairing_context.py",
+    "frontend/vite.config.js"
+  ],
+  "matched_modules": [
+    "backend-api",
+    "mobile-pwa"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/backend-api.yaml",
+    ".steward/modules/mobile-pwa.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries",
+    "global.require_tests_for_behavior_change",
+    "backend-api.no_protocol_drift",
+    "mobile-pwa.keep_chat_first_surface"
+  ],
+  "constraints": [
+    "Do not implement relay in this task.",
+    "Do not delete or archive untracked backlog files.",
+    "Do not change the WebSocket protocol.",
+    "Keep the existing Vite development server path available for developer use."
+  ],
+  "required_checks": [
+    "pytest tests/test_pairing_context.py tests/test_backend_main.py tests/test_static_pwa.py -q",
+    "cd frontend && npm run build",
+    "powershell -ExecutionPolicy Bypass -File scripts/v1_desktop_gate.ps1"
+  ],
+  "suggested_write_scope": [
+    "backend/**",
+    "frontend/vite.config.js",
+    "tests/**",
+    "start.ps1",
+    "docs/**",
+    ".steward/tasks/ext-pocketvibe-local-product-shell-018.json"
+  ],
+  "done_when": [
+    "Product startup builds the PWA and serves it from the backend under a stable mobile path.",
+    "Pairing links point to the backend-served PWA when product mode is enabled.",
+    "Developer startup mode can still run the Vite dev server.",
+    "Automated tests cover product-mode URL construction and static PWA mounting behavior."
+  ],
+  "decision": "task_ready"
+}

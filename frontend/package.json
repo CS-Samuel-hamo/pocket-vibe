@@ -1,0 +1,34 @@
+{
+    "name": "openvibe-frontend",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "test:capabilities": "node --test tests/runtimeCapabilities.test.js tests/connectionConfig.test.js tests/connectionPreflight.test.js tests/messageFeed.test.js tests/consoleEntries.test.js tests/runtimeActionState.test.js tests/supportDiagnostics.test.js tests/controlHome.test.js tests/projectRegistry.test.js tests/promptSkills.test.js tests/omniSearch.test.js"
+    },
+    "dependencies": {
+        "@ant-design/icons": "^6.1.0",
+        "antd-mobile": "^5.42.3",
+        "lucide-react": "^0.344.0",
+        "qrcode.react": "^4.2.0",
+        "react": "^18.2.0",
+        "react-diff-viewer": "^3.1.1",
+        "react-dom": "^18.2.0",
+        "react-speech-recognition": "^4.0.1",
+        "socket.io-client": "^4.7.4"
+    },
+    "devDependencies": {
+        "@types/react": "^18.2.64",
+        "@types/react-dom": "^18.2.21",
+        "@vitejs/plugin-react": "^4.2.1",
+        "autoprefixer": "^10.4.18",
+        "postcss": "^8.4.35",
+        "tailwindcss": "^3.4.1",
+        "vite": "^5.1.6",
+        "vite-plugin-pwa": "^1.2.0",
+        "workbox-window": "^7.4.0"
+    }
+}

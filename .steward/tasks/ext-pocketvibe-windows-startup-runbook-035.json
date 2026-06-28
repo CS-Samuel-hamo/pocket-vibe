@@ -1,0 +1,28 @@
+{
+  "id": "ext-pocketvibe-windows-startup-runbook-035",
+  "title": "Document the Windows-first startup and validation path",
+  "module": "docs",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "README.md",
+    "QUICKSTART.md",
+    "scripts/check_windows_prereqs.ps1",
+    "docs/v1_acceptance_script.md"
+  ],
+  "outputs": [
+    "A Windows-first runbook explains prereq check, startup, bridge connection, phone connection, smoke test, and failure triage",
+    "README and QUICKSTART point users to the runbook",
+    "The runbook states the current relay boundary clearly"
+  ],
+  "acceptance_commands": [
+    "powershell -ExecutionPolicy Bypass -File scripts/check_windows_prereqs.ps1 -SkipFrontendPort",
+    "powershell -ExecutionPolicy Bypass -File scripts/v1_desktop_gate.ps1"
+  ],
+  "do_not_do": [
+    "Do not claim public relay is deployed",
+    "Do not add app-store, payment, DNS, or cloud account steps as completed work",
+    "Do not modify product code in this docs-only task",
+    "Do not stage unrelated untracked files"
+  ]
+}

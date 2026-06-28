@@ -1,0 +1,54 @@
+{
+  "task_id": "ext-pocketvibe-host-feasibility-013",
+  "task": "Rank the next desktop host families after the VS Code reference adapter and prepare the first feasibility path for a non-reference host family such as a native AI coding desktop app, an AI IDE variant, or a JetBrains-family host.",
+  "task_type": "strategy",
+  "risk_level": "medium",
+  "task_mode": "planned-market",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "docs/platform_priority_matrix.md",
+    "docs/productization_roadmap.md",
+    ".steward/reports/goals/pocket-vibe-host-platform-expansion.md",
+    ".steward/reports/workstreams/pocket-vibe-v1-active-plan.md"
+  ],
+  "matched_modules": [
+    "desktop-bridge",
+    "backend-api",
+    "mobile-pwa"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/desktop-bridge.yaml",
+    ".steward/modules/backend-api.yaml",
+    ".steward/modules/mobile-pwa.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries"
+  ],
+  "constraints": [
+    "desktop-bridge.forbidden:silent-fallback-behavior",
+    "mobile-pwa.forbidden:hidden-risk-actions"
+  ],
+  "required_checks": [
+    "strategy-review",
+    "feasibility-matrix-review"
+  ],
+  "required_approvals": [
+    "main-orchestrator"
+  ],
+  "suggested_write_scope": [
+    "docs/**",
+    ".steward/**",
+    "tasks/todo.md"
+  ],
+  "next_steps": [
+    "define_platform_rubric",
+    "rank_host_families",
+    "pick_first_non_reference_adapter",
+    "publish_rollout_order"
+  ],
+  "decision": "task_ready"
+}

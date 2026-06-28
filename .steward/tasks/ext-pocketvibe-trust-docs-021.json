@@ -1,0 +1,50 @@
+{
+  "task_id": "ext-pocketvibe-trust-docs-021",
+  "task": "Replace legacy OpenVibe privacy language with Pocket Vibe trust, data flow, diagnostics, and error-code documentation that matches the PWA-first local product and planned metadata-first relay.",
+  "task_type": "trust-and-safety",
+  "risk_level": "medium",
+  "task_mode": "implementation",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "docs/PRIVACY_POLICY.md",
+    "docs/v1_done_definition.md",
+    "docs/productization_roadmap.md",
+    "docs/remote_access_guide.md"
+  ],
+  "matched_modules": [
+    "docs",
+    "protocol-contract",
+    "backend-api"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/protocol-contract.yaml",
+    ".steward/modules/backend-api.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "protocol-contract.replay_and_audit_changes_require_targeted_tests",
+    "backend-api.no_protocol_drift"
+  ],
+  "constraints": [
+    "Do not claim relay is already production-live.",
+    "Do not claim no data is collected once relay mode is planned.",
+    "Do not promise legal compliance beyond what the implementation supports.",
+    "Do not change runtime code in this docs-only task."
+  ],
+  "required_checks": [
+    "git diff --check",
+    "manual review of privacy/security claims against current implementation"
+  ],
+  "suggested_write_scope": [
+    "docs/**",
+    ".steward/tasks/ext-pocketvibe-trust-docs-021.json"
+  ],
+  "done_when": [
+    "Privacy policy uses Pocket Vibe naming and distinguishes current local mode from planned relay mode.",
+    "Security/trust doc defines data classes, E2EE posture, diagnostics opt-in, and threat model.",
+    "Error code dictionary gives user-visible recovery categories for connection, auth, runtime, relay, and diagnostics failures."
+  ],
+  "decision": "task_ready"
+}

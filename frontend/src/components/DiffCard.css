@@ -1,0 +1,112 @@
+.diff-card {
+  margin: 12px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.diff-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e8e8e8;
+  border-radius: 8px 8px 0 0;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-icon {
+  font-size: 16px;
+}
+
+.file-name {
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: #24292e;
+  word-break: break-all;
+}
+
+.diff-badge {
+  background: #1890ff;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.diff-content {
+  max-height: 400px;
+  overflow: auto;
+  background: #ffffff;
+}
+
+.raw-diff {
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 12px;
+  margin: 0;
+  background: #f8f9fa;
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.diff-actions {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid #e8e8e8;
+  background: #fafafa;
+  border-radius: 0 0 8px 8px;
+}
+
+.action-btn {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.reject-btn {
+  background: #ff4d4f !important;
+  color: white !important;
+  border: none !important;
+}
+
+.confirm-btn {
+  background: #52c41a !important;
+  color: white !important;
+  border: none !important;
+}
+
+/* 折叠面板样式调整 */
+.adm-collapse-panel-content {
+  padding: 0 !important;
+}
+
+.adm-collapse-header {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Diff Viewer 样式微调 */
+.react-diff-viewer {
+  font-size: 12px !important;
+}
+
+.react-diff-viewer td {
+  padding: 2px 8px !important;
+}
+
+.react-diff-viewer pre {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}

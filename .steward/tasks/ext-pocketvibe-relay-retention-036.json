@@ -1,0 +1,27 @@
+{
+  "id": "ext-pocketvibe-relay-retention-036",
+  "title": "Add relay replay retention and pairing challenge cleanup",
+  "module": "backend-api",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "backend/relay_core.py",
+    "tests/test_relay_core.py",
+    "docs/relay_mvp.md"
+  ],
+  "outputs": [
+    "RelayCore can cap retained replay messages per session",
+    "RelayCore can clean consumed and expired pairing challenges",
+    "Tests cover retention and cleanup behavior without adding public relay deployment"
+  ],
+  "acceptance_commands": [
+    "pytest tests/test_relay_core.py -q",
+    "python scripts/quality_gate.py backend/relay_core.py tests/test_relay_core.py"
+  ],
+  "do_not_do": [
+    "Do not add durable persistence",
+    "Do not expose relay publicly",
+    "Do not store plaintext payloads",
+    "Do not stage unrelated untracked files"
+  ]
+}

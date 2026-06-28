@@ -1,0 +1,47 @@
+version: 1
+
+module:
+  id: mobile-pwa
+  name: Mobile PWA
+  description: Governs the mobile and desktop React surfaces, session UX, audit views, omni-search, control panels, and runtime-agnostic host presentation.
+
+ownership:
+  steward_agent: main-orchestrator
+  human_owners:
+    - mobile-runtime
+  escalation_channel: "#mobile-pwa-review"
+
+match:
+  paths:
+    - frontend/**
+  dependencies:
+    - src/domain/models/protocol.py
+    - backend/main.py
+
+behavior:
+  allowed_actions:
+    - feature
+    - refactor
+    - hardening
+    - tests
+  forbidden_actions:
+    - localhost-only-assumptions
+    - runtime-branded-ui-regression
+    - hidden-risk-actions
+
+rules:
+  inherit_global_principles: true
+  extra_principles:
+    - runtime-agnostic-ui_changes_require_capability_trace
+    - kill_switch_and_approval_flows_require_visible_feedback
+    - mobile_workspace_actions_must_respect_backend-contract
+
+checks:
+  required:
+    - steward-approval
+  optional:
+    - frontend-build
+
+prompts:
+  task_template: default-task-template
+  review_template: default-review-template

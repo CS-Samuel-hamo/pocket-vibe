@@ -1,0 +1,50 @@
+{
+  "task_id": "ext-pocketvibe-desktop-bridge-004",
+  "task": "Harden the VS Code runtime registry so runtime detection, dispatch strategy, health state, and fallback behavior are explicit for codex-cli, claude-code, opencode, and antigravity.",
+  "task_type": "feature",
+  "risk_level": "medium",
+  "task_mode": "planned-market",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "vscode-bridge/src/extension.ts",
+    "vscode-bridge/src/runtimeRegistry.ts",
+    "vscode-bridge/src/test/runtimeRegistry.test.ts"
+  ],
+  "matched_modules": [
+    "desktop-bridge"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/desktop-bridge.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries",
+    "global.require_tests_for_behavior_change",
+    "desktop-bridge.runtime_catalog_changes_require_protocol_trace",
+    "desktop-bridge.fallback_paths_must_emit_user-visible-status",
+    "desktop-bridge.kill_and_approval_paths_require_explicit-handling"
+  ],
+  "constraints": [
+    "desktop-bridge.forbidden:runtime-detection-regression",
+    "desktop-bridge.forbidden:hidden-connection-configuration",
+    "desktop-bridge.forbidden:silent-fallback-behavior"
+  ],
+  "required_checks": [
+    "steward-approval"
+  ],
+  "required_approvals": [
+    "main-orchestrator"
+  ],
+  "suggested_write_scope": [
+    "vscode-bridge/**"
+  ],
+  "next_steps": [
+    "build_plan_before_patch",
+    "collect_runtime-evidence",
+    "run_independent_review_crosscheck"
+  ],
+  "decision": "task_ready"
+}

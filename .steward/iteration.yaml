@@ -1,0 +1,35 @@
+version: 1
+
+workflow:
+  require_task_brief: true
+  require_plan_before_patch: true
+  require_rule_trace: true
+  require_eval_on_behavior_change: true
+
+limits:
+  max_modules_per_task: 3
+  block_cross_module_without_escalation: true
+
+handoff:
+  require_explicit_write_scope: true
+  require_review_before_merge: true
+
+stages:
+  task_brief:
+    owner: main-orchestrator
+    support:
+      - explorer-agent
+  route_and_context:
+    owner: explorer-agent
+    require_module_steward_on_protected_match: true
+  implementation:
+    owner: worker-agent
+    require_explicit_write_scope: true
+  review:
+    owner: review-agent
+  evals:
+    owner: evals-agent
+  learning:
+    owner: learning-agent
+  docs_sync:
+    owner: docs-agent

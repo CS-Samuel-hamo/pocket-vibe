@@ -1,0 +1,28 @@
+{
+  "id": "ext-pocketvibe-windows-prereq-check-034",
+  "title": "Add a Windows prereq check before product startup",
+  "module": "release-scripts",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "start.ps1",
+    "scripts/start_codex.ps1",
+    "frontend/package.json",
+    "vscode-bridge/package.json"
+  ],
+  "outputs": [
+    "A Windows prereq checker reports required tools, dependencies, ports, VS Code, and Codex CLI availability",
+    "Product startup runs the prereq checker unless explicitly skipped",
+    "Failures include actionable install or recovery commands"
+  ],
+  "acceptance_commands": [
+    "powershell -ExecutionPolicy Bypass -File scripts/check_windows_prereqs.ps1",
+    "powershell -ExecutionPolicy Bypass -File scripts/check_windows_prereqs.ps1 -Json"
+  ],
+  "do_not_do": [
+    "Do not install dependencies automatically",
+    "Do not modify user PATH or shell profile",
+    "Do not delete local logs or runtime files",
+    "Do not stage unrelated untracked files"
+  ]
+}

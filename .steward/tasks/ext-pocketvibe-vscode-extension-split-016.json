@@ -1,0 +1,71 @@
+{
+  "task_id": "ext-pocketvibe-vscode-extension-split-016",
+  "task": "Split vscode-bridge/src/extension.ts into activation, websocket client, runtime dispatch, terminal IO, project registry, and UI/status modules without changing runtime behavior.",
+  "task_type": "refactor",
+  "risk_level": "high",
+  "task_mode": "post-baseline",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "vscode-bridge/src/extension.ts",
+    "vscode-bridge/src/runtimeAdapters.ts",
+    "vscode-bridge/src/shellExecution.ts",
+    "vscode-bridge/src/workspaceActions.ts",
+    "vscode-bridge/src/codexExecRuntime.ts",
+    "vscode-bridge/src/backendConnection.ts",
+    "vscode-bridge/src/bridgeSettings.ts",
+    "vscode-bridge/src/commandAvailability.ts",
+    "vscode-bridge/src/messageFormatting.ts",
+    "vscode-bridge/src/runtimeRegistry.ts",
+    "vscode-bridge/src/runtimeLaunch.ts",
+    "vscode-bridge/src/codexExec.ts"
+  ],
+  "matched_modules": [
+    "desktop-bridge"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/desktop-bridge.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.preserve_module_boundaries",
+    "global.require_tests_for_behavior_change",
+    "desktop-bridge.runtime_catalog_changes_require_protocol_trace",
+    "desktop-bridge.fallback_paths_must_emit_user-visible-status",
+    "desktop-bridge.kill_and_approval_paths_require_explicit-handling"
+  ],
+  "constraints": [
+    "Do not regress codex-cli terminal attach and prompt dispatch.",
+    "Do not hide degraded or unsupported runtime states.",
+    "Do not change backend protocol payloads during the split."
+  ],
+  "required_checks": [
+    "cd vscode-bridge; npm run compile",
+    "cd vscode-bridge; npm run test:runtime",
+    "python scripts/quality_gate.py <changed bridge files>"
+  ],
+  "required_approvals": [
+    "main-orchestrator"
+  ],
+  "suggested_write_scope": [
+    "vscode-bridge/src/**",
+    "vscode-bridge/src/test/**"
+  ],
+  "completed_slices": [
+    "extract_runtime_adapters",
+    "extract_project_shell_execution",
+    "extract_workspace_actions",
+    "extract_codex_exec_runtime",
+    "extract_backend_connection",
+    "extract_bridge_settings_and_utilities",
+    "flatten_extension_dispatch_nesting"
+  ],
+  "next_steps": [
+    "extract_websocket_client",
+    "extract_project_registry_sync",
+    "extract_status_and_diagnostics"
+  ],
+  "decision": "in_progress"
+}

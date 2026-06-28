@@ -1,0 +1,48 @@
+version: 1
+workspace:
+  id: steward-prototype
+  name: Steward Prototype
+
+execution:
+  default_provider: codex
+  default_mode: cli
+  default_model: gpt-5.2
+  default_reasoning_effort: medium
+  roles:
+    orchestrator: main-orchestrator
+    explorer: explorer-agent
+    worker: worker-agent
+    review: review-agent
+    evals: evals-agent
+    learning: learning-agent
+    docs: docs-agent
+
+subagents:
+  registry: .steward/agents/registry.yaml
+  default_enabled:
+    - main-orchestrator
+    - explorer-agent
+    - worker-agent
+    - review-agent
+    - evals-agent
+    - learning-agent
+    - docs-agent
+
+principles:
+  - keep_changes_scoped
+  - preserve_module_boundaries
+  - require_tests_for_behavior_change
+  - explain_rule_exceptions
+
+defaults:
+  approval_mode: steward_required
+  patch_mode: proposal_then_review
+  require_audit_log: true
+  require_task_brief: true
+
+imports:
+  codeowners: CODEOWNERS
+
+audit:
+  output_dir: .steward/logs
+  redact_secrets: true

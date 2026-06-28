@@ -1,0 +1,89 @@
+.voice-input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.voice-btn {
+  min-width: 80px;
+  height: 40px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  background: #f0f0f0;
+  border: 1px solid #d9d9d9;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.voice-btn:hover {
+  background: #e6f7ff;
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.voice-btn.listening {
+  background: #ff4d4f;
+  border-color: #ff4d4f;
+  color: white;
+  animation: pulse 1.5s infinite;
+}
+
+.voice-btn.disabled {
+  background: #f5f5f5;
+  border-color: #d9d9d9;
+  color: #bfbfbf;
+  cursor: not-allowed;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+  }
+}
+
+.transcript-preview {
+  max-width: 200px;
+  padding: 8px 12px;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #52c41a;
+  text-align: center;
+  word-break: break-all;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .voice-btn {
+    min-width: 60px;
+    height: 36px;
+    font-size: 12px;
+    padding: 0 12px;
+  }
+
+  .transcript-preview {
+    max-width: 150px;
+    font-size: 12px;
+  }
+}

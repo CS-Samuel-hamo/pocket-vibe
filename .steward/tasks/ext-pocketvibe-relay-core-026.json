@@ -1,0 +1,27 @@
+{
+  "id": "ext-pocketvibe-relay-core-026",
+  "title": "Implement the tested Relay MVP core state machine",
+  "module": "backend-api",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "docs/SECURITY_AND_TRUST.md",
+    "docs/error_codes.md",
+    "backend/connection_manager.py"
+  ],
+  "outputs": [
+    "In-memory relay core supports host registration, short-code pairing, device revocation, presence, encrypted envelope append, and cursor replay",
+    "Relay core rejects unencrypted payload envelopes",
+    "Backend tests cover pairing success, short-code expiry, revocation, presence, and replay cursor behavior"
+  ],
+  "acceptance_commands": [
+    "pytest tests/test_relay_core.py -q",
+    "python scripts/quality_gate.py backend/relay_core.py"
+  ],
+  "do_not_do": [
+    "Do not add cloud deployment, DNS, or account/payment dependencies",
+    "Do not integrate the relay core into production WebSocket routing in this task",
+    "Do not store plaintext prompt/output/source payloads",
+    "Do not change the local LAN reference path"
+  ]
+}

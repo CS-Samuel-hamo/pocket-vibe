@@ -1,0 +1,27 @@
+{
+  "id": "ext-pocketvibe-relay-docs-028",
+  "title": "Document the default-off Relay MVP API boundary",
+  "module": "protocol-contract",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "backend/relay_api.py",
+    "backend/relay_core.py",
+    "docs/SECURITY_AND_TRUST.md",
+    "docs/README.md"
+  ],
+  "outputs": [
+    "Relay MVP documentation explains enabled/disabled state, endpoints, and security limits",
+    "Docs distinguish the tested local relay core from a deployed production relay",
+    "Docs list remaining human confirmation points for public relay launch"
+  ],
+  "acceptance_commands": [
+    "python scripts/quality_gate.py docs/relay_mvp.md docs/README.md"
+  ],
+  "do_not_do": [
+    "Do not claim public relay is deployed",
+    "Do not add DNS, certificate, payment, or cloud account instructions as completed work",
+    "Do not edit product code in this docs task",
+    "Do not stage unrelated untracked files"
+  ]
+}

@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "updated": "2026-05-02",
+  "policy": "Existing violations are allowed only while their measured value does not increase. New or worse violations fail the quality gate.",
+  "violations": [
+    {
+      "key": "backend/telemetry.py|function-too long|monitor",
+      "value": 71,
+      "message": "backend/telemetry.py:12: Function 'monitor' too long (71 > 30)"
+    },
+    {
+      "key": "frontend/src/App.jsx|js-nesting",
+      "value": 4,
+      "message": "frontend/src/App.jsx:137: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/components/ConnectionSetupView.jsx|js-nesting",
+      "value": 4,
+      "message": "frontend/src/components/ConnectionSetupView.jsx:26: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/components/ConsolePanel.jsx|js-nesting",
+      "value": 4,
+      "message": "frontend/src/components/ConsolePanel.jsx:55: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/components/DesktopTerminalView.jsx|js-nesting",
+      "value": 4,
+      "message": "frontend/src/components/DesktopTerminalView.jsx:30: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/components/DiffApprovalModal.jsx|js-nesting",
+      "value": 4,
+      "message": "frontend/src/components/DiffApprovalModal.jsx:50: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/components/FileNavigator.jsx|js-nesting",
+      "value": 4,
+      "message": "frontend/src/components/FileNavigator.jsx:59: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/components/MobileControllerView.jsx|js-nesting",
+      "value": 4,
+      "message": "frontend/src/components/MobileControllerView.jsx:172: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/components/OmniSearchDrawer.jsx|js-nesting",
+      "value": 4,
+      "message": "frontend/src/components/OmniSearchDrawer.jsx:60: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/components/VibeWalkingMode.jsx|js-nesting",
+      "value": 4,
+      "message": "frontend/src/components/VibeWalkingMode.jsx:44: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/components/VoicePromptInput.jsx|js-nesting",
+      "value": 4,
+      "message": "frontend/src/components/VoicePromptInput.jsx:31: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/hooks/useOpenVibeWS.js|js-nesting",
+      "value": 4,
+      "message": "frontend/src/hooks/useOpenVibeWS.js:18: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/utils/consoleEntries.js|js-nesting",
+      "value": 4,
+      "message": "frontend/src/utils/consoleEntries.js:228: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/utils/messageFeed.js|js-nesting",
+      "value": 4,
+      "message": "frontend/src/utils/messageFeed.js:110: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/utils/projectRegistry.js|js-nesting",
+      "value": 4,
+      "message": "frontend/src/utils/projectRegistry.js:72: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/src/utils/runtimeCapabilities.js|js-nesting",
+      "value": 4,
+      "message": "frontend/src/utils/runtimeCapabilities.js:80: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/tests/connectionPreflight.test.js|js-nesting",
+      "value": 4,
+      "message": "frontend/tests/connectionPreflight.test.js:29: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/tests/projectRegistry.test.js|js-nesting",
+      "value": 4,
+      "message": "frontend/tests/projectRegistry.test.js:43: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "frontend/vite.config.js|js-nesting",
+      "value": 4,
+      "message": "frontend/vite.config.js:16: JS/JSX block nesting deeper than 3"
+    },
+    {
+      "key": "scripts/host_probe.py|function-too long|run_probe",
+      "value": 31,
+      "message": "scripts/host_probe.py:75: Function 'run_probe' too long (31 > 30)"
+    },
+    {
+      "key": "scripts/rename_openvibe.py|function-has too deep nesting|rename_and_replace",
+      "value": 5,
+      "message": "scripts/rename_openvibe.py:3: Function 'rename_and_replace' has too deep nesting (5 > 3)"
+    },
+    {
+      "key": "scripts/rename_openvibe.py|function-has too many branches|rename_and_replace",
+      "value": 9,
+      "message": "scripts/rename_openvibe.py:3: Function 'rename_and_replace' has too many branches (9 > 3)"
+    },
+    {
+      "key": "scripts/rename_openvibe.py|function-too long|rename_and_replace",
+      "value": 46,
+      "message": "scripts/rename_openvibe.py:3: Function 'rename_and_replace' too long (46 > 30)"
+    },
+    {
+      "key": "src/core/telemetry/monitor.py|function-too long|monitor",
+      "value": 60,
+      "message": "src/core/telemetry/monitor.py:14: Function 'monitor' too long (60 > 30)"
+    },
+    {
+      "key": "src/domain/models/protocol.py|function-has too many branches|normalize_protocol_message",
+      "value": 10,
+      "message": "src/domain/models/protocol.py:159: Function 'normalize_protocol_message' has too many branches (10 > 3)"
+    },
+    {
+      "key": "src/domain/models/protocol.py|function-too long|build_capabilities",
+      "value": 34,
+      "message": "src/domain/models/protocol.py:83: Function 'build_capabilities' too long (34 > 30)"
+    },
+    {
+      "key": "src/domain/models/protocol.py|function-too long|normalize_protocol_message",
+      "value": 115,
+      "message": "src/domain/models/protocol.py:159: Function 'normalize_protocol_message' too long (115 > 30)"
+    },
+    {
+      "key": "src/domain/services/project_state.py|function-has too deep nesting|_add_make_targets",
+      "value": 4,
+      "message": "src/domain/services/project_state.py:157: Function '_add_make_targets' has too deep nesting (4 > 3)"
+    },
+    {
+      "key": "src/domain/services/project_state.py|function-has too deep nesting|_add_npm_scripts",
+      "value": 4,
+      "message": "src/domain/services/project_state.py:130: Function '_add_npm_scripts' has too deep nesting (4 > 3)"
+    },
+    {
+      "key": "src/domain/services/project_state.py|function-has too deep nesting|get_all_files",
+      "value": 5,
+      "message": "src/domain/services/project_state.py:32: Function 'get_all_files' has too deep nesting (5 > 3)"
+    },
+    {
+      "key": "src/domain/services/project_state.py|function-has too many branches|_add_make_targets",
+      "value": 5,
+      "message": "src/domain/services/project_state.py:157: Function '_add_make_targets' has too many branches (5 > 3)"
+    },
+    {
+      "key": "src/domain/services/project_state.py|function-has too many branches|_add_npm_scripts",
+      "value": 4,
+      "message": "src/domain/services/project_state.py:130: Function '_add_npm_scripts' has too many branches (4 > 3)"
+    },
+    {
+      "key": "src/domain/services/project_state.py|function-has too many branches|_iter_command_dirs",
+      "value": 5,
+      "message": "src/domain/services/project_state.py:73: Function '_iter_command_dirs' has too many branches (5 > 3)"
+    },
+    {
+      "key": "src/domain/services/project_state.py|function-has too many branches|get_all_files",
+      "value": 5,
+      "message": "src/domain/services/project_state.py:32: Function 'get_all_files' has too many branches (5 > 3)"
+    },
+    {
+      "key": "src/domain/services/vscode_driver.py|function-has too many branches|start",
+      "value": 4,
+      "message": "src/domain/services/vscode_driver.py:27: Function 'start' has too many branches (4 > 3)"
+    },
+    {
+      "key": "src/interfaces/cli/launcher.py|function-too long|main",
+      "value": 56,
+      "message": "src/interfaces/cli/launcher.py:31: Function 'main' too long (56 > 30)"
+    },
+    {
+      "key": "tests/test_backend_main.py|function-too long|test_encrypted_approval_response_routes_to_driver",
+      "value": 38,
+      "message": "tests/test_backend_main.py:518: Function 'test_encrypted_approval_response_routes_to_driver' too long (38 > 30)"
+    },
+    {
+      "key": "tests/test_backend_main.py|function-too long|test_encrypted_kill_request_routes_to_driver",
+      "value": 42,
+      "message": "tests/test_backend_main.py:560: Function 'test_encrypted_kill_request_routes_to_driver' too long (42 > 30)"
+    },
+    {
+      "key": "tests/test_backend_main.py|function-too long|test_encrypted_resume_replays_only_visible_packets",
+      "value": 39,
+      "message": "tests/test_backend_main.py:475: Function 'test_encrypted_resume_replays_only_visible_packets' too long (39 > 30)"
+    },
+    {
+      "key": "tests/test_backend_main.py|function-too long|test_initial_snapshot_includes_project_registry_for_connected_bridge",
+      "value": 32,
+      "message": "tests/test_backend_main.py:219: Function 'test_initial_snapshot_includes_project_registry_for_connected_bridge' too long (32 > 30)"
+    },
+    {
+      "key": "tests/test_backend_main.py|function-too long|test_initial_snapshot_supports_generic_desktop_host_role",
+      "value": 40,
+      "message": "tests/test_backend_main.py:255: Function 'test_initial_snapshot_supports_generic_desktop_host_role' too long (40 > 30)"
+    },
+    {
+      "key": "tests/test_backend_main.py|function-too long|test_project_select_changes_target_bridge_for_prompt",
+      "value": 46,
+      "message": "tests/test_backend_main.py:365: Function 'test_project_select_changes_target_bridge_for_prompt' too long (46 > 30)"
+    },
+    {
+      "key": "tests/test_backend_main.py|function-too long|test_prompt_submit_routes_to_driver_and_emits_user_event",
+      "value": 39,
+      "message": "tests/test_backend_main.py:176: Function 'test_prompt_submit_routes_to_driver_and_emits_user_event' too long (39 > 30)"
+    },
+    {
+      "key": "tests/test_backend_main.py|function-too long|test_read_only_native_host_probe_registers_project_and_degraded_host",
+      "value": 43,
+      "message": "tests/test_backend_main.py:299: Function 'test_read_only_native_host_probe_registers_project_and_degraded_host' too long (43 > 30)"
+    },
+    {
+      "key": "tests/test_project_state.py|function-too long|test_get_available_commands_discovers_supported_workspace_scripts",
+      "value": 42,
+      "message": "tests/test_project_state.py:6: Function 'test_get_available_commands_discovers_supported_workspace_scripts' too long (42 > 30)"
+    }
+  ]
+}

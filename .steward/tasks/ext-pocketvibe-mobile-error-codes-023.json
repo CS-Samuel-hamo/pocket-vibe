@@ -1,0 +1,28 @@
+{
+  "id": "ext-pocketvibe-mobile-error-codes-023",
+  "title": "Surface connection error codes in the mobile setup flow",
+  "module": "mobile-pwa",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "docs/error_codes.md",
+    "backend/connection_preflight.py",
+    "frontend/src/utils/connectionPreflight.js",
+    "frontend/src/components/ConnectionSetupView.jsx"
+  ],
+  "outputs": [
+    "Connection preflight result carries a user-facing errorCode",
+    "Manual connection UI displays PV-AUTH/PV-CONN codes when recovery is needed",
+    "Frontend tests cover backend-provided and local network error codes"
+  ],
+  "acceptance_commands": [
+    "cd frontend && npm run test:capabilities",
+    "cd frontend && npm run build"
+  ],
+  "do_not_do": [
+    "Do not change backend protocol fields in this task",
+    "Do not redesign the mobile home screen",
+    "Do not add relay behavior or cloud dependencies",
+    "Do not stage unrelated untracked files"
+  ]
+}

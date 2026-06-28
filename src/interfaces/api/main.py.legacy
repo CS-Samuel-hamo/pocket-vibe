@@ -1,0 +1,123 @@
+"""FastAPI WebSocket interface for OpenVibe."""
+
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends
+from fastapi.responses import HTMLResponse
+import logging
+import asyncio
+import json
+import os
+import sys
+from typing import Optional, List, Dict, Any
+
+# Add src to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
+
+from src.domain.services.aider_driver import AiderDriver
+from src.core.telemetry import monitor
+
+app = FastAPI()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Security: Token must be set via env var or passed in args.
+# For this "Phase 3" simplified security, we'll read from ENV or default to None (insecure) if not set.
+AUTH_TOKEN: Optional[str] = os.getenv("POCKET_VIBE_TOKEN")
+
+
+class ConnectionManager:
+    """Manages WebSocket connections."""
+
+    def __init__(self) -> None:
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket) -> None:
+        """Accept a new WebSocket connection."""
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket) -> None:
+        """Remove a WebSocket connection."""
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str) -> None:
+        """Broadcast a message to all connected clients."""
+        for connection in self.active_connections:
+            try:
+                await connection.send_text(message)
+            except Exception as e:
+                logger.warning(f"Failed to send message to client: {e}")
+
+
+manager = ConnectionManager()
+
+# Using AiderDriver for real functionality
+driver = AiderDriver(target_dir=os.getenv("TARGET_DIR", "."))
+
+
+@app.get("/")
+async def get() -> HTMLResponse:
+    """Root endpoint returning a simple HTML response."""
+    return HTMLResponse("<h1>OpenVibe Backend (Phase 3: Secure)</h1>")
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None) -> None:
+    """WebSocket endpoint for real-time communication with the AI driver."""
+    # --- AUTHENTICATION CHECK ---
+    if AUTH_TOKEN and token != AUTH_TOKEN:
+        logger.warning(f"Auth failed. Token mismatch: {token}")
+        # We accept to send error then close, otherwise client just gets generic network error
+        await websocket.accept()
+        await websocket.send_text(json.dumps({"type": "status", "state": "error", "message": "Authentication Failed"}))
+        await websocket.close(code=4003)
+        return
+    # ----------------------------
+
+    await manager.connect(websocket)
+
+    # Auto-start driver loop if needed
+    if not driver.running:
+        asyncio.create_task(broadcast_driver_output())
+
+    try:
+        max_messages: int = 10000  # 熔断机制：最大消息数
+        message_count: int = 0
+
+        while message_count < max_messages:
+            message_count += 1
+            message_text: str = await websocket.receive_text()
+            logger.info(f"Received: {message_text}")
+
+            try:
+                parsed_message: Dict[str, Any] = json.loads(message_text)
+
+                if parsed_message.get("type") == "command":
+                    if not driver.running:
+                         asyncio.create_task(broadcast_driver_output())
+                         await asyncio.sleep(1)
+
+                    await driver.send_input(parsed_message.get("content", ""))
+
+                elif parsed_message.get("type") == "stop":
+                    await driver.stop()
+
+            except json.JSONDecodeError:
+                logger.error("Invalid JSON received")
+
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        logger.info("Client disconnected")
+
+
+@monitor
+async def broadcast_driver_output() -> None:
+    """Broadcast driver output to all connected clients."""
+    async for packet in driver.start():
+        await manager.broadcast(packet)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    # Allow port to be set via env
+    port: int = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

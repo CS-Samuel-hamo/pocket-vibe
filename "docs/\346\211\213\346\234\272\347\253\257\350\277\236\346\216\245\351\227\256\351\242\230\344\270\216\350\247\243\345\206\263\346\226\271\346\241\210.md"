@@ -1,0 +1,154 @@
+# 手机端连接问题与解决方案
+
+本文档基于 **Restarting System Components.md** 中的对话上下文，总结当前程序的潜在问题，并给出手机端连接问题的排查与解决步骤。
+
+---
+
+## 一、整体程序有无问题？
+
+### 1. 架构与实现（现状）
+
+- **后端**：FastAPI，监听 `0.0.0.0:8000`，WebSocket + E2EE，与 OpenCode 通过 SSE/HTTP 通信。
+- **前端**：React，通过 URL 参数 `token`、`ws_host`、`ws_port` 构造 WebSocket 地址并连接后端。
+- **启动脚本**：`infra/start.py` 可生成二维码；`--tunnel` 时用 Cloudflare Tunnel 暴露**后端**端口 8000。
+
+整体链路是通的，但在「手机如何打开页面」「隧道与 VPN」上有设计缺口，容易导致你遇到的现象。
+
+### 2. 已知问题概览
+
+| 问题 | 原因 | 影响 |
+|------|------|------|
+| 手机打不开页面（尤其用 `--tunnel` 时） | 隧道只暴露了**后端**，二维码里的「前端地址」仍是 `http://本机IP:5173`，手机不在同一局域网或 PC 开 VPN 时无法访问 | 扫码/点链接后页面无法加载 |
+| 和电脑用 VPN 时手机打不开 | `get_ip_address()` 可能拿到 VPN 出口 IP，手机和 PC 在同一 WiFi 也访问不到该 IP | 局域网直连也失败 |
+| 手机能打开但「没办法操作」、Console 有显示无反应 | 多为后端未启动或 WebSocket 未真正连上；前端会先把输入显示在 Console，但消息未通过 WS 发到后端 | 看起来像连上了，实际未连后端/OpenCode |
+| 不确定是否和 OpenCode 连上 | 需按顺序启动：OpenCode(4096) → Backend(8000) → Frontend；任一环节未启动或断开会表现为「没反应」 | 指令发不出去或没有 AI 回复 |
+
+---
+
+## 二、从对话上下文看：手机端连接问题要怎么解决
+
+下面按「现象 → 原因 → 怎么做」整理，对应文档里的讨论。
+
+### 问题 1：「我要怎么连手机端？没看到过二维码」
+
+**原因**：只运行了 `python backend/main.py` 不会出二维码；二维码是由 **启动脚本** 生成的。
+
+**解决**：
+
+1. 在项目根目录执行：
+   ```powershell
+   python infra/start.py
+   ```
+2. 按提示按回车确认安全警告后，终端会打印**字符二维码**和 **Frontend Link**。
+3. 手机连接方式二选一：
+   - **扫码**：用手机浏览器或相机扫该二维码。
+   - **手动输入**：把终端里 `Frontend Link` 的地址完整输入到手机浏览器。
+
+若希望在外网也能连，需要同时解决「前端页面」的访问方式（见问题 2）。
+
+---
+
+### 问题 2：「手机打不开；和电脑用 VPN 有关吗？`--tunnel` 说全球可用但也打不开」
+
+**原因（两点）**：
+
+1. **VPN**
+   电脑开 VPN 时，`infra/start.py` 里 `get_ip_address()` 可能拿到的是 VPN 的出口 IP（如 10.x）。手机和电脑在同一 WiFi，也访问不到这个 IP，所以「局域网直连」会失败。
+
+2. **`--tunnel` 只暴露了后端**
+   - Cloudflare Tunnel 只把本机 **8000 端口** 映射到公网（如 `https://xxx.trycloudflare.com`）。
+   - 二维码里的链接是：`http://<本机IP>:5173/?token=...&ws_host=xxx.trycloudflare.com`。
+   - 也就是说：**前端页面** 仍然要从 `本机IP:5173` 加载；只有 **WebSocket** 用了隧道地址。
+   - 手机不在同一局域网（或本机 IP 因 VPN 不可达）时，连「打开页面」都做不到，所以会感觉「全球可用但也打不开」。
+
+**解决思路**：
+
+- **先保证同一 WiFi、且 PC 尽量不开 VPN**
+  关闭 VPN 后重新运行 `python infra/start.py`，用终端里打印的本机 IP（应为 192.168.x.x）在手机浏览器打开 Frontend Link，一般就能打开并连上。
+
+- **若必须在外网或 PC 开 VPN 时用**，需要让「前端页面」也能从公网访问，例如：
+  - **方案 A**：再起一条隧道暴露前端（例如 5173）→ 二维码改为「前端隧道 URL + 后端隧道作为 ws_host」。
+  - **方案 B**：后端同时提供静态前端（或反向代理到前端），只暴露 8000 一个端口，公网只访问这一条隧道，前端和 WS 都走同一域名（需改 start.py 和前端 WS 的构造方式）。
+
+当前代码未实现 A/B，所以「全球可用」目前只对「后端接口」成立，对「手机打开完整页面」不成立。
+
+---
+
+### 问题 3：「手机上打开了，但没办法操作，而且这个界面和 OpenCode 连上了么？」
+
+**原因**：
+
+- 「没办法操作」常见两种：
+  1. **WebSocket 没连上**：页面是打开了，但 `ws://...` 或 `wss://...` 连不上（后端没开、token 错、端口/防火墙等），所以点发送、审批等都没有真正发到后端。
+  2. **后端没连上 OpenCode**：WebSocket 通了，但 Backend 连不上 `localhost:4096`（OpenCode 未开或端口不对），所以没有 AI 回复。
+
+- 界面是否「和 OpenCode 连上」取决于整条链：
+  **手机 ↔ Backend(8000) ↔ OpenCode(4096)** 都通，才叫连上。
+
+**解决（推荐顺序）**：
+
+1. **按顺序启动三样（文档里强调的「重启系统组件」）**
+   - 第 1 个终端：启动 OpenCode（例如 `opencode serve` / `npx opencode`），确认在 4096 端口。
+   - 第 2 个终端：在项目根目录运行
+     ```powershell
+     set POCKET_VIBE_TOKEN=你的token
+     python backend/main.py
+     ```
+     或直接 `python infra/start.py`（会设置 token 并启动后端）。
+   - 第 3 个终端：启动前端，例如 `npm run dev`（或你项目里用的命令），确保前端在 5173（或你配置的端口）。
+
+2. **确认后端和 OpenCode 都活着**
+   - 电脑浏览器访问：`http://127.0.0.1:8000/`，应能看到后端说明或接口。
+   - 确认 OpenCode 的 API（如 `http://localhost:4096`）可访问且接口路径与 `opencode_driver.py` 中一致（若文档里提到 `/chat` 返回 HTML，需核对 OpenCode 实际 API 路径）。
+
+3. **手机端如何确认「和 OpenCode 连上了」**
+   - 看前端连接状态：若使用 `useOpenVibeWS`，连上后会显示 E2EE 已建立等状态。
+   - 在手机发一条简单指令（如「列出当前目录」），若 Console 有你的输入且很快有 AI 回复/思考流，说明 Backend ↔ OpenCode 也通了。
+
+---
+
+### 问题 4：「Console 有显示，没其他反应」
+
+**原因（对话里已说明）**：
+前端会先把用户输入显示在 Console（本地状态），但若此时**后端已关或 WebSocket 断连**，消息并没有发到后端，自然也没有 OpenCode 的回复。
+
+**解决**：
+
+- 确认后端和前端都在跑，且前端 WebSocket 状态为已连接。
+- 若 `http://127.0.0.1:8000/` 打不开，说明后端没起来，需要先按上面「问题 3」的启动顺序把 Backend 和 OpenCode 都启动好。
+
+---
+
+## 三、自己排查时重点看的模块（对应文档中的「不让你自动改代码」的排查指引）
+
+| 目标 | 模块/文件 | 关注点 |
+|------|-----------|--------|
+| 手机能否连上后端 | `frontend/src/App.jsx` | `WS_URL` 的构造（`ws_host` / `ws_port` / `token`）；`useOpenVibeWS(WS_URL)` |
+| 后端是否接受连接、转发指令 | `backend/main.py` | `websocket_endpoint`、`_authenticate`、`_handle_socket_message`（尤其是 `command` 分支） |
+| 后端是否连上 OpenCode | `src/domain/services/opencode_driver.py` | `base_url`（默认 4096）、`start()`（SSE）、`send_input()`（POST 路径是否与 OpenCode 实际 API 一致） |
+| 二维码与隧道逻辑 | `infra/start.py` | `get_ip_address()`（VPN 时可能拿错 IP）、`--tunnel` 时只暴露 8000、`frontend_url` 仍用本机 IP:5173 |
+
+---
+
+## 四、总结：手机端连接问题如何解决（按步骤）
+
+1. **先保证局域网能连**
+   - 关掉 PC 上的 VPN。
+   - 用 `python infra/start.py` 生成二维码/Frontend Link，手机用同一 WiFi 访问该链接。
+   - 按顺序启动：OpenCode → Backend → Frontend。
+
+2. **若仍打不开**
+   - 查 Windows 防火墙是否放行 8000、5173（及 3000，若前端用 3000）。
+   - 确认后端以 `0.0.0.0` 监听（`config.py` 中 `HOST` 默认已是 `0.0.0.0`）。
+
+3. **若「能打开但没反应」**
+   - 确认后端、OpenCode 都在运行；
+   - 看前端 WebSocket 状态是否已连接；
+   - 用电脑浏览器访问 `http://127.0.0.1:8000/` 验证后端；
+   - 核对 OpenCode 的 API 路径与 `opencode_driver.py` 是否一致。
+
+4. **若需要真正的「全球可用」**
+   - 当前 `--tunnel` 只让后端全球可达，前端仍需本机 IP:5173。
+   - 要全球打开页面，需要改造：要么对前端再开一条隧道并改二维码，要么让后端同时提供/代理前端，只暴露一个公网入口。
+
+按上述顺序做，大部分「手机端连接问题」都能定位并解决；若你愿意改代码，我可以再根据你选的方案（例如双隧道或后端代理前端）给出具体修改建议和补丁位置。

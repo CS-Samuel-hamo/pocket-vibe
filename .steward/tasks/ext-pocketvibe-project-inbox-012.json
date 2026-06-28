@@ -1,0 +1,55 @@
+{
+  "task_id": "ext-pocketvibe-project-inbox-012",
+  "task": "Turn the phone landing flow into a cross-project inbox that lets users enter active projects across hosts while preserving the simplified chat-first remote-control experience.",
+  "task_type": "productization",
+  "risk_level": "medium",
+  "task_mode": "planned-market",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "docs/platform_priority_matrix.md",
+    ".steward/reports/workstreams/pocket-vibe-v1-active-plan.md",
+    "frontend/src/App.jsx",
+    "frontend/src/components/MobileControllerView.jsx",
+    "frontend/src/utils/projectRegistry.js"
+  ],
+  "matched_modules": [
+    "mobile-pwa",
+    "backend-api"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/mobile-pwa.yaml",
+    ".steward/modules/backend-api.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.require_tests_for_behavior_change",
+    "mobile-pwa.kill_switch_and_approval_flows_require_visible_feedback"
+  ],
+  "constraints": [
+    "mobile-pwa.forbidden:hidden-risk-actions"
+  ],
+  "required_checks": [
+    "frontend-build",
+    "manual-mobile-smoke"
+  ],
+  "required_approvals": [
+    "main-orchestrator"
+  ],
+  "suggested_write_scope": [
+    "frontend/**",
+    "backend/**",
+    "docs/**",
+    ".steward/**",
+    "tasks/todo.md"
+  ],
+  "next_steps": [
+    "design_project_inbox",
+    "surface_recent_projects_and_pending_work",
+    "preserve_chat_first_flow",
+    "verify_cross_project_switching_on_mobile"
+  ],
+  "decision": "task_ready"
+}

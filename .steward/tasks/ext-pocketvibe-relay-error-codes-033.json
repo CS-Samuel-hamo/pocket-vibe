@@ -1,0 +1,28 @@
+{
+  "id": "ext-pocketvibe-relay-error-codes-033",
+  "title": "Return user-facing PV error codes from the Relay MVP API",
+  "module": "backend-api",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "backend/relay_api.py",
+    "backend/relay_core.py",
+    "docs/error_codes.md",
+    "tests/test_relay_api.py"
+  ],
+  "outputs": [
+    "Relay API failure responses include a stable error_code field",
+    "Pairing, authorization, replay, session, and encrypted-payload failures map to existing PV-* categories",
+    "Backend tests verify representative relay error codes"
+  ],
+  "acceptance_commands": [
+    "pytest tests/test_relay_api.py tests/test_relay_core.py -q",
+    "python scripts/quality_gate.py backend/relay_api.py tests/test_relay_api.py"
+  ],
+  "do_not_do": [
+    "Do not change RelayCore behavior",
+    "Do not add public relay deployment",
+    "Do not add plaintext payload storage",
+    "Do not stage unrelated untracked files"
+  ]
+}

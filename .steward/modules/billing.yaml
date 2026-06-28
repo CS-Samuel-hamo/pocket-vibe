@@ -1,0 +1,44 @@
+﻿version: 1
+
+module:
+  id: billing
+  name: Billing (Archived Sample)
+  description: Archived sample protected module kept only for bootstrap history. Do not use for new Pocket_Vibe pilot tasks.
+
+ownership:
+  steward_agent: billing-steward
+  human_owners:
+    - finance-platform
+  escalation_channel: "#billing-review"
+
+match:
+  paths:
+    - services/billing/**
+    - packages/ledger/**
+  dependencies:
+    - shared/money/**
+
+behavior:
+  allowed_actions:
+    - bugfix
+    - refactor
+    - tests
+  forbidden_actions:
+    - bypass-ledger-write-path
+    - remove-idempotency-check
+
+rules:
+  inherit_global_principles: true
+  extra_principles:
+    - archived_sample_only
+
+checks:
+  required:
+    - billing-unit-tests
+    - steward-approval
+  optional:
+    - finance-review
+
+prompts:
+  task_template: billing-task-template
+  review_template: billing-review-template

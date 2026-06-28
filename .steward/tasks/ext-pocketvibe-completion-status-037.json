@@ -1,0 +1,27 @@
+{
+  "id": "ext-pocketvibe-completion-status-037",
+  "title": "Record product completion status against M0-M5",
+  "module": "docs",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "docs/productization_roadmap.md",
+    "docs/relay_mvp.md",
+    "docs/windows_first_startup.md",
+    "docs/v1_release_manifest.md"
+  ],
+  "outputs": [
+    "A milestone status document states what is done, partial, blocked, and next",
+    "Manual gates are separated from Codex-implementable engineering work",
+    "The document prevents treating M4/M5 as complete before relay and field validation are done"
+  ],
+  "acceptance_commands": [
+    "powershell -ExecutionPolicy Bypass -File scripts/v1_desktop_gate.ps1"
+  ],
+  "do_not_do": [
+    "Do not claim public relay, account system, payment, or app-store distribution are complete",
+    "Do not create release tags without real-phone acceptance evidence",
+    "Do not modify product code in this docs-only task",
+    "Do not stage unrelated untracked files"
+  ]
+}

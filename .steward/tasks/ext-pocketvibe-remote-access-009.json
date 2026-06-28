@@ -1,0 +1,61 @@
+{
+  "task_id": "ext-pocketvibe-remote-access-009",
+  "task": "Turn remote access into a supported path with explicit backend/frontend addressing, pairing guidance, recovery guidance, and one documented cross-network happy path.",
+  "task_type": "productization",
+  "risk_level": "medium",
+  "task_mode": "planned-market",
+  "repo_root": "D:\\AI_projects\\Pocket_Vibe",
+  "input_paths": [
+    "docs/productization_roadmap.md",
+    "docs/手机端连接问题与解决方案.md",
+    ".env.example",
+    ".steward/reports/workstreams/pocket-vibe-v1-active-plan.md"
+  ],
+  "matched_modules": [
+    "backend-api",
+    "protocol-contract",
+    "mobile-pwa"
+  ],
+  "context_bundle": [
+    ".steward/constitution.yaml",
+    ".steward/iteration.yaml",
+    ".steward/policies.yaml",
+    ".steward/modules/backend-api.yaml",
+    ".steward/modules/protocol-contract.yaml",
+    ".steward/modules/mobile-pwa.yaml"
+  ],
+  "rule_trace": [
+    "global.keep_changes_scoped",
+    "global.require_tests_for_behavior_change",
+    "protocol-contract.replay_and_audit_changes_require_targeted_tests",
+    "mobile-pwa.kill_switch_and_approval_flows_require_visible_feedback"
+  ],
+  "constraints": [
+    "protocol-contract.forbidden:silent-protocol-drift",
+    "mobile-pwa.forbidden:hidden-risk-actions"
+  ],
+  "required_checks": [
+    "backend-tests",
+    "frontend-build",
+    "manual-remote-pairing-smoke"
+  ],
+  "required_approvals": [
+    "main-orchestrator"
+  ],
+  "suggested_write_scope": [
+    "backend/**",
+    "frontend/**",
+    ".env.example",
+    "README.md",
+    "QUICKSTART.md",
+    "docs/**",
+    ".steward/**"
+  ],
+  "next_steps": [
+    "choose_supported_remote_path",
+    "make_pairing_explicit",
+    "add_recovery_guidance",
+    "document_cross_network_setup"
+  ],
+  "decision": "task_ready"
+}

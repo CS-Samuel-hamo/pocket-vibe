@@ -1,0 +1,28 @@
+{
+  "id": "ext-pocketvibe-mobile-diagnostics-codes-025",
+  "title": "Add redacted diagnostic error codes to mobile support bundles",
+  "module": "mobile-pwa",
+  "status": "in_progress",
+  "created_at": "2026-05-09",
+  "inputs": [
+    "docs/error_codes.md",
+    "docs/SECURITY_AND_TRUST.md",
+    "frontend/src/utils/supportDiagnostics.js",
+    "frontend/tests/supportDiagnostics.test.js"
+  ],
+  "outputs": [
+    "Support debug bundle includes a primary PV-* error code",
+    "Support debug bundle explicitly states that prompt/output/source payloads are redacted",
+    "Frontend tests cover connection, runtime, and unsupported-action diagnostic codes"
+  ],
+  "acceptance_commands": [
+    "cd frontend && npm run test:capabilities",
+    "cd frontend && npm run build"
+  ],
+  "do_not_do": [
+    "Do not include prompt text, assistant output, source code, or terminal output in diagnostics",
+    "Do not change WebSocket protocol behavior",
+    "Do not change the mobile visual layout beyond diagnostic text generated for copy/export",
+    "Do not stage unrelated untracked files"
+  ]
+}

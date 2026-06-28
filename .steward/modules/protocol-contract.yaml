@@ -1,0 +1,50 @@
+version: 1
+
+module:
+  id: protocol-contract
+  name: Protocol Contract
+  description: Governs the websocket session contract, message normalization, replay semantics, approvals, audit events, and capability metadata.
+
+ownership:
+  steward_agent: main-orchestrator
+  human_owners:
+    - platform-architecture
+  escalation_channel: "#protocol-review"
+
+match:
+  paths:
+    - backend/main.py
+    - src/domain/models/protocol.py
+    - src/domain/models/driver.py
+  dependencies:
+    - tests/test_backend_main.py
+    - tests/test_protocol.py
+
+behavior:
+  allowed_actions:
+    - feature
+    - refactor
+    - hardening
+    - tests
+  forbidden_actions:
+    - silent-protocol-drift
+    - bypass-replay-semantics
+    - approval-contract-breakage
+
+rules:
+  inherit_global_principles: true
+  extra_principles:
+    - websocket_contract_changes_require_explicit_trace
+    - replay_and_audit_changes_require_targeted_tests
+    - compatibility_shims_must_be_declared
+
+checks:
+  required:
+    - backend-tests
+    - steward-approval
+  optional:
+    - protocol-review
+
+prompts:
+  task_template: default-task-template
+  review_template: default-review-template
